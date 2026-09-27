@@ -4,8 +4,8 @@ This file is the spec for building my personal website. Read it fully before sta
 
 ## 0. Context
 
-- **Purpose:** English-language personal site, primarily for overseas job searching.
-- **Audience:** recruiters and hiring managers who skim in ~15 seconds, plus curious visitors who explore.
+- **Purpose:** English-language personal site — mainly a personal showcase (work, photography, hobbies), not a recruiting page. (Owner decision, updated.)
+- **Audience:** anyone curious — friends, peers, and the occasional recruiter. Don't tailor wording specifically for hiring.
 - **Design principle:** the scan path is clean and obvious (who I am → what I do → resume). Personality and interaction live one layer down (photos, coffee, running, small touches).
 - **Me:** software engineer working on ML for weather forecasting and LLMs. Hobbies: running, latte art, photography.
 
@@ -126,7 +126,8 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 - Collection `src/content/coffee/*.md`, frontmatter:
   `date`, `pattern` (heart | tulip | rosetta | swan | other), `beans`, `milk`, `result` (nailed | decent | wobbly | disaster), `photo` (id from `photos.json`), optional `before` (photo id of an earlier attempt), `note`.
 - Page: grid view and timeline view toggle; filter by pattern; `result` shown as a playful badge.
-- **CompareSlider component:** when `before` exists, show a before/after slider ("Week 1 vs now"). Draggable handle, arrow keys move it, works on touch.
+- ~~CompareSlider~~ — dropped (owner decision). Instead, a short, modest intro: latte art is a weekend simple pleasure.
+- Coffee photos live in `photos-src/coffee/`; their location is always dropped (taken at home).
 
 ### 5.5 Running
 

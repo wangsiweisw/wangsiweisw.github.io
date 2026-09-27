@@ -1,5 +1,57 @@
 [
   {
+    "id": "65f38ff83043",
+    "file": "coffee/IMG_3211.HEIC",
+    "width": 3024,
+    "height": 4032,
+    "alt": "Latte art of a swan with detailed layered wings and a curved neck, in a white mug with a blue handle.",
+    "title": "Swan",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-09-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRo4AAABXRUJQVlA4IIIAAADQBACdASoUABsAPu1qqk8ppiOiMBgIATAdiWwAnTKAAPDUIXp9AFhKat+RuTBbAADoXowTWXO2D4qz4kl4yH3+NmMI0ZKaCm+PcMGLD62zdn842/YY1QKHFouVJ3NEEdkIug4EGWjCHvd38qZvYmn1poiUNnEizeZndkZez9OEGgoA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/65f38ff83043-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/65f38ff83043-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/65f38ff83043-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/65f38ff83043-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/65f38ff83043-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/65f38ff83043-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/65f38ff83043-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/65f38ff83043-2400.webp"
+      }
+    ]
+  },
+  {
     "id": "bea045cd9a92",
     "file": "cherry_spring/DSC08969-Min Horizon Noise-2.jpg",
     "width": 7008,
@@ -55,6 +107,266 @@
       {
         "width": 2400,
         "url": "https://img.siweiwang.me/bea045cd9a92-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "a2e02b0f08a2",
+    "file": "coffee/IMG_0911.HEIC",
+    "width": 3024,
+    "height": 4032,
+    "alt": "A winged tulip in a cream cup and saucer on a wooden table, casting a shadow in the sunlight.",
+    "title": "Winged tulip in the sun",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-06-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRqwAAABXRUJQVlA4IKAAAADQBACdASoUABsAPu1ur1KppiQiqAgBMB2JaAC1F9SVgSP8eOsauMe2fvOxSRbmoAD3BCMUwla/bhy2bBlgKgGcflqs0QQUJc3exCPKj/luNr6V6vo+bNaadwweBQw/5qS4e7+QpinmWVhHHpXRDPp2LnWB//dFADjJvzqGtP2PfOwb+PtcNA2a1HCkCX7zz8Njt192Ps6M3tgcIrHen4AA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a2e02b0f08a2-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "ac9c04e01ff4",
+    "file": "coffee/IMG_0429.HEIC",
+    "width": 3024,
+    "height": 4032,
+    "alt": "A crisp, symmetrical winged tulip with stacked layers, in a white mug on a grey countertop.",
+    "title": "Winged tulip",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-06-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRrAAAABXRUJQVlA4IKQAAACQBACdASoUABsAPu1oqU8ppiOiMBgIATAdiWYApxQEzZg6j2sYifgj4ZMp2gAA+cI0MKQnh7Zyv0bCmbAve2nai+nzWEcTVYc2+A2ROsk4skEwXjgbaTV7PPCwX7rU95VabxIWER9JF1sDDGO8OMSJ+Ofv9xFxGVdhhElF1Zk1IBSsslF07n5iswPfAtOHMwxa3EhQxrTy9dTograBuGyUqIAAAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/ac9c04e01ff4-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "401600b0b23b",
+    "file": "coffee/IMG_7698.HEIC",
+    "width": 4284,
+    "height": 5712,
+    "alt": "Latte art of a swan with a curled neck and a feathered body, seen from above.",
+    "title": "First swan",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-03-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAACQBQCdASoUABsAPu1irVAppSQisBgIATAdiWoAnQAQ3qQETTXKVxJ2SsNWZp3zcQ/+5oyYAAD+qA3yEJEuAns0CjciiEr8jqoxK/iJKjF+gQSdhXKaTiCH+PYYvzFH5uK/DRtNDCobA3wMEq9z9ZzDdIH7kS+GUr8ezntUAq5nte0BNBNwoOc2Zq0nmWd8LpczESzJpQcmLS7994nosY0rcwVLyGXsRkk6NcAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/401600b0b23b-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/401600b0b23b-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/401600b0b23b-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/401600b0b23b-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/401600b0b23b-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/401600b0b23b-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/401600b0b23b-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/401600b0b23b-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "3a645eb02381",
+    "file": "coffee/IMG_6709.heic",
+    "width": 5712,
+    "height": 4284,
+    "alt": "A rosetta poured into a cream embossed vintage cup, sitting on a painted coaster on a wooden table.",
+    "title": "Rosetta",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-02-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADwAwCdASoUAA8APu1iqU2ppaOiMAgBMB2JQBdl4AAuFx8V64rkRQC+AP3doTJ+MqGEgTHxbEXRNdEdjFb30r3ayAqlkFak4+21cWMJxMA+RmHc44zSzwrZGe5kAAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/3a645eb02381-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/3a645eb02381-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/3a645eb02381-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/3a645eb02381-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/3a645eb02381-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/3a645eb02381-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/3a645eb02381-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/3a645eb02381-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "c27beb5e774d",
+    "file": "coffee/IMG_6658.heic",
+    "width": 4284,
+    "height": 5712,
+    "alt": "Latte art of a winged tulip with two stacked hearts on top, in a pale blue mug seen from above.",
+    "title": "Winged tulip",
+    "caption": null,
+    "album": "coffee",
+    "location": null,
+    "featured": false,
+    "date": "2026-02-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAADQBQCdASoUABsAPu1gq1AppSOisBgIATAdiWwAtRsvwaocz4f9Pg7QA5tSlvmrHRZf6bc8YnwAAP7Lig2p/lWBPKO7gnPMc6M6tWfVZhEHkZ3nfgh/cvSTtQ56a5yjVf44PRHErHk4rkPLAXYG+XHG1N1TVFBLr1KedCj3gkivqPOibE9Ar+i1rb03tIJcf3LBSgAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/c27beb5e774d-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/c27beb5e774d-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/c27beb5e774d-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/c27beb5e774d-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/c27beb5e774d-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/c27beb5e774d-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/c27beb5e774d-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/c27beb5e774d-2400.webp"
       }
     ]
   },
@@ -240,7 +552,7 @@
     "file": "china/DSC02120.jpg",
     "width": 3820,
     "height": 3598,
-    "alt": "A bee landing on white blossoms with pink centres and young bronze-green leaves, against a soft blurred background.",
+    "alt": "A bee landing on white blossoms with pink centers and young bronze-green leaves, against a soft blurred background.",
     "title": "Bee in the blossoms",
     "caption": null,
     "album": "beijing",

@@ -57,6 +57,8 @@ const metaSchema = z.record(
     location: z.string().optional(),
     featured: z.boolean().optional(),
     hide_location: z.boolean().optional(),
+    // leave this file out entirely (not processed, not uploaded)
+    skip: z.boolean().optional(),
   }),
 );
 type Meta = z.infer<typeof metaSchema>[string];
@@ -160,6 +162,10 @@ const seen = new Set<string>();
 let uploaded = 0;
 
 for (const file of files) {
+  if (meta[file]?.skip) {
+    console.log(`- ${file} skipped (meta.yaml)`);
+    continue;
+  }
   const path = join(SRC, file);
   const original = await readFile(path);
   const id = createHash('sha256').update(original).digest('hex').slice(0, 12);
@@ -195,6 +201,9 @@ for (const file of files) {
     const hasGps = typeof tags?.latitude === 'number' && typeof tags?.longitude === 'number';
     const taken: Date | undefined = tags?.DateTimeOriginal ?? tags?.CreateDate;
     const prev = byId.get(id);
+    const album = m.album ?? folderAlbum(file);
+    // Latte art is personal and shot at home: keep only the month (for ordering) and no camera details.
+    const personal = album === 'coffee';
 
     byId.set(id, {
       id,
@@ -204,19 +213,27 @@ for (const file of files) {
       alt: m.alt ?? prev?.alt ?? null,
       title: m.title ?? null,
       caption: m.caption ?? null,
-      album: m.album ?? folderAlbum(file),
+      album,
       location: m.location ?? null,
       featured: m.featured ?? false,
-      date: taken instanceof Date && !isNaN(+taken) ? taken.toISOString() : null,
-      coords: hasGps && !m.hide_location ? { lat: round2(tags.latitude), lon: round2(tags.longitude) } : null,
-      exif: {
+      date:
+        taken instanceof Date && !isNaN(+taken)
+          ? personal
+            ? `${taken.toISOString().slice(0, 7)}-01T00:00:00.000Z`
+            : taken.toISOString()
+          : null,
+      // latte art is shot at home: never keep its location, even rounded
+      coords: hasGps && !m.hide_location && !personal ? { lat: round2(tags.latitude), lon: round2(tags.longitude) } : null,
+      exif: personal
+        ? {}
+        : {
         camera: [tags?.Make, tags?.Model].filter(Boolean).join(' ').trim() || undefined,
         lens: tags?.LensModel,
         focalLength: tags?.FocalLength ? `${Math.round(tags.FocalLength)}mm` : undefined,
         aperture: tags?.FNumber ? `f/${tags.FNumber}` : undefined,
         shutter: formatShutter(tags?.ExposureTime),
         iso: tags?.ISO,
-      },
+          },
       placeholder,
       avif,
       webp,

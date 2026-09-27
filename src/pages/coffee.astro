@@ -1,0 +1,112 @@
+---
+// Latte art: a short, modest intro and a grid of cups (no dates or camera details); tap one to open it.
+import Base from '../layouts/Base.astro';
+import Lightbox from '../components/Lightbox.astro';
+import { pours } from '../lib/coffee';
+import { srcset } from '../lib/photos';
+
+---
+
+<Base title="Latte art" description="Latte art Siwei Wang pours on weekend mornings.">
+  <header class="page-head">
+    <h1>Latte art</h1>
+    <p class="intro">
+      On slow weekend mornings, I like to make a latte and try a bit of latte art. It's a simple pleasure. Here are a
+      few cups I was happy with.
+    </p>
+  </header>
+
+  <ul class="cups">
+    {
+      pours.map(({ photo: p }, i) => (
+        <li class="item">
+          <a href={`#photo-${p.id}`} data-photo={p.id}>
+            <span class="frame">
+              <span class="ph" style={`background-image: url(${p.placeholder})`} aria-hidden="true" />
+              <picture>
+                <source type="image/avif" srcset={srcset(p.avif)} sizes="(min-width: 900px) 20rem, (min-width: 560px) 45vw, 90vw" />
+                <img
+                  src={p.webp.find((v) => v.width >= 960)?.url ?? p.webp.at(-1)!.url}
+                  srcset={srcset(p.webp)}
+                  sizes="(min-width: 900px) 20rem, (min-width: 560px) 45vw, 90vw"
+                  width={p.width}
+                  height={p.height}
+                  alt={p.alt ?? ''}
+                  loading={i < 3 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </picture>
+            </span>
+            <span class="caption">{p.title}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <Lightbox photos={pours.map((x) => x.photo)} details={false} />
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2.5rem;
+  }
+  h1 {
+    margin: 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .intro {
+    max-width: var(--measure);
+    margin: 1rem 0 0;
+    font: 400 1.2rem / 1.5 var(--display);
+  }
+  .cups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: 2.5rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    display: block;
+    text-decoration: none;
+  }
+  .frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .ph {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px);
+    transform: scale(1.1);
+  }
+  img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  a:hover img {
+    transform: scale(1.04);
+  }
+  .caption {
+    display: block;
+    margin-top: 0.75rem;
+    font: 400 1.15rem var(--display);
+    transition: color var(--ease);
+  }
+  a:hover .caption {
+    color: var(--accent);
+  }
+</style>

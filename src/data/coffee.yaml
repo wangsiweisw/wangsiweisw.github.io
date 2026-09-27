@@ -1,0 +1,13 @@
+# Latte art shown on /coffee (newest first by photo date). `photo` is the path in photos-src/.
+- photo: coffee/IMG_3211.HEIC
+  pattern: swan
+- photo: coffee/IMG_0911.HEIC
+  pattern: tulip
+- photo: coffee/IMG_0429.HEIC
+  pattern: tulip
+- photo: coffee/IMG_7698.HEIC
+  pattern: swan
+- photo: coffee/IMG_6709.heic
+  pattern: rosetta
+- photo: coffee/IMG_6658.heic
+  pattern: tulip

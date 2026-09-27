@@ -1,5 +1,6 @@
 import { resume } from '../lib/resume';
 import { albums } from '../lib/albums';
+import { pours } from '../lib/coffee';
 
 // Site sections. Links to sections that aren't built yet are shown in dev only, so production never links to a 404.
 export interface NavItem {
@@ -13,7 +14,7 @@ export const nav: NavItem[] = [
   { href: '/resume', label: 'Resume', live: !resume.sample },
   // Photos appear once at least one album in albums.yaml has photos.
   { href: '/photos', label: 'Photography', live: albums.length > 0 },
-  { href: '/coffee', label: 'Coffee', live: false },
+  { href: '/coffee', label: 'Latte art', live: pours.length > 0 },
   { href: '/running', label: 'Running', live: false },
   // Flip to live once the first post is published (drafts are excluded from production).
   { href: '/blog', label: 'Blog', live: false },

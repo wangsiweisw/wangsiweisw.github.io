@@ -4,8 +4,11 @@ import { srcset, type Photo } from '../lib/photos';
 
 interface Props {
   photos: Photo[];
+  /** Show the camera/date details panel (i). Off for latte art, where it adds nothing. */
+  details?: boolean;
 }
 
+const { details = true } = Astro.props;
 const data = Astro.props.photos.map((p) => ({
   id: p.id,
   album: p.album,
@@ -15,8 +18,9 @@ const data = Astro.props.photos.map((p) => ({
   title: p.title,
   caption: p.caption,
   location: p.location,
-  date: p.date ? new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null,
-  exif: p.exif,
+  // without the details panel, don't ship dates or camera data in the page at all
+  date: details && p.date ? new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null,
+  exif: details ? p.exif : {},
   avif: srcset(p.avif),
   webp: srcset(p.webp),
   src: p.webp.at(-1)!.url,
@@ -38,14 +42,14 @@ const data = Astro.props.photos.map((p) => ({
         <p class="caption"></p>
       </div>
       <div class="controls">
-        <button type="button" data-action="info" aria-pressed="false" title="Photo details (i)">i</button>
+        {details && <button type="button" data-action="info" aria-pressed="false" title="Photo details (i)">i</button>}
         <button type="button" data-action="prev" aria-label="Previous photo (←)">←</button>
         <span class="count" aria-live="polite"></span>
         <button type="button" data-action="next" aria-label="Next photo (→)">→</button>
         <button type="button" data-action="close" aria-label="Close (Esc)">✕</button>
       </div>
     </div>
-    <dl class="exif" hidden></dl>
+    {details && <dl class="exif" hidden></dl>}
   </dialog>
 </photo-lightbox>
 
@@ -227,7 +231,7 @@ const data = Astro.props.photos.map((p) => ({
       q('[data-action="prev"]').addEventListener('click', () => this.step(-1));
       q('[data-action="next"]').addEventListener('click', () => this.step(1));
       q('[data-action="close"]').addEventListener('click', () => this.dialog.close());
-      q('[data-action="info"]').addEventListener('click', () => this.toggleInfo());
+      this.dialog.querySelector('[data-action="info"]')?.addEventListener('click', () => this.toggleInfo());
       this.dialog.addEventListener('close', () => history.replaceState(null, '', location.pathname + location.search));
       this.dialog.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') this.step(-1);
@@ -283,8 +287,9 @@ const data = Astro.props.photos.map((p) => ({
     }
 
     toggleInfo() {
-      const panel = this.dialog.querySelector<HTMLElement>('.exif')!;
-      const btn = this.dialog.querySelector('[data-action="info"]')!;
+      const panel = this.dialog.querySelector<HTMLElement>('.exif');
+      const btn = this.dialog.querySelector('[data-action="info"]');
+      if (!panel || !btn) return;
       panel.hidden = !panel.hidden;
       btn.setAttribute('aria-pressed', String(!panel.hidden));
     }
@@ -306,8 +311,7 @@ const data = Astro.props.photos.map((p) => ({
       const rows = EXIF_LABELS.filter(([k]) => item.exif[k] !== undefined).map(([k, label]) => [label, String(item.exif[k])]);
       if (item.date) rows.push(['Date', item.date]);
       if (item.location) rows.push(['Location', item.location]);
-      const panel = d.querySelector('.exif')!;
-      panel.replaceChildren(
+      d.querySelector('.exif')?.replaceChildren(
         ...rows.flatMap(([k, v]) => {
           const dt = document.createElement('dt');
           const dd = document.createElement('dd');

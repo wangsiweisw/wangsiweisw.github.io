@@ -4,10 +4,23 @@ import Base from '../layouts/Base.astro';
 import { site } from '../lib/site';
 import { isLive } from '../data/nav';
 
-// Link the hobby mention in the bio to the gallery once it's live.
-const PHOTO_PHRASE = 'take photos';
-const [bioBefore, bioAfter] =
-  isLive('/photos') && site.bio.includes(PHOTO_PHRASE) ? site.bio.split(PHOTO_PHRASE) : [site.bio, undefined];
+// Link hobby mentions in the bio to their pages once those pages are live.
+const BIO_LINKS: [phrase: string, href: string][] = [
+  ['pour latte art', '/coffee/'],
+  ['take photos', '/photos/'],
+];
+type Part = string | { text: string; href: string };
+const bioParts = BIO_LINKS.reduce<Part[]>(
+  (parts, [phrase, href]) =>
+    isLive(href.replace(/\/$/, ''))
+      ? parts.flatMap((part) =>
+          typeof part === 'string' && part.includes(phrase)
+            ? part.split(phrase).flatMap((piece, i) => (i === 0 ? [piece] : [{ text: phrase, href }, piece]))
+            : [part],
+        )
+      : parts,
+  [site.bio],
+);
 
 const [before, after] = site.positioningEmphasis
   ? site.positioning.split(site.positioningEmphasis)
@@ -24,7 +37,7 @@ const [before, after] = site.positioningEmphasis
       {before}{after !== undefined && <em>{site.positioningEmphasis}</em>}{after}
     </p>
     <p class="bio">
-      {bioBefore}{bioAfter !== undefined && <a href="/photos/">{PHOTO_PHRASE}</a>}{bioAfter}
+      {bioParts.map((part) => (typeof part === 'string' ? part : <a href={part.href}>{part.text}</a>))}
     </p>
     <div class="actions">
       {isLive('/resume') && <a class="btn btn-primary" href="/resume">Resume</a>}
