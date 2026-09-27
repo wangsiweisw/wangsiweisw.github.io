@@ -1,0 +1,21 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+*.log
+
+# secrets (R2 credentials etc.) — never commit
+.env
+.env.*
+
+# original photos — never commit (see PLAN.md §1)
+photos-src/
+
+# OS / editor
+.DS_Store
+.idea/
