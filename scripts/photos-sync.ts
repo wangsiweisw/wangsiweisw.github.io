@@ -202,8 +202,8 @@ for (const file of files) {
     const taken: Date | undefined = tags?.DateTimeOriginal ?? tags?.CreateDate;
     const prev = byId.get(id);
     const album = m.album ?? folderAlbum(file);
-    // Latte art is personal and shot at home: keep only the month (for ordering) and no camera details.
-    const personal = album === 'coffee';
+    // Personal photos (latte art shot at home, the portrait): keep only the month and no camera or location data.
+    const personal = album === 'coffee' || album === 'me';
 
     byId.set(id, {
       id,

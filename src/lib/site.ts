@@ -14,6 +14,7 @@ const schema = z.object({
     linkedin: z.url(),
     email: z.email().nullable(),
   }),
+  portrait: z.string().optional(),
   showEmployerOnHome: z.boolean(),
   weather: z.object({
     city: z.string().nullable(),

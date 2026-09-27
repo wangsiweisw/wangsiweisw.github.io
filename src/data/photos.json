@@ -52,6 +52,58 @@
     ]
   },
   {
+    "id": "f03d87086b4f",
+    "file": "me/DSC09538.JPG",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Portrait of Siwei Wang wearing glasses and a light jacket, with a red-rock canyon in the background at dusk.",
+    "title": "Siwei Wang",
+    "caption": null,
+    "album": "me",
+    "location": null,
+    "featured": false,
+    "date": "2026-08-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAADwAwCdASoUAA0APu1kqU2ppaQiMAgBMB2JYwC/OCFQz75XmjisizagAP7es2H08rG947gNAKkIcpG8MXppxtE2SXM/LxZIKYEIHfGxxLlgXk8Qi6FVOKROsDomrYb7co9kmEWAOaP2yoAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/f03d87086b4f-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/f03d87086b4f-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/f03d87086b4f-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/f03d87086b4f-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/f03d87086b4f-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/f03d87086b4f-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/f03d87086b4f-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/f03d87086b4f-2048.webp"
+      }
+    ]
+  },
+  {
     "id": "bea045cd9a92",
     "file": "cherry_spring/DSC08969-Min Horizon Noise-2.jpg",
     "width": 7008,
