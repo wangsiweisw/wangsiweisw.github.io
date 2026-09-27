@@ -1,9 +1,8 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
 
-// TODO(owner): switch to https://siweiwang.me once DNS is live (and add public/CNAME).
 export default defineConfig({
-  site: 'https://wangsiweisw.github.io',
+  site: 'https://siweiwang.me',
   // Fonts are downloaded at build time and self-hosted; no requests to Google at runtime.
   fonts: [
     {
