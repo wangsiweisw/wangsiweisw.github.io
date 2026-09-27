@@ -423,6 +423,419 @@
     ]
   },
   {
+    "id": "d2aa3156b9b3",
+    "file": "botanical_garden/DSC07763.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Soft white orchids in the foreground frame a red and cream model trolley passing miniature mansions built from bark and twigs, their windows glowing warm.",
+    "title": "Uptown trolley",
+    "caption": null,
+    "album": "new-york",
+    "location": "Holiday Train Show, New York Botanical Garden",
+    "featured": false,
+    "date": "2026-01-03T22:20:10.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "FE 50mm F1.4 GM",
+      "focalLength": "50mm",
+      "aperture": "f/2.2",
+      "shutter": "1/250s",
+      "iso": 4000
+    },
+    "placeholder": "data:image/webp;base64,UklGRqgAAABXRUJQVlA4IJwAAACwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JYgCdMoGv/i1/0Ntn1Ml2I2s1UtlwAP3jRNNW2xftv9ubrS3SjSCvwLHzGTlfGg7PicqabNeHTxxDjeu2wHAGgePDp8uIS+F4mSxpk3XDoi7XEkj1kDlfvgtsXGlk2+d/jGF81j+ext7aAPxvCzw3tincA7kper/r8mJii2QsgsEwgAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/d2aa3156b9b3-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "a746b5080818",
+    "file": "botanical_garden/DSC07702.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A Statue of Liberty model made of plant materials standing in a reflecting pool, surrounded by tropical plants and orchids.",
+    "title": "Liberty in bark and leaves",
+    "caption": null,
+    "album": "new-york",
+    "location": "Holiday Train Show, New York Botanical Garden",
+    "featured": false,
+    "date": "2026-01-03T21:55:10.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "FE 50mm F1.4 GM",
+      "focalLength": "50mm",
+      "aperture": "f/2.5",
+      "shutter": "1/200s",
+      "iso": 2500
+    },
+    "placeholder": "data:image/webp;base64,UklGRpIAAABXRUJQVlA4IIYAAAAwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JYwC7ACPuK39FTRSS7pg8SAAA/sAGOSQy5JmlZrK6i9MMSKbwjMYP7T4DKRacqqjQGp/A61Sq52XIJPQBOggXCEihgybe+6SIc1YUIRt55hhi3WArqH1ezTIcCnj+5L3JmndUXEkm/qmS+gAAAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a746b5080818-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a746b5080818-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a746b5080818-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a746b5080818-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a746b5080818-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a746b5080818-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a746b5080818-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a746b5080818-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "76c4ab620fba",
+    "file": "botanical_garden/DSC07701.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A miniature ferry labelled Bronx, made from natural materials, floating on dark water that mirrors the arched model building behind it.",
+    "title": "The Bronx ferry",
+    "caption": null,
+    "album": "new-york",
+    "location": "Holiday Train Show, New York Botanical Garden",
+    "featured": false,
+    "date": "2026-01-03T21:54:58.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "FE 50mm F1.4 GM",
+      "focalLength": "50mm",
+      "aperture": "f/2.5",
+      "shutter": "1/200s",
+      "iso": 3200
+    },
+    "placeholder": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAAAwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JZgCdEf/gKfgIpsA2EPw0434A/qnJCnz3JznQ3oK6LYW3Uc5n2eDvlO0aLuETociVEOviXy5c4RXZK43bEyOhQXFpsJLNGnuiNtV6/zPI/Y1lqRtEvIxFTTj5PwAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/76c4ab620fba-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/76c4ab620fba-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/76c4ab620fba-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/76c4ab620fba-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/76c4ab620fba-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/76c4ab620fba-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/76c4ab620fba-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/76c4ab620fba-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "b6dcab350f09",
+    "file": "Atlanta/DSC03294.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A model train loaded with toy figures and a tiny Christmas tree curving along a wooden trestle, holiday lights blurred behind.",
+    "title": "Holiday train",
+    "caption": null,
+    "album": "atlanta",
+    "location": "Atlanta Botanical Garden",
+    "featured": false,
+    "date": "2024-11-24T23:34:16.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "84mm",
+      "aperture": "f/4.5",
+      "shutter": "1/200s",
+      "iso": 10000
+    },
+    "placeholder": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAADQAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JQBWAA7PjP+A7CajTskAA/uX8udg+MUwxphmXksPtn0bEmU54xUqix4Odmx/YzUDGwho87XagQgOTjsi0QZ2riaAsXGAQcADzTBphgI0AAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/b6dcab350f09-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/b6dcab350f09-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/b6dcab350f09-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/b6dcab350f09-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/b6dcab350f09-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/b6dcab350f09-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/b6dcab350f09-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/b6dcab350f09-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "250339f65a79",
+    "file": "Atlanta/DSC03272.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A blue and white glass sculpture on a lit fountain at dusk, surrounded by benches and hedges strung with small lights.",
+    "title": "Glass fountain at dusk",
+    "caption": null,
+    "album": "atlanta",
+    "location": "Atlanta Botanical Garden",
+    "featured": false,
+    "date": "2024-11-24T23:28:08.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "114mm",
+      "aperture": "f/5",
+      "shutter": "1/60s",
+      "iso": 2000
+    },
+    "placeholder": "data:image/webp;base64,UklGRnIAAABXRUJQVlA4IGYAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZQC7ACHUY5cb3hhnecAA/uzsrx+Tm9GGkkUKPnKnuNis/NEpSMC+E/lE5VheETCs8jkr6waxO0853omdDhuzwmXrMlIRrTQxswOeAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/250339f65a79-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/250339f65a79-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/250339f65a79-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/250339f65a79-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/250339f65a79-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/250339f65a79-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/250339f65a79-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/250339f65a79-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "8b35de0cca3e",
+    "file": "Atlanta/DSC03207.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Two spotted jellyfish drifting against a deep blue background.",
+    "title": "Jellyfish",
+    "caption": null,
+    "album": "atlanta",
+    "location": "Georgia Aquarium, Atlanta",
+    "featured": false,
+    "date": "2024-11-24T18:23:56.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "46mm",
+      "aperture": "f/3.5",
+      "shutter": "1/250s",
+      "iso": 3200
+    },
+    "placeholder": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JaACdMoR3ACmXyzdaswAA/vDUfIrK1sey+D6YJ/0xKU0TtAN1fvFG+/kTCpHzPJf5ufAkY93P91H/8HtgAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8b35de0cca3e-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "aa69f5b92adb",
+    "file": "Atlanta/DSC03116.JPG",
+    "width": 4544,
+    "height": 6816,
+    "alt": "Looking straight up a tall hotel atrium, its curving ribbed balconies converging on a narrow bright skylight.",
+    "title": "Looking up the atrium",
+    "caption": null,
+    "album": "atlanta",
+    "location": "Marriott Marquis, Atlanta",
+    "featured": false,
+    "date": "2024-11-23T22:25:16.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/2.8",
+      "shutter": "1/30s",
+      "iso": 500
+    },
+    "placeholder": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAAAwBQCdASoUAB4APuVgpE2pJaMiMAwBIByJZQDGQCHhaeCad6p2EJmgMkjQyCTKTdVAAAD+8NDKnKswXB+SORx8/fIAJ5rAEb3FrUPk2NstBFf6OwkXTvl5HW0EMLPHhL8RZz7HyBpn4nOkTx8tQKnUPkkA2eu1QOygwXRaVNKELw4VUblpGFAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/aa69f5b92adb-2400.webp"
+      }
+    ]
+  },
+  {
     "id": "4eb69656bf79",
     "file": "china/DSC02558.JPG",
     "width": 7008,
@@ -655,6 +1068,360 @@
       {
         "width": 2400,
         "url": "https://img.siweiwang.me/586fbb2b8eff-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "46bf5c967bff",
+    "file": "cambridge/DSC01216.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A white memorial stone on a brick path engraved in Chinese with lines from Xu Zhimo's poem \"Saying Good-bye to Cambridge Again\".",
+    "title": "Farewell to Cambridge",
+    "caption": "轻轻的我走了，正如我轻轻的来。——徐志摩《再别康桥》",
+    "album": "cambridge",
+    "location": "King's College, Cambridge",
+    "featured": false,
+    "date": "2023-12-17T14:41:12.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/5.6",
+      "shutter": "1/30s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JYwAAQyTRU1ntbhQJI3AA/u9IkkJmAoKapLgy3CHKdPgc5BVsvAZInYKXNFC+Z9+iRe5WjgoQCqeXM7XQzOeEDKaR+9XOEXYXUSFW3FxkedUAAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/46bf5c967bff-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/46bf5c967bff-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/46bf5c967bff-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/46bf5c967bff-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/46bf5c967bff-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/46bf5c967bff-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/46bf5c967bff-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/46bf5c967bff-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "0aa064e849f4",
+    "file": "cambridge/DSC01178.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A small bronze statue of a crowned figure holding a sceptre and orb, silhouetted against softly blurred stained-glass windows.",
+    "title": "Stained glass light",
+    "caption": null,
+    "album": "cambridge",
+    "location": "King's College Chapel, Cambridge",
+    "featured": false,
+    "date": "2023-12-17T14:23:41.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "61mm",
+      "aperture": "f/4",
+      "shutter": "1/60s",
+      "iso": 800
+    },
+    "placeholder": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAACwAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JZwAANvEaUayrPnWodAD+v6Fw5Y8oGnC3FL3IXtSwf2C5Zja1dVeRAvZ6gusbo04m/PIOjVdHQpFw/wXkqL+oLspSxEETyLTlIH6FOzwgacmzKY/6gc2AAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0aa064e849f4-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0aa064e849f4-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0aa064e849f4-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0aa064e849f4-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0aa064e849f4-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0aa064e849f4-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0aa064e849f4-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0aa064e849f4-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "a2fd45ae1316",
+    "file": "cambridge/DSC01170.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A carved wooden statue of a crowned king playing a harp on top of the organ screen, with the chapel's fan-vaulted ceiling behind.",
+    "title": "King David above the organ",
+    "caption": null,
+    "album": "cambridge",
+    "location": "King's College Chapel, Cambridge",
+    "featured": false,
+    "date": "2023-12-17T14:22:09.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "200mm",
+      "aperture": "f/5.6",
+      "shutter": "1/60s",
+      "iso": 8000
+    },
+    "placeholder": "data:image/webp;base64,UklGRoIAAABXRUJQVlA4IHYAAACQAwCdASoUAA0APu1iqk2ppaQiMAgBMB2JQBOgAwxEZzKVGsiAAPwVw9S+u+Aw+fOz3C6YizjfyDHAbuwEPGl0uC4XezQstnoHaLDWQLIuf4Nno/oQ55VV7+dOFjJee0DdCkA1bIuwwlWwBddfGOUV2vKM08gA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/a2fd45ae1316-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "d6a56d12404d",
+    "file": "cambridge/DSC01111.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "The Bridge of Sighs over the River Cam, with low winter sun shining through the arch and glinting on the water.",
+    "title": "Bridge of Sighs",
+    "caption": null,
+    "album": "cambridge",
+    "location": "St John's College, Cambridge",
+    "featured": false,
+    "date": "2023-12-17T13:07:22.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/11",
+      "shutter": "1/50s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAAAwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JYwC7MoACTNiR0a6LfBX5gAAA/oofg9M7V5HfGZaKSeMLWzL3kbpotqZfH9h88RzbxVs0emd4uNodReVVJv10xaXaRsOMEGfqn3v9HarLtFclpX/8mNHuv01zL/sYlfG8iRDnEAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/d6a56d12404d-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/d6a56d12404d-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/d6a56d12404d-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/d6a56d12404d-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/d6a56d12404d-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/d6a56d12404d-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/d6a56d12404d-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/d6a56d12404d-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "2bb6e1171204",
+    "file": "london/DSC00949.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A white porcelain teapot painted with lotus flowers and Chinese calligraphy, two matching vases blurred behind it.",
+    "title": "Lotus teapot",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-12-16T16:56:42.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "73mm",
+      "aperture": "f/4",
+      "shutter": "1/25s",
+      "iso": 800
+    },
+    "placeholder": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAACwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JYwC7ABhnnNdeEAebwAD+9J3/0Ym/2HKEQszMcQD8BFmmWR8m5vppu4vtqFd+lYAnPq+ZSMh4LsyHLToJLR0hGMCSn8uaZjBNGsYP/V4IKMuB1NjSEuN/B0XGRrxU8AA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/2bb6e1171204-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/2bb6e1171204-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/2bb6e1171204-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/2bb6e1171204-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/2bb6e1171204-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/2bb6e1171204-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/2bb6e1171204-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/2bb6e1171204-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "0308458e0bdf",
+    "file": "london/DSC00758.jpg",
+    "width": 4672,
+    "height": 7008,
+    "alt": "Looking down on a paved courtyard where a ginkgo tree glows bright yellow, its fallen leaves scattered around a few people walking.",
+    "title": "Ginkgo from above",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-11-18T12:46:22.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "130mm",
+      "aperture": "f/5",
+      "shutter": "1/50s",
+      "iso": 200
+    },
+    "placeholder": "data:image/webp;base64,UklGRrgAAABXRUJQVlA4IKwAAAAQBQCdASoUAB4APu1kqE2ppaOiMAgBMB2JQBlEF/hN8pUfvDw55OB5i61tY8I8x7IAAP70Ju2CArFPRudIHUzwRDEBQt2ENqHLVCSJnt/XRqo5gMrxEnOuIZHbMEjRkuueolsxb6zST/wRDrULiP43zV7U8FVmF5ENAittJL/+DUdx6lSuHH+VVUFOkuGaZ+CfQJJTAcGoLwQqx6JjhLRqV6AwK/XqyD7xgAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0308458e0bdf-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0308458e0bdf-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0308458e0bdf-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0308458e0bdf-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0308458e0bdf-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0308458e0bdf-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0308458e0bdf-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0308458e0bdf-2400.webp"
       }
     ]
   },

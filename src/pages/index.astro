@@ -7,6 +7,19 @@ import { photos, srcset } from '../lib/photos';
 
 const portrait = site.portrait ? photos.find((p) => p.file === site.portrait) : undefined;
 
+// schema.org Person: helps search engines connect this site, the name, and the LinkedIn profile.
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: site.name,
+  alternateName: site.nameZh,
+  url: new URL('/', Astro.site).href,
+  description: site.description,
+  jobTitle: 'Software Engineer',
+  image: portrait?.webp.find((v) => v.width >= 960)?.url,
+  sameAs: [site.links.linkedin],
+};
+
 // Link hobby mentions in the bio to their pages once those pages are live.
 const BIO_LINKS: [phrase: string, href: string][] = [
   ['pour latte art', '/coffee/'],
@@ -31,6 +44,7 @@ const [before, after] = site.positioningEmphasis
 ---
 
 <Base title={site.name}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
   <section class:list={['hero', { 'has-portrait': portrait }]}>
     {
       portrait && (

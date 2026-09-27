@@ -1,10 +1,20 @@
-# Photo albums shown on /photos, in this order. `id` matches the `album` of each photo
+# Photo albums shown on /photos, in this order (newest trip first). `id` matches the `album` of each photo
 # (folder name in photos-src/, or `album:` in meta.yaml). `cover` is the photo's path in photos-src/.
-# Albums not listed here (e.g. coffee) are kept off the gallery.
+# Albums not listed here (e.g. coffee, me) are kept off the gallery.
 
-- id: london
-  title: London
-  cover: london/DSC00467-2.jpg
+- id: night-sky
+  title: Night Sky
+  cover: cherry_spring/DSC08969-Min Horizon Noise-2.jpg
+
+- id: new-york
+  title: New York
+  subtitle: Holiday Train Show
+  cover: botanical_garden/DSC07701.jpg
+
+- id: atlanta
+  title: Atlanta
+  subtitle: Georgia
+  cover: Atlanta/DSC03116.JPG
 
 - id: yangshuo
   title: Yangshuo
@@ -16,6 +26,12 @@
   subtitle: China
   cover: china/DSC02168.JPG
 
-- id: night-sky
-  title: Night Sky
-  cover: cherry_spring/DSC08969-Min Horizon Noise-2.jpg
+- id: cambridge
+  title: Cambridge
+  subtitle: England
+  cover: cambridge/DSC01111.jpg
+
+- id: london
+  title: London
+  subtitle: England
+  cover: london/DSC00467-2.jpg

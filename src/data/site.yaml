@@ -10,8 +10,7 @@ description: Siwei Wang is a software engineer building AI weather forecasting m
 
 links:
   linkedin: https://www.linkedin.com/in/siwei-wang/
-  # TODO(owner): set once hi@siweiwang.me forwarding is set up; the Email button appears automatically.
-  email: null
+  email: hi@siweiwang.me
 
 # Home page portrait: path in photos-src/ (album "me"). Remove the line to hide it.
 portrait: me/DSC09538.JPG
