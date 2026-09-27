@@ -1,0 +1,52 @@
+/* Design tokens — direction A "Almanac": warm paper, editorial serif, terracotta accent. */
+
+:root {
+  --bg: #f6f1e9;
+  --surface: #fbf8f2;
+  --fg: #22201c;
+  --muted: #6e675d;
+  --rule: #e2d9cb;
+  --accent: #b4532a;
+  --accent-fg: #fff8f1;
+
+  --display: var(--font-display), Georgia, serif;
+  --body: var(--font-body), system-ui, sans-serif;
+
+  --measure: 34rem;
+  --page: 68rem;
+  --gutter: 16px;
+  --radius: 4px;
+  --ease: 0.15s ease;
+
+  color-scheme: light;
+}
+
+@media (min-width: 720px) {
+  :root {
+    --gutter: 40px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1a1714;
+    --surface: #211d19;
+    --fg: #efe8dd;
+    --muted: #a39a8c;
+    --rule: #342e28;
+    --accent: #e07a4f;
+    --accent-fg: #1a1714;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #1a1714;
+  --surface: #211d19;
+  --fg: #efe8dd;
+  --muted: #a39a8c;
+  --rule: #342e28;
+  --accent: #e07a4f;
+  --accent-fg: #1a1714;
+  color-scheme: dark;
+}

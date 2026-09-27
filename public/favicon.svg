@@ -1,5 +1,4 @@
-<!-- TODO(owner): placeholder favicon, replaced in Phase 1 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <style>circle { fill: #1c1c1a; } @media (prefers-color-scheme: dark) { circle { fill: #e8e8e4; } }</style>
-  <circle cx="16" cy="16" r="10" />
+  <style>circle { fill: #b4532a; } @media (prefers-color-scheme: dark) { circle { fill: #e07a4f; } }</style>
+  <circle cx="16" cy="16" r="11" />
 </svg>

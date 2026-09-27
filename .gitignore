@@ -19,3 +19,6 @@ photos-src/
 # OS / editor
 .DS_Store
 .idea/
+
+# Phase 1 design mocks (local reference only)
+mocks/

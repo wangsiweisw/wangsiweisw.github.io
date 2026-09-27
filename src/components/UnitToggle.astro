@@ -1,0 +1,28 @@
+---
+// Imperial/metric toggle. Pages that show units listen for the `unitschange` event on document.
+---
+
+<unit-toggle>
+  <button class="toggle" type="button" aria-label="Use metric units" aria-pressed="false">°F</button>
+</unit-toggle>
+
+<script>
+  import { getUnits, setUnits } from '../scripts/prefs';
+
+  class UnitToggle extends HTMLElement {
+    connectedCallback() {
+      const button = this.querySelector('button')!;
+      const sync = () => {
+        const metric = getUnits() === 'metric';
+        button.textContent = metric ? '°C' : '°F';
+        button.setAttribute('aria-pressed', String(metric));
+      };
+      sync();
+      button.addEventListener('click', () => {
+        setUnits(getUnits() === 'metric' ? 'imperial' : 'metric');
+        sync();
+      });
+    }
+  }
+  customElements.define('unit-toggle', UnitToggle);
+</script>

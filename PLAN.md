@@ -13,10 +13,10 @@ This file is the spec for building my personal website. Read it fully before sta
 
 | Token | Meaning |
 |---|---|
-| `{{NAME}}` | My full name |
-| `{{DOMAIN}}` | e.g. `example.com` |
-| `{{CITY}}`, `{{LAT}}`, `{{LON}}` | City shown in the weather card |
-| `{{GITHUB}}`, `{{LINKEDIN}}`, `{{EMAIL}}` | Contact links |
+| `{{NAME}}` | My full name — **Siwei Wang** (Chinese name 王思为 shown as a secondary line, no parentheses) |
+| `{{DOMAIN}}` | **`siweiwang.me`** |
+| `{{CITY}}`, `{{LAT}}`, `{{LON}}` | City shown in the weather card (TBD) |
+| `{{LINKEDIN}}`, `{{EMAIL}}` | Contact links. LinkedIn: `https://www.linkedin.com/in/siwei-wang/`. Email TBD. **No GitHub link anywhere on the site.** |
 | `{{R2_PUBLIC_HOST}}` | e.g. `img.example.com` |
 
 Mark any placeholder content in code or content files with `TODO(owner)`.
@@ -77,9 +77,9 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 
 ## 4. Global design & behavior
 
-- **Visual direction (do this before styling anything):** propose **two** distinct directions, each as a static mock of the home page only. Aim for "distinctive but restrained": one accent color, one characterful display font paired with a clean body font, generous whitespace. Stop and wait for me to pick.
+- **Visual direction:** ✅ picked **A · "Almanac"** — warm paper background, terracotta accent, Fraunces (display) + Instrument Sans (body). May be revisited later.
 - **Theme:** light/dark following system by default, with a toggle; preference persisted in `localStorage` (wrapped in try/catch).
-- **Units:** one global Metric/Imperial toggle (°C/°F, km/mi), default Imperial for a US audience, persisted like the theme. Used by the weather card and running page.
+- **Units:** one global Metric/Imperial toggle (°C/°F, km/mi), default Imperial for a US audience, persisted like the theme. Used by the running page (and the weather card, wherever it ends up). Only shown on pages that use it.
 - **Motion:** hover states, subtle transitions, Astro View Transitions between pages. Everything respects `prefers-reduced-motion`. No cursor trails, particle effects, or scroll-jacking.
 - **Accessibility:** every interactive component is keyboard-operable with visible focus; `alt` text is required by schema for every image.
 - **Performance targets:** Lighthouse ≥ 95 in all categories on Home, Photos, Blog post. Home page ships < 30 KB of JS. No layout shift from images (width/height always known).
@@ -90,8 +90,8 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 
 ### 5.1 Home
 
-- **Hero:** `{{NAME}}`, one-line positioning, 2–3 sentence bio, buttons: Resume, GitHub, LinkedIn, Email. All from `site.yaml`.
-- **Weather card (signature piece):**
+- **Hero:** `{{NAME}}`, one-line positioning, 2–3 sentence bio, buttons: Resume, LinkedIn, Email (no GitHub). All from `site.yaml`.
+- **Weather card (signature piece) — ⏸ NOT on Home for now.** Owner will decide placement and caption later (see §9). Spec kept for when it lands:
   - Client-side fetch from Open-Meteo (no API key): current temperature + today and tomorrow high/low and weather code for `{{LAT}},{{LON}}`, `timezone=auto`.
   - Map WMO weather codes to a small icon set (inline SVG).
   - Caption from `site.yaml`, default: *"I build ML models that try to get this right."*
@@ -170,7 +170,7 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 |---|---|---|
 | 0 | Scaffold Astro project, tooling, base layout shell, deploy workflow, `CNAME` | Placeholder page is live at `https://{{DOMAIN}}` with HTTPS |
 | 1 | Two visual directions → **stop for my pick** → tokens, typography, theme + units toggles, nav/footer | Chosen direction applied site-wide |
-| 2 | Home (hero + weather card), Resume (web + PDF), Blog skeleton, 404 | **MVP shipped** — site is shareable |
+| 2 | Home (hero), Resume (web + PDF), Blog skeleton, 404 | **MVP shipped** — site is shareable |
 | 3 | Photos pipeline, gallery, lightbox | I can add photos with one command |
 | 4 | Coffee page + CompareSlider | |
 | 5 | Running sync, CSV fallback, stats page, cron | Stats update daily without me |
@@ -186,7 +186,10 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 
 ## 9. Owner to-do
 
-- [ ] Buy domain, point DNS to GitHub Pages
+- [x] Buy domain (`siweiwang.me`, Cloudflare)
+- [ ] Point DNS to GitHub Pages and verify the domain in GitHub account settings
+- [ ] Decide where the weather card lives (not Home) and rewrite its caption (current draft: "I build ML models that try to get this right.")
+- [ ] Set up `hi@siweiwang.me` via Cloudflare Email Routing (forwarding), then fill `{{EMAIL}}` — needed before the Email button in Phase 2
 - [ ] Create R2 bucket, API token, and connect `{{R2_PUBLIC_HOST}}`
 - [ ] Create a Strava API app and obtain a refresh token (`activity:read_all` scope if private runs should count toward totals)
 - [ ] Write bio, positioning line, and `resume.yaml` content

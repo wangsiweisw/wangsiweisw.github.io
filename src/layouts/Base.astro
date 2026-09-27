@@ -1,10 +1,14 @@
 ---
-// Base page shell: <head> metadata, site header, main slot, footer.
+// Base page shell: <head> metadata, fonts, theme bootstrap, header, main slot, footer.
+import { Font } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
+  showUnits?: boolean;
 }
 
 // TODO(owner): name and default description move to src/data/site.yaml in Phase 2.
@@ -12,6 +16,7 @@ const siteName = 'Siwei Wang';
 const {
   title,
   description = 'Siwei Wang is a software engineer building AI weather forecasting models and LLM applications.',
+  showUnits = false,
 } = Astro.props;
 const pageTitle = title === siteName ? title : `${title} · ${siteName}`;
 ---
@@ -26,14 +31,30 @@ const pageTitle = title === siteName ? title : `${title} · ${siteName}`;
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-body" preload />
+    <script is:inline>
+      // Apply saved theme/units before first paint.
+      (function () {
+        var root = document.documentElement;
+        var theme = null;
+        var units = null;
+        try {
+          theme = localStorage.getItem('theme');
+          units = localStorage.getItem('units');
+        } catch (e) {}
+        if (theme === 'light' || theme === 'dark') root.dataset.theme = theme;
+        var dark = theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        root.dataset.effectiveTheme = dark ? 'dark' : 'light';
+        root.dataset.units = units === 'metric' ? 'metric' : 'imperial';
+      })();
+    </script>
   </head>
   <body>
-    <header class="site-header">
-      <a href="/">{siteName}</a>
-    </header>
-    <main>
+    <Header showUnits={showUnits} />
+    <main class="wrap">
       <slot />
     </main>
-    <footer class="site-footer">© {new Date().getFullYear()} {siteName}</footer>
+    <Footer />
   </body>
 </html>

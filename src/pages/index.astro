@@ -1,11 +1,62 @@
 ---
-// Home: placeholder until Phase 2 builds the hero and weather card.
+// Home: hero. Section teasers arrive in Phase 6; the full hero content (from site.yaml) in Phase 2.
 import Base from '../layouts/Base.astro';
+import { isLive } from '../data/nav';
 ---
 
 <Base title="Siwei Wang">
-  <h1>Siwei Wang <span lang="zh-Hans">王思为</span></h1>
-  <p>Software engineer building AI weather forecasting models and LLM applications.</p>
-  <!-- TODO(owner): replaced by the full hero in Phase 2 -->
-  <p>This site is under construction.</p>
+  <section class="hero">
+    <h1>Siwei Wang<span class="zh" lang="zh-Hans">王思为</span></h1>
+    <p class="lede">Software engineer building <em>AI weather forecasting</em> models and LLM applications.</p>
+    <!-- TODO(owner): 2–3 sentence bio -->
+    <p class="bio">This site is under construction. More soon.</p>
+    <div class="actions">
+      {isLive('/resume') && <a class="btn btn-primary" href="/resume">Resume</a>}
+      <a class="btn" href="https://www.linkedin.com/in/siwei-wang/">LinkedIn ↗</a>
+    </div>
+  </section>
 </Base>
+
+<style>
+  .hero {
+    padding: 4rem 0 2rem;
+  }
+  @media (min-width: 880px) {
+    .hero {
+      padding: 6rem 0 3rem;
+    }
+  }
+  h1 {
+    margin: 0;
+    font: 400 clamp(3rem, 8vw, 5.5rem) / 0.95 var(--display);
+    letter-spacing: -0.035em;
+  }
+  .zh {
+    display: block;
+    margin-top: 0.9rem;
+    font: 300 1.35rem var(--display);
+    letter-spacing: 0.25em;
+    color: var(--muted);
+  }
+  .lede {
+    max-width: var(--measure);
+    margin: 2rem 0 0;
+    font: 400 1.45rem / 1.4 var(--display);
+    letter-spacing: -0.01em;
+  }
+  .lede em {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .bio {
+    max-width: var(--measure);
+    margin: 1.25rem 0 0;
+    color: var(--muted);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+</style>
