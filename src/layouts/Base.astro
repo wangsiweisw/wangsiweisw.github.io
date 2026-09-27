@@ -8,8 +8,11 @@ interface Props {
 }
 
 // TODO(owner): name and default description move to src/data/site.yaml in Phase 2.
-const siteName = '{{NAME}}';
-const { title, description = 'Personal website of {{NAME}}.' } = Astro.props;
+const siteName = 'Siwei Wang';
+const {
+  title,
+  description = 'Siwei Wang is a software engineer building AI weather forecasting models and LLM applications.',
+} = Astro.props;
 const pageTitle = title === siteName ? title : `${title} · ${siteName}`;
 ---
 
