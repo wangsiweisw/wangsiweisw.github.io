@@ -1,0 +1,138 @@
+---
+// Gallery landing: one card per album (place), in the order of albums.yaml.
+import Base from '../../layouts/Base.astro';
+import { albums } from '../../lib/albums';
+import { srcset } from '../../lib/photos';
+
+const total = albums.reduce((n, a) => n + a.photos.length, 0);
+---
+
+<Base title="Photos" description="Travel photographs by Siwei Wang.">
+  <header class="page-head">
+    <h1>Photos</h1>
+    <p class="lede">{total} photographs from {albums.length} places.</p>
+  </header>
+
+  {
+    albums.length === 0 ? (
+      <p class="empty">No photos yet.</p>
+    ) : (
+      <ul class="albums">
+        {albums.map((a, i) => (
+          <li>
+            <a href={`/photos/${a.id}/`} class="card">
+              <span class="cover">
+                <span class="ph" style={`background-image: url(${a.cover.placeholder})`} aria-hidden="true" />
+                <picture>
+                  <source type="image/avif" srcset={srcset(a.cover.avif)} sizes="(min-width: 720px) 34rem, 100vw" />
+                  <img
+                    src={a.cover.webp.find((v) => v.width >= 960)?.url ?? a.cover.webp.at(-1)!.url}
+                    srcset={srcset(a.cover.webp)}
+                    sizes="(min-width: 720px) 34rem, 100vw"
+                    width={a.cover.width}
+                    height={a.cover.height}
+                    alt={a.cover.alt ?? ''}
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </picture>
+              </span>
+              <span class="meta">
+                <span class="title">{a.title}</span>
+                <span class="sub">
+                  {[a.subtitle, a.when].filter(Boolean).join(' · ')}
+                  <span class="count">
+                    {a.photos.length} {a.photos.length === 1 ? 'photo' : 'photos'}
+                  </span>
+                </span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2.5rem;
+  }
+  h1 {
+    margin: 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .lede {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+  }
+  .albums {
+    display: grid;
+    gap: 3rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 720px) {
+    .albums {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .card {
+    display: block;
+    text-decoration: none;
+  }
+  .cover {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .ph {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px);
+    transform: scale(1.1);
+  }
+  img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .card:hover img {
+    transform: scale(1.03);
+  }
+  .meta {
+    display: block;
+    margin-top: 1rem;
+  }
+  .title {
+    display: block;
+    font: 400 1.9rem / 1.1 var(--display);
+    letter-spacing: -0.02em;
+    transition: color var(--ease);
+  }
+  .card:hover .title {
+    color: var(--accent);
+  }
+  .sub {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin-top: 0.4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .empty {
+    color: var(--muted);
+  }
+</style>

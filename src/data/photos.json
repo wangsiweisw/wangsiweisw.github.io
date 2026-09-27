@@ -1,0 +1,533 @@
+[
+  {
+    "id": "bea045cd9a92",
+    "file": "cherry_spring/DSC08969-Min Horizon Noise-2.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "The Milky Way arcing across a star-filled night sky above a dark treeline, with a faint orange glow on the horizon.",
+    "title": "Milky Way over Cherry Springs",
+    "caption": null,
+    "album": "night-sky",
+    "location": "Cherry Springs State Park, Pennsylvania",
+    "featured": false,
+    "date": "2026-06-20T05:04:13.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "Sony FE 20mm F1.8",
+      "focalLength": "20mm",
+      "aperture": "f/1.8",
+      "shutter": "5s",
+      "iso": 6400
+    },
+    "placeholder": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADQAwCdASoUAA0APu1kqU4ppaOiMAgBMB2JZQCdAB59SMvOn94bagAA/vFsFFnUMovXEizUc/h2Vh+eJKSaAvggXtXDn+xCbqv/uVAWGoqVOb8AAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bea045cd9a92-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bea045cd9a92-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bea045cd9a92-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bea045cd9a92-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bea045cd9a92-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bea045cd9a92-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bea045cd9a92-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bea045cd9a92-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "4eb69656bf79",
+    "file": "china/DSC02558.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A man poling a bamboo raft across a wide, misty river, with more rafts and green trees fading into the haze behind him.",
+    "title": "Rafts in the mist",
+    "caption": null,
+    "album": "yangshuo",
+    "location": "Yulong River, Yangshuo",
+    "featured": false,
+    "date": "2024-04-10T03:09:33.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "86mm",
+      "aperture": "f/10",
+      "shutter": "1/50s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAACwAwCdASoUAA0APu1iqk2ppaQiMAgBMB2JZwDKABt21BSgVC4LkAD+25n7PaJeycEbeHftCTxgSNScafX5Pr81p/HnXp6doA9ujwAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4eb69656bf79-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4eb69656bf79-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4eb69656bf79-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4eb69656bf79-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4eb69656bf79-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4eb69656bf79-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4eb69656bf79-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4eb69656bf79-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "4dfe297c9732",
+    "file": "china/DSC02437.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "An old stone arch bridge draped in vines over a calm green river, with bamboo rafts and red lanterns moored on the left and lush green trees around it.",
+    "title": "Bridge over the Yulong River",
+    "caption": null,
+    "album": "yangshuo",
+    "location": "Yulong River, Yangshuo",
+    "featured": false,
+    "date": "2024-04-09T09:20:07.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "87mm",
+      "aperture": "f/4.5",
+      "shutter": "1/80s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZAAARlspu3TUSXXaDmAA/hnFWh9Con+n9qflwCGO0aBHMtEeUViWXWPwlDsLtecawyJ/VkdPs+bScLVHjysM6H/dkqB42IvwCmnCb8AuYx9mAAChLHVykRld6DnFEAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4dfe297c9732-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4dfe297c9732-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4dfe297c9732-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4dfe297c9732-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4dfe297c9732-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4dfe297c9732-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4dfe297c9732-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4dfe297c9732-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "0983b6bb98ce",
+    "file": "china/DSC02168.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Branches of pink blossoms in the foreground framing the Olympic Tower in the pale distance.",
+    "title": "Spring in Olympic Park",
+    "caption": null,
+    "album": "beijing",
+    "location": "Olympic Forest Park, Beijing",
+    "featured": false,
+    "date": "2024-04-05T08:46:01.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "91mm",
+      "aperture": "f/11",
+      "shutter": "1/100s",
+      "iso": 125
+    },
+    "placeholder": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAACQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZQC06Yw6e9axzc6AAPysDMyAEjevTequLgA+TbH+PRRE+oqOcyVpy9AQraAeUeXNRKn3EWeuHvbaN54xr4A9pUBviGw3mVv9wUox8+tmnazlirlVD2CE6X97jWUNwdBm/E2HetH9//cbIGKMviiAAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/0983b6bb98ce-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "586fbb2b8eff",
+    "file": "china/DSC02120.jpg",
+    "width": 3820,
+    "height": 3598,
+    "alt": "A bee landing on white blossoms with pink centres and young bronze-green leaves, against a soft blurred background.",
+    "title": "Bee in the blossoms",
+    "caption": null,
+    "album": "beijing",
+    "location": "Beijing",
+    "featured": false,
+    "date": "2024-04-05T08:04:00.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "110mm",
+      "aperture": "f/11",
+      "shutter": "1/125s",
+      "iso": 320
+    },
+    "placeholder": "data:image/webp;base64,UklGRq4AAABXRUJQVlA4IKIAAAAQBQCdASoUABMAPu1wsFIppiSiqAgBMB2JQBYdsZFNGqyXnyls1DSDhdD04PZ+iAqAAP6N39TQpaUZrHzB6jSdBUUHypQUU+AZy1maK2QgxcsX095h7CPLQ5LCzvMm9Vc6k0XyTqD4no7J7V3rGQUJzw/0UlqGxyF/a9OSvh1MntOYjcuxDtB9AByR4OsckghcEU13wKZgYIA/aMv6JvhoAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/586fbb2b8eff-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "5083144b6569",
+    "file": "london/DSC00467-2.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Illuminated angel Christmas lights stretching over Regent Street at night, above red double-decker buses bound for Piccadilly Circus.",
+    "title": "Angels over Regent Street",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-11-11T23:49:32.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "200mm",
+      "aperture": "f/5.6",
+      "shutter": "1/40s",
+      "iso": 2500
+    },
+    "placeholder": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAACwAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JZwAAUcntUUb8fLHAAAD+7MGUrw/guczY71akvkGQjID5Uw3Xlg/kUKPjvsZZRKdNyIU68wRXJbfLeu7ZsMTtwxsHNDjXxQBbhELJTxaF+3PrEzOVmAVJigAAAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/5083144b6569-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/5083144b6569-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/5083144b6569-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/5083144b6569-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/5083144b6569-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/5083144b6569-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/5083144b6569-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/5083144b6569-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "6ca3ed96980c",
+    "file": "london/DSC00318.jpg",
+    "width": 4672,
+    "height": 7008,
+    "alt": "Christmas lights spelling \"St Martin's Lane\" with theatre masks hanging over a busy street at night, a black cab below.",
+    "title": "St Martin's Lane at night",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-11-11T22:54:29.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "57mm",
+      "aperture": "f/4",
+      "shutter": "1/30s",
+      "iso": 800
+    },
+    "placeholder": "data:image/webp;base64,UklGRsAAAABXRUJQVlA4ILQAAAAwBQCdASoUAB4APu1urlIppiQiqAgBMB2JZQDH5y6EWrMh4vGkjKAtuPNqsCnG6/9LgAD++cV7aqnHn6LhjqXyD8cvTJt9svgRNNGM1W3C/VHYDPq6JATOjVun7zTY2pSoIYVexo6gdsNZDZzOL4IGqu36/GwNxrIS9m6o0p/Szg5H4CKosjK2WZWthyKK1VgqUx3GqqUHNOams8HMxSoCwBx6iI/vIkBAe+YNASyAzahYAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/6ca3ed96980c-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "8db9a7ac8410",
+    "file": "london/DSC00205.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A motion-blurred car crossing a bridge over the Thames, with riverside towers under a blue sky and white clouds behind it.",
+    "title": "Crossing the Thames",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-11-05T16:12:11.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/16",
+      "shutter": "1/25s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAADQAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JYwCdACBUFLwdzuRM40AA+NRYwZGZgLTW5K0J9ChtWfFpeC1bc5LHjj5yiLCmW7NCH72VBb2vPNid/Eg34a7icZF1rs8pfxvlCi7qUe8SH0nhwGbgUQERty+D8dtoLk8ga1qYcAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8db9a7ac8410-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "1114375207dd",
+    "file": "london/DSC00093.jpg",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Tower Bridge under dark storm clouds, with the City skyline and bright white clouds framed between its towers.",
+    "title": "Tower Bridge before the storm",
+    "caption": null,
+    "album": "london",
+    "location": "London",
+    "featured": false,
+    "date": "2023-11-05T14:40:18.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "129mm",
+      "aperture": "f/5",
+      "shutter": "1/500s",
+      "iso": 125
+    },
+    "placeholder": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZwAAUrocsbxLMRnEoAAA/uzHT6Zx5LjV+9Iy0gpkqeuhUMmJpApTGhMzOFjJoDel4/EBBlrZT5VekvAAAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1114375207dd-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1114375207dd-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1114375207dd-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/1114375207dd-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1114375207dd-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1114375207dd-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1114375207dd-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/1114375207dd-2400.webp"
+      }
+    ]
+  }
+]

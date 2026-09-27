@@ -1,0 +1,83 @@
+---
+// One album: header, justified grid, lightbox, and links to the neighbouring albums.
+import Base from '../../layouts/Base.astro';
+import PhotoGrid from '../../components/PhotoGrid.astro';
+import Lightbox from '../../components/Lightbox.astro';
+import { albums, type Album } from '../../lib/albums';
+
+export function getStaticPaths() {
+  return albums.map((album, i) => ({
+    params: { album: album.id },
+    props: { album, prev: albums[i - 1], next: albums[i + 1] },
+  }));
+}
+
+interface Props {
+  album: Album;
+  prev?: Album;
+  next?: Album;
+}
+
+const { album, prev, next } = Astro.props;
+const n = album.photos.length;
+---
+
+<Base title={`${album.title} · Photos`} description={`Photographs from ${album.title}${album.subtitle ? `, ${album.subtitle}` : ''}.`}>
+  <header class="page-head">
+    <a class="back" href="/photos/">← All places</a>
+    <h1>{album.title}</h1>
+    <p class="sub">{[album.subtitle, album.when, `${n} ${n === 1 ? 'photo' : 'photos'}`].filter(Boolean).join(' · ')}</p>
+  </header>
+
+  <PhotoGrid photos={album.photos} rowHeight={320} />
+  <Lightbox photos={album.photos} />
+
+  <nav class="pager" aria-label="Other places">
+    {prev ? <a href={`/photos/${prev.id}/`}><span class="kicker">← Previous</span>{prev.title}</a> : <span />}
+    {next && <a class="next" href={`/photos/${next.id}/`}><span class="kicker">Next →</span>{next.title}</a>}
+  </nav>
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2rem;
+  }
+  .back {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .back:hover {
+    color: var(--fg);
+  }
+  h1 {
+    margin: 0.75rem 0 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .sub {
+    margin: 0.6rem 0 0;
+    color: var(--muted);
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font: 400 1.3rem / 1.2 var(--display);
+    text-decoration: none;
+  }
+  .pager a:hover {
+    color: var(--accent);
+  }
+  .pager .next {
+    text-align: right;
+  }
+</style>

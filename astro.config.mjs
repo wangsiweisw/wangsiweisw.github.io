@@ -7,11 +7,19 @@ import { parse } from 'yaml';
 
 // Resume is unpublished while resume.yaml is sample content (see src/pages/resume.astro).
 const resumeLive = parse(readFileSync('./src/data/resume.yaml', 'utf8')).sample !== true;
+// Photos page is unlisted until there are photos.
+const photosLive = JSON.parse(readFileSync('./src/data/photos.json', 'utf8')).length > 0;
 
 export default defineConfig({
   site: 'https://siweiwang.me',
   // TODO(owner): drop the /blog filter once the first post is published (also flip `live` in src/data/nav.ts).
-  integrations: [mdx(), sitemap({ filter: (page) => !page.includes('/blog') && (resumeLive || !page.includes('/resume')) })],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) =>
+        !page.includes('/blog') && (resumeLive || !page.includes('/resume')) && (photosLive || !page.includes('/photos')),
+    }),
+  ],
   markdown: {
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },

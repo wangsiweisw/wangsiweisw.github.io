@@ -107,18 +107,19 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 ### 5.3 Photos
 
 **Pipeline — `pnpm photos:sync`** (run locally, not in CI):
-1. Read images in `photos-src/` plus optional `photos-src/meta.yaml` (per file: title, caption, album, location name, featured, `hide_location`).
+1. Read images anywhere under `photos-src/` (one folder per place; the folder name is the default album) plus optional `photos-src/meta.yaml` keyed by relative path (per file: title, **alt**, caption, album, location name, featured, `hide_location`).
 2. Extract EXIF with `exifr`: camera, lens, focal length, aperture, shutter, ISO, capture date, GPS.
 3. **Privacy:** round GPS to 2 decimal places (~1 km) and drop it entirely if `hide_location` is set. **Strip all metadata** from every output file.
 4. With `sharp`, generate widths 480 / 960 / 1600 / 2400 in AVIF and WebP, plus a ~20 px blurred placeholder (base64).
 5. Upload to R2 via the S3-compatible API using content-hash filenames and `Cache-Control: public, max-age=31536000, immutable`. Skip files whose hash already exists.
 6. Merge results into `src/data/photos.json` (id, album, dimensions, srcset URLs, placeholder, EXIF, rounded coords, title, caption, date).
 
-**Gallery page:**
-- Justified grid using known aspect ratios; `<picture>` with AVIF/WebP `srcset`; lazy loading; blur-up placeholders.
-- Album filter chips (albums include `coffee`, which the coffee page reuses).
+**Gallery (owner decision: organised by place):**
+- `/photos`: one card per album (place) — cover, title, subtitle, date range, count. Order, titles and covers in `src/data/albums.yaml`; albums not listed there (e.g. `coffee`) never appear in the gallery. Current albums: London, Yangshuo, Beijing, Night Sky.
+- `/photos/[album]`: justified grid using known aspect ratios; `<picture>` with AVIF/WebP `srcset`; lazy loading; blur-up placeholders; prev/next album links.
+- Latte art is **not** photography: it lives only on `/coffee` (§5.4), never in the gallery.
 - **Lightbox:** ←/→ to navigate, Esc to close, swipe on touch, preload neighbors, deep link via `#photo-<id>`. Press `i` (or hover on desktop) to toggle an EXIF panel.
-- **Map view:** a Grid/Map toggle. Leaflet + OpenStreetMap tiles, loaded only when the map is first opened; clustered markers; clicking a marker opens the lightbox. Show required OSM attribution.
+- **Map view:** a Grid/Map toggle. Note: the current photos carry no GPS, so markers will need per-album coordinates (e.g. in `albums.yaml`). Leaflet + OpenStreetMap tiles, loaded only when the map is first opened; clustered markers; clicking a marker opens the lightbox. Show required OSM attribution.
 
 ### 5.4 Coffee
 

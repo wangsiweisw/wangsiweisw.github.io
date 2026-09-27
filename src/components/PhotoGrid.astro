@@ -1,0 +1,117 @@
+---
+// Justified photo grid (pure CSS: flex-grow by aspect ratio) with blur-up placeholders and album filtering.
+import { srcset, type Photo } from '../lib/photos';
+
+interface Props {
+  photos: Photo[];
+  rowHeight?: number;
+}
+
+const { photos, rowHeight = 260 } = Astro.props;
+
+// Simulate flex-wrap at the desktop content width: stretch the last row too if it's already ≥ 60% full,
+// otherwise leave it at its natural size so one lonely photo doesn't blow up.
+const CONTENT_WIDTH = 1008;
+const GAP = 8;
+let rowWidth = 0;
+for (const p of photos) {
+  const basis = (p.width / p.height) * rowHeight;
+  rowWidth = rowWidth > 0 && rowWidth + GAP + basis > CONTENT_WIDTH ? basis : rowWidth + (rowWidth > 0 ? GAP : 0) + basis;
+}
+const fillLastRow = rowWidth / CONTENT_WIDTH >= 0.6;
+---
+
+<ul class:list={["grid", { "fill-last": fillLastRow }]} style={`--row: ${rowHeight}px`}>
+  {
+    photos.map((p, i) => {
+      const ar = p.width / p.height;
+      return (
+        <li
+          class="item"
+          data-album={p.album}
+          style={`--ar: ${ar.toFixed(4)}; flex-grow: ${(ar * 100).toFixed(1)}; flex-basis: ${Math.round(ar * rowHeight)}px`}
+        >
+          <a href={`#photo-${p.id}`} data-photo={p.id} aria-label={p.title ?? p.alt ?? 'Open photo'}>
+            <span class="ph" style={`background-image: url(${p.placeholder})`} aria-hidden="true" />
+            <picture>
+              <source type="image/avif" srcset={srcset(p.avif)} sizes={`(max-width: 600px) 100vw, ${Math.round(ar * rowHeight * 1.5)}px`} />
+              <img
+                src={p.webp.find((v) => v.width >= 960)?.url ?? p.webp.at(-1)!.url}
+                srcset={srcset(p.webp)}
+                sizes={`(max-width: 600px) 100vw, ${Math.round(ar * rowHeight * 1.5)}px`}
+                width={p.width}
+                height={p.height}
+                alt={p.alt ?? ''}
+                loading={i < 6 ? 'eager' : 'lazy'}
+                decoding="async"
+                class:list={[{ 'missing-alt': !p.alt }]}
+              />
+            </picture>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* keeps the last row from stretching */
+  .grid:not(.fill-last)::after {
+    content: '';
+    flex-grow: 1000000;
+  }
+  .item {
+    position: relative;
+    aspect-ratio: var(--ar);
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  .item[hidden] {
+    display: none;
+  }
+  @media (max-width: 600px) {
+    .item {
+      flex-basis: 100% !important;
+    }
+  }
+  a {
+    display: block;
+    height: 100%;
+  }
+  .ph {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    filter: blur(14px);
+    transform: scale(1.1);
+  }
+  img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  a:hover img {
+    transform: scale(1.02);
+  }
+  a:focus-visible {
+    outline-offset: -3px;
+  }
+  /* dev-only reminder; production builds fail without alt text */
+  .missing-alt {
+    outline: 3px dashed var(--accent);
+    outline-offset: -3px;
+  }
+</style>

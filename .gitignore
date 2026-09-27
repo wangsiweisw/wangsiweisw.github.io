@@ -12,9 +12,12 @@ node_modules/
 # secrets (R2 credentials etc.) — never commit
 .env
 .env.*
+!.env.example
 
 # original photos — never commit (see PLAN.md §1)
 photos-src/
+# local-only photo variants from `photos:sync --local`
+public/photos-local/
 
 # OS / editor
 .DS_Store

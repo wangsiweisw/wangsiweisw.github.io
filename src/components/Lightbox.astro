@@ -1,0 +1,332 @@
+---
+// Photo lightbox: <dialog> with ←/→, Esc, swipe, neighbour preloading, #photo-<id> deep links, and an EXIF panel (i).
+import { srcset, type Photo } from '../lib/photos';
+
+interface Props {
+  photos: Photo[];
+}
+
+const data = Astro.props.photos.map((p) => ({
+  id: p.id,
+  album: p.album,
+  w: p.width,
+  h: p.height,
+  alt: p.alt ?? '',
+  title: p.title,
+  caption: p.caption,
+  location: p.location,
+  date: p.date ? new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null,
+  exif: p.exif,
+  avif: srcset(p.avif),
+  webp: srcset(p.webp),
+  src: p.webp.at(-1)!.url,
+}));
+---
+
+<photo-lightbox>
+  <script type="application/json" set:html={JSON.stringify(data)} />
+  <dialog class="lb" aria-label="Photo viewer">
+    <div class="stage">
+      <picture>
+        <source type="image/avif" sizes="100vw" />
+        <img alt="" sizes="100vw" />
+      </picture>
+    </div>
+    <div class="bar">
+      <div class="text">
+        <p class="title"></p>
+        <p class="caption"></p>
+      </div>
+      <div class="controls">
+        <button type="button" data-action="info" aria-pressed="false" title="Photo details (i)">i</button>
+        <button type="button" data-action="prev" aria-label="Previous photo (←)">←</button>
+        <span class="count" aria-live="polite"></span>
+        <button type="button" data-action="next" aria-label="Next photo (→)">→</button>
+        <button type="button" data-action="close" aria-label="Close (Esc)">✕</button>
+      </div>
+    </div>
+    <dl class="exif" hidden></dl>
+  </dialog>
+</photo-lightbox>
+
+<style>
+  .lb {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #0f0d0b;
+    color: #efe8dd;
+    overflow: hidden;
+  }
+  .lb::backdrop {
+    background: #0f0d0b;
+  }
+  .lb[open] {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    animation: fade 0.2s ease;
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+  .stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    padding: 16px;
+    touch-action: pan-y pinch-zoom;
+  }
+  .stage img {
+    max-width: 100%;
+    max-height: calc(100dvh - 110px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 16px 1rem;
+  }
+  .text {
+    min-width: 0;
+  }
+  .title {
+    margin: 0;
+    font: 400 1.1rem var(--display);
+  }
+  .caption {
+    margin: 0.1rem 0 0;
+    color: #a39a8c;
+    font-size: 0.9rem;
+  }
+  .title:empty,
+  .caption:empty {
+    display: none;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: none;
+  }
+  .controls button {
+    min-width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid #342e28;
+    border-radius: 99px;
+    background: transparent;
+    color: inherit;
+    font: 500 0.95rem var(--body);
+    cursor: pointer;
+  }
+  .controls button:hover,
+  .controls button[aria-pressed='true'] {
+    border-color: #e07a4f;
+    color: #e07a4f;
+  }
+  .count {
+    min-width: 4rem;
+    color: #a39a8c;
+    font-size: 0.85rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .exif {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.3rem 1rem;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    background: rgba(15, 13, 11, 0.85);
+    backdrop-filter: blur(8px);
+    font-size: 0.85rem;
+  }
+  .exif[hidden] {
+    display: none;
+  }
+  .exif :global(dt) {
+    color: #a39a8c;
+  }
+  .exif :global(dd) {
+    margin: 0;
+  }
+  /* desktop: hovering the photo also reveals the details */
+  @media (hover: hover) {
+    .stage:hover ~ .exif:not(:empty),
+    .exif:hover {
+      display: grid;
+    }
+  }
+  :global(body:has(.lb[open])) {
+    overflow: hidden;
+  }
+  @media (max-width: 600px) {
+    .count {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  interface Item {
+    id: string;
+    album: string;
+    w: number;
+    h: number;
+    alt: string;
+    title: string | null;
+    caption: string | null;
+    location: string | null;
+    date: string | null;
+    exif: Record<string, string | number | undefined>;
+    avif: string;
+    webp: string;
+    src: string;
+  }
+
+  const EXIF_LABELS: [string, string][] = [
+    ['camera', 'Camera'],
+    ['lens', 'Lens'],
+    ['focalLength', 'Focal length'],
+    ['aperture', 'Aperture'],
+    ['shutter', 'Shutter'],
+    ['iso', 'ISO'],
+  ];
+
+  class PhotoLightbox extends HTMLElement {
+    items: Item[] = [];
+    index = 0;
+    dialog!: HTMLDialogElement;
+
+    connectedCallback() {
+      this.items = JSON.parse(this.querySelector('script')!.textContent!);
+      this.dialog = this.querySelector('dialog')!;
+      const q = <T extends Element>(s: string) => this.dialog.querySelector<T>(s)!;
+
+      document.addEventListener('click', (e) => {
+        const link = (e.target as Element).closest<HTMLAnchorElement>('a[data-photo]');
+        if (!link) return;
+        e.preventDefault();
+        this.open(link.dataset.photo!);
+      });
+
+      q('[data-action="prev"]').addEventListener('click', () => this.step(-1));
+      q('[data-action="next"]').addEventListener('click', () => this.step(1));
+      q('[data-action="close"]').addEventListener('click', () => this.dialog.close());
+      q('[data-action="info"]').addEventListener('click', () => this.toggleInfo());
+      this.dialog.addEventListener('close', () => history.replaceState(null, '', location.pathname + location.search));
+      this.dialog.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') this.step(-1);
+        else if (e.key === 'ArrowRight') this.step(1);
+        else if (e.key === 'i' || e.key === 'I') this.toggleInfo();
+      });
+      // click on the dark area outside the image closes
+      q('.stage').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) this.dialog.close();
+      });
+
+      // swipe
+      let startX = 0;
+      let startY = 0;
+      const stage = q<HTMLElement>('.stage');
+      stage.addEventListener('pointerdown', (e) => {
+        startX = e.clientX;
+        startY = e.clientY;
+      });
+      stage.addEventListener('pointerup', (e) => {
+        const dx = e.clientX - startX;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(e.clientY - startY)) this.step(dx < 0 ? 1 : -1);
+      });
+
+      const fromHash = () => {
+        const m = location.hash.match(/^#photo-(\w+)$/);
+        if (m && this.items.some((i) => i.id === m[1])) this.open(m[1]);
+      };
+      window.addEventListener('hashchange', fromHash);
+      // after other components (album filter) have applied their initial state
+      setTimeout(fromHash);
+    }
+
+    /** Photos currently visible in the grid (album filter), in order. */
+    visible(): Item[] {
+      const shown = new Set(
+        [...document.querySelectorAll<HTMLElement>('.item:not([hidden]) a[data-photo]')].map((a) => a.dataset.photo),
+      );
+      return shown.size ? this.items.filter((i) => shown.has(i.id)) : this.items;
+    }
+
+    open(id: string) {
+      const list = this.visible();
+      this.index = Math.max(0, list.findIndex((i) => i.id === id));
+      this.render(list);
+      if (!this.dialog.open) this.dialog.showModal();
+    }
+
+    step(delta: number) {
+      const list = this.visible();
+      this.index = (this.index + delta + list.length) % list.length;
+      this.render(list);
+    }
+
+    toggleInfo() {
+      const panel = this.dialog.querySelector<HTMLElement>('.exif')!;
+      const btn = this.dialog.querySelector('[data-action="info"]')!;
+      panel.hidden = !panel.hidden;
+      btn.setAttribute('aria-pressed', String(!panel.hidden));
+    }
+
+    render(list: Item[]) {
+      const item = list[this.index];
+      const d = this.dialog;
+      const img = d.querySelector('img')!;
+      d.querySelector('source')!.srcset = item.avif;
+      img.srcset = item.webp;
+      img.src = item.src;
+      img.width = item.w;
+      img.height = item.h;
+      img.alt = item.alt;
+      d.querySelector('.title')!.textContent = item.title ?? '';
+      d.querySelector('.caption')!.textContent = [item.caption, item.location].filter(Boolean).join(' · ');
+      d.querySelector('.count')!.textContent = `${this.index + 1} / ${list.length}`;
+
+      const rows = EXIF_LABELS.filter(([k]) => item.exif[k] !== undefined).map(([k, label]) => [label, String(item.exif[k])]);
+      if (item.date) rows.push(['Date', item.date]);
+      if (item.location) rows.push(['Location', item.location]);
+      const panel = d.querySelector('.exif')!;
+      panel.replaceChildren(
+        ...rows.flatMap(([k, v]) => {
+          const dt = document.createElement('dt');
+          const dd = document.createElement('dd');
+          dt.textContent = k;
+          dd.textContent = v;
+          return [dt, dd];
+        }),
+      );
+
+      history.replaceState(null, '', `#photo-${item.id}`);
+
+      // preload neighbours
+      for (const n of [list[(this.index + 1) % list.length], list[(this.index - 1 + list.length) % list.length]]) {
+        const pre = new Image();
+        pre.sizes = '100vw';
+        pre.srcset = n.webp;
+      }
+    }
+  }
+
+  customElements.define('photo-lightbox', PhotoLightbox);
+</script>

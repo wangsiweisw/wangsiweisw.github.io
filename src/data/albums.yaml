@@ -1,0 +1,21 @@
+# Photo albums shown on /photos, in this order. `id` matches the `album` of each photo
+# (folder name in photos-src/, or `album:` in meta.yaml). `cover` is the photo's path in photos-src/.
+# Albums not listed here (e.g. coffee) are kept off the gallery.
+
+- id: london
+  title: London
+  cover: london/DSC00467-2.jpg
+
+- id: yangshuo
+  title: Yangshuo
+  subtitle: Guangxi, China
+  cover: china/DSC02437.JPG
+
+- id: beijing
+  title: Beijing
+  subtitle: China
+  cover: china/DSC02168.JPG
+
+- id: night-sky
+  title: Night Sky
+  cover: cherry_spring/DSC08969-Min Horizon Noise-2.jpg
