@@ -12,7 +12,7 @@ export const nav: NavItem[] = [
   // Resume stays hidden in production until resume.yaml has real content (sample: false).
   { href: '/resume', label: 'Resume', live: !resume.sample },
   // Photos appear once at least one album in albums.yaml has photos.
-  { href: '/photos', label: 'Photos', live: albums.length > 0 },
+  { href: '/photos', label: 'Photography', live: albums.length > 0 },
   { href: '/coffee', label: 'Coffee', live: false },
   { href: '/running', label: 'Running', live: false },
   // Flip to live once the first post is published (drafts are excluded from production).

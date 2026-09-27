@@ -2,8 +2,6 @@
 name: Siwei Wang
 nameZh: 王思为
 positioning: Software engineer building AI weather forecasting models and LLM applications.
-# Phrase inside `positioning` shown in the accent italic.
-positioningEmphasis: AI weather forecasting
 # Don't name the current employer here (see showEmployerOnHome).
 bio: >-
   I work on machine learning for weather forecasting and build applications with

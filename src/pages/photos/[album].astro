@@ -22,9 +22,9 @@ const { album, prev, next } = Astro.props;
 const n = album.photos.length;
 ---
 
-<Base title={`${album.title} · Photos`} description={`Photographs from ${album.title}${album.subtitle ? `, ${album.subtitle}` : ''}.`}>
+<Base title={`${album.title} · Photography`} description={`Photographs from ${album.title}${album.subtitle ? `, ${album.subtitle}` : ''}.`}>
   <header class="page-head">
-    <a class="back" href="/photos/">← All places</a>
+    <a class="back" href="/photos/">← Photography</a>
     <h1>{album.title}</h1>
     <p class="sub">{[album.subtitle, album.when, `${n} ${n === 1 ? 'photo' : 'photos'}`].filter(Boolean).join(' · ')}</p>
   </header>

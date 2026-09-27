@@ -4,6 +4,11 @@ import Base from '../layouts/Base.astro';
 import { site } from '../lib/site';
 import { isLive } from '../data/nav';
 
+// Link the hobby mention in the bio to the gallery once it's live.
+const PHOTO_PHRASE = 'take photos';
+const [bioBefore, bioAfter] =
+  isLive('/photos') && site.bio.includes(PHOTO_PHRASE) ? site.bio.split(PHOTO_PHRASE) : [site.bio, undefined];
+
 const [before, after] = site.positioningEmphasis
   ? site.positioning.split(site.positioningEmphasis)
   : [site.positioning, undefined];
@@ -18,7 +23,9 @@ const [before, after] = site.positioningEmphasis
     <p class="lede">
       {before}{after !== undefined && <em>{site.positioningEmphasis}</em>}{after}
     </p>
-    <p class="bio">{site.bio}</p>
+    <p class="bio">
+      {bioBefore}{bioAfter !== undefined && <a href="/photos/">{PHOTO_PHRASE}</a>}{bioAfter}
+    </p>
     <div class="actions">
       {isLive('/resume') && <a class="btn btn-primary" href="/resume">Resume</a>}
       <a class="btn" href={site.links.linkedin}>LinkedIn ↗</a>
@@ -62,6 +69,16 @@ const [before, after] = site.positioningEmphasis
     max-width: var(--measure);
     margin: 1.25rem 0 0;
     color: var(--muted);
+  }
+  .bio a {
+    color: inherit;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--ease), color var(--ease);
+  }
+  .bio a:hover {
+    color: var(--fg);
+    text-decoration-color: currentColor;
   }
   .actions {
     display: flex;
