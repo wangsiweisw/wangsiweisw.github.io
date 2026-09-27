@@ -1,0 +1,254 @@
+---
+// Web resume rendered from resume.yaml; print.css turns it into the US Letter PDF.
+import Base from '../layouts/Base.astro';
+import { site } from '../lib/site';
+import { resume, formatRange } from '../lib/resume';
+import '../styles/print.css';
+
+// Not published until resume.yaml has real content: production builds redirect home.
+if (import.meta.env.PROD && resume.sample) return Astro.redirect('/');
+
+const siteHost = new URL(Astro.site!).host;
+const linkedinText = site.links.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+---
+
+<Base title="Resume" description={`Resume of ${site.name}: ${resume.headline}.`}>
+  {
+    resume.sample && (
+      <p class="sample-banner no-print" role="note">
+        Sample content: replace <code>src/data/resume.yaml</code> with the real resume.
+      </p>
+    )
+  }
+
+  <article class="resume">
+    <header class="resume-header">
+      <div>
+        <h1>{site.name}</h1>
+        <p class="headline">{resume.headline}</p>
+      </div>
+      <ul class="contact">
+        {resume.location && <li>{resume.location}</li>}
+        {site.links.email && <li><a href={`mailto:${site.links.email}`}>{site.links.email}</a></li>}
+        <li><a href={site.links.linkedin}>{linkedinText}</a></li>
+        <li><a href={Astro.site}>{siteHost}</a></li>
+      </ul>
+      <a class="btn btn-primary download no-print" href="/resume.pdf" download>Download PDF</a>
+    </header>
+
+    {resume.summary && <p class="summary">{resume.summary}</p>}
+
+    <section>
+      <h2 class="kicker">Experience</h2>
+      {
+        resume.experience.map((job) => (
+          <div class="entry">
+            <div class="entry-head">
+              <h3>
+                {job.title}, <span class="org">{job.company}</span>
+              </h3>
+              <span class="when">{formatRange(job.start, job.end)}</span>
+            </div>
+            {job.location && <p class="where">{job.location}</p>}
+            <ul class="bullets">
+              {job.bullets.map((b) => (
+                <li>{b}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </section>
+
+    {
+      resume.projects.length > 0 && (
+        <section>
+          <h2 class="kicker">Selected projects</h2>
+          {resume.projects.map((p) => (
+            <div class="entry compact">
+              <h3>{p.link ? <a href={p.link}>{p.name}</a> : p.name}</h3>
+              <p>{p.description}</p>
+            </div>
+          ))}
+        </section>
+      )
+    }
+
+    <section>
+      <h2 class="kicker">Education</h2>
+      {
+        resume.education.map((ed) => (
+          <div class="entry compact">
+            <div class="entry-head">
+              <h3>
+                {ed.degree}, <span class="org">{ed.school}</span>
+              </h3>
+              <span class="when">{formatRange(ed.start, ed.end)}</span>
+            </div>
+            {ed.notes && <p>{ed.notes}</p>}
+          </div>
+        ))
+      }
+    </section>
+
+    <section>
+      <h2 class="kicker">Skills</h2>
+      <dl class="skills">
+        {
+          resume.skills.map((s) => (
+            <div>
+              <dt>{s.group}</dt>
+              <dd>{s.items.join(' · ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .sample-banner {
+    margin: 1rem 0 0;
+    padding: 0.6rem 1rem;
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font-size: 0.9rem;
+  }
+  .resume {
+    max-width: 46rem;
+    padding: 3rem 0 0;
+  }
+  .resume-header {
+    display: grid;
+    gap: 1.25rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .download {
+    justify-self: start;
+  }
+  @media (min-width: 720px) {
+    .resume-header {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+    }
+    .download {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+      align-self: start;
+    }
+  }
+  h1 {
+    margin: 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .headline {
+    margin: 0.6rem 0 0;
+    font: italic 400 1.2rem / 1.35 var(--display);
+    color: var(--accent);
+  }
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 0.95rem;
+    grid-column: 1 / -1;
+  }
+  .contact a {
+    text-decoration: none;
+  }
+  .contact a:hover {
+    color: var(--fg);
+    text-decoration: underline;
+  }
+  .summary {
+    margin: 2rem 0 0;
+    font: 400 1.15rem / 1.5 var(--display);
+  }
+  section {
+    margin-top: 2.5rem;
+  }
+  section > .kicker {
+    margin: 0 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+    font-weight: 500;
+  }
+  .entry + .entry {
+    margin-top: 1.5rem;
+  }
+  .entry.compact + .entry.compact {
+    margin-top: 1rem;
+  }
+  .entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 1rem;
+    align-items: baseline;
+  }
+  h3 {
+    margin: 0;
+    font: 500 1.1rem / 1.35 var(--display);
+  }
+  h3 a {
+    text-decoration-color: var(--rule);
+  }
+  .org {
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .when {
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .where {
+    margin: 0.1rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .entry p {
+    margin: 0.25rem 0 0;
+  }
+  .bullets {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+  }
+  .bullets li + li {
+    margin-top: 0.3rem;
+  }
+  .bullets li::marker {
+    color: var(--accent);
+  }
+  .skills {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+  }
+  .skills div {
+    display: grid;
+    gap: 0 1rem;
+  }
+  @media (min-width: 620px) {
+    .skills div {
+      grid-template-columns: 11rem 1fr;
+    }
+  }
+  .skills dt {
+    font-weight: 500;
+  }
+  .skills dd {
+    margin: 0;
+    color: var(--muted);
+  }
+</style>

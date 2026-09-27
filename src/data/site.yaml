@@ -1,0 +1,25 @@
+# Site-wide identity and settings. Validated by src/lib/site.ts.
+name: Siwei Wang
+nameZh: 王思为
+positioning: Software engineer building AI weather forecasting models and LLM applications.
+# Phrase inside `positioning` shown in the accent italic.
+positioningEmphasis: AI weather forecasting
+# Don't name the current employer here (see showEmployerOnHome).
+bio: >-
+  I work on machine learning for weather forecasting and build applications with
+  large language models. Outside of work, I run, pour latte art, and take photos.
+description: Siwei Wang is a software engineer building AI weather forecasting models and LLM applications.
+
+links:
+  linkedin: https://www.linkedin.com/in/siwei-wang/
+  # TODO(owner): set once hi@siweiwang.me forwarding is set up; the Email button appears automatically.
+  email: null
+
+showEmployerOnHome: false
+
+# Weather card is parked (not on Home). Placement, city and caption are TBD.
+weather:
+  city: null
+  lat: null
+  lon: null
+  caption: I build ML models that try to get this right.

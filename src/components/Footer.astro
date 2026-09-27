@@ -1,11 +1,11 @@
 ---
-// Site footer: copyright and contact.
+// Site footer: copyright line.
+import { site } from '../lib/site';
 ---
 
 <footer class="wrap">
   <div class="site-footer">
-    <span>© {new Date().getFullYear()} Siwei Wang</span>
-    <a href="https://www.linkedin.com/in/siwei-wang/">LinkedIn</a>
+    <span>© {new Date().getFullYear()} {site.name}</span>
   </div>
 </footer>
 
@@ -14,19 +14,9 @@
     margin-top: 5rem;
   }
   .site-footer {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
     padding: 2rem 0 3rem;
     border-top: 1px solid var(--rule);
     color: var(--muted);
     font-size: 0.9rem;
-  }
-  a {
-    text-decoration: none;
-  }
-  a:hover {
-    color: var(--fg);
   }
 </style>

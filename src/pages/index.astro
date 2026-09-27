@@ -1,18 +1,28 @@
 ---
-// Home: hero. Section teasers arrive in Phase 6; the full hero content (from site.yaml) in Phase 2.
+// Home: hero from site.yaml. Section teasers arrive in Phase 6.
 import Base from '../layouts/Base.astro';
+import { site } from '../lib/site';
 import { isLive } from '../data/nav';
+
+const [before, after] = site.positioningEmphasis
+  ? site.positioning.split(site.positioningEmphasis)
+  : [site.positioning, undefined];
 ---
 
-<Base title="Siwei Wang">
+<Base title={site.name}>
   <section class="hero">
-    <h1>Siwei Wang<span class="zh" lang="zh-Hans">王思为</span></h1>
-    <p class="lede">Software engineer building <em>AI weather forecasting</em> models and LLM applications.</p>
-    <!-- TODO(owner): 2–3 sentence bio -->
-    <p class="bio">This site is under construction. More soon.</p>
+    <h1>
+      {site.name}
+      {site.nameZh && <span class="zh" lang="zh-Hans">{site.nameZh}</span>}
+    </h1>
+    <p class="lede">
+      {before}{after !== undefined && <em>{site.positioningEmphasis}</em>}{after}
+    </p>
+    <p class="bio">{site.bio}</p>
     <div class="actions">
       {isLive('/resume') && <a class="btn btn-primary" href="/resume">Resume</a>}
-      <a class="btn" href="https://www.linkedin.com/in/siwei-wang/">LinkedIn ↗</a>
+      <a class="btn" href={site.links.linkedin}>LinkedIn ↗</a>
+      {site.links.email && <a class="btn" href={`mailto:${site.links.email}`}>Email</a>}
     </div>
   </section>
 </Base>

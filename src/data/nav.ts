@@ -1,3 +1,5 @@
+import { resume } from '../lib/resume';
+
 // Site sections. Links to sections that aren't built yet are shown in dev only, so production never links to a 404.
 export interface NavItem {
   href: string;
@@ -6,10 +8,12 @@ export interface NavItem {
 }
 
 export const nav: NavItem[] = [
-  { href: '/resume', label: 'Resume', live: false },
+  // Resume stays hidden in production until resume.yaml has real content (sample: false).
+  { href: '/resume', label: 'Resume', live: !resume.sample },
   { href: '/photos', label: 'Photos', live: false },
   { href: '/coffee', label: 'Coffee', live: false },
   { href: '/running', label: 'Running', live: false },
+  // Flip to live once the first post is published (drafts are excluded from production).
   { href: '/blog', label: 'Blog', live: false },
 ];
 

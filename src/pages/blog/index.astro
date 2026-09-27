@@ -1,0 +1,63 @@
+---
+// Blog index: all published posts, newest first, plus tag list.
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { getPosts, allTags } from '../../lib/posts';
+
+const posts = await getPosts();
+const tags = allTags(posts);
+---
+
+<Base title="Blog" description="Writing on ML weather forecasting, LLM applications, and the occasional hobby.">
+  <header class="page-head">
+    <h1>Blog</h1>
+    {
+      tags.length > 0 && (
+        <ul class="tags" aria-label="Tags">
+          {tags.map((t) => (
+            <li>
+              <a href={`/blog/tags/${t.slug}/`}>
+                {t.tag} <span>{t.count}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </header>
+  <PostList posts={posts} />
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2rem;
+  }
+  h1 {
+    margin: 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tags a {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: border-color var(--ease);
+  }
+  .tags a:hover {
+    border-color: var(--fg);
+  }
+  .tags span {
+    color: var(--muted);
+  }
+</style>

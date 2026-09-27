@@ -194,6 +194,9 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 - [ ] Decide where the weather card lives (not Home) and rewrite its caption (current draft: "I build ML models that try to get this right.")
 - [ ] Set up `hi@siweiwang.me` via Cloudflare Email Routing (forwarding), then fill `{{EMAIL}}` — needed before the Email button in Phase 2
 - [ ] Create R2 bucket, API token, and connect `{{R2_PUBLIC_HOST}}`
-- [ ] Create a Strava API app and obtain a refresh token (`activity:read_all` scope if private runs should count toward totals)
-- [ ] Write bio, positioning line, and `resume.yaml` content
+- [ ] ~~Create a Strava API app~~ — not needed (Strava API ruled out, see §5.5)
+- [x] Positioning line
+- [x] Bio
+- [ ] Real `resume.yaml` content (currently sample; set `sample: false`)
+- [ ] Publish the first blog post, then flip Blog `live` in `src/data/nav.ts` and drop the `/blog` sitemap filter
 - [ ] Pick photos and coffee shots; fill in `meta.yaml`

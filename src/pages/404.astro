@@ -1,0 +1,29 @@
+---
+// Not found page, in the site's voice.
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Page not found">
+  <section class="nf">
+    <p class="kicker">Error 404</p>
+    <h1>Forecast: 100% chance of a wrong URL.</h1>
+    <p>The page you're looking for isn't here. It may have moved, or it never existed.</p>
+    <a class="btn btn-primary" href="/">Back to home</a>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    max-width: 36rem;
+    padding: 5rem 0 2rem;
+  }
+  h1 {
+    margin: 0.75rem 0 0;
+    font: 400 clamp(2.2rem, 6vw, 3.5rem) / 1.05 var(--display);
+    letter-spacing: -0.03em;
+  }
+  p:not(.kicker) {
+    margin: 1.25rem 0 2rem;
+    color: var(--muted);
+  }
+</style>

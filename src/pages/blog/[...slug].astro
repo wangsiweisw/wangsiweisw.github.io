@@ -1,0 +1,209 @@
+---
+// Blog post: header, optional TOC (≥ 3 H2s), content with heading permalinks, prev/next.
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import H2 from '../../components/H2.astro';
+import H3 from '../../components/H3.astro';
+import { getPosts, readingTime, formatDate, tagSlug, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    // posts are newest first: "newer" is the previous index
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
+const h2Count = headings.filter((h) => h.depth === 2).length;
+const toc = h2Count >= 3 ? headings.filter((h) => h.depth === 2 || h.depth === 3) : [];
+const { title, description, date, updated, tags, cover, draft } = post.data;
+---
+
+<Base title={title} description={description} ogType="article">
+  <article class="post">
+    <header class="post-head">
+      <p class="meta">
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        <span aria-hidden="true">·</span>
+        <span>{readingTime(post.body)} min read</span>
+        {draft && <span class="draft">Draft</span>}
+      </p>
+      <h1>{title}</h1>
+      <p class="dek">{description}</p>
+      {
+        tags.length > 0 && (
+          <ul class="tags" aria-label="Tags">
+            {tags.map((t) => (
+              <li>
+                <a href={`/blog/tags/${tagSlug(t)}/`}>{t}</a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    {cover && <Image class="cover" src={cover.src} alt={cover.alt} widths={[720, 1440]} sizes="(min-width: 46rem) 44rem, 100vw" />}
+
+    {
+      toc.length > 0 && (
+        <nav class="toc" aria-label="Table of contents">
+          <p class="kicker">Contents</p>
+          <ol>
+            {toc.map((h) => (
+              <li class={`depth-${h.depth}`}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <div class="prose">
+      <Content components={{ h2: H2, h3: H3 }} />
+    </div>
+
+    {updated && <p class="updated">Updated {formatDate(updated)}</p>}
+
+    {
+      (newer || older) && (
+        <nav class="pager" aria-label="More posts">
+          {older ? (
+            <a class="older" href={`/blog/${older.id}/`}>
+              <span class="kicker">← Older</span>
+              {older.data.title}
+            </a>
+          ) : (
+            <span />
+          )}
+          {newer && (
+            <a class="newer" href={`/blog/${newer.id}/`}>
+              <span class="kicker">Newer →</span>
+              {newer.data.title}
+            </a>
+          )}
+        </nav>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .post {
+    max-width: 44rem;
+    padding-top: 3rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .draft {
+    padding: 0 0.5rem;
+    border: 1px dashed var(--accent);
+    border-radius: 99px;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+  h1 {
+    margin: 0.75rem 0 0;
+    font: 400 clamp(2.2rem, 5.5vw, 3.25rem) / 1.08 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .dek {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font: italic 400 1.2rem / 1.45 var(--display);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tags a {
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+  .tags a::before {
+    content: '#';
+    opacity: 0.6;
+  }
+  .cover {
+    width: 100%;
+    height: auto;
+    margin-top: 2rem;
+    border-radius: var(--radius);
+  }
+  .toc {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .toc .kicker {
+    margin: 0 0 0.5rem;
+  }
+  .toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .toc li {
+    padding: 0.15rem 0;
+  }
+  .toc .depth-3 {
+    padding-left: 1rem;
+    font-size: 0.95rem;
+  }
+  .toc a {
+    text-decoration: none;
+  }
+  .toc a:hover {
+    color: var(--accent);
+  }
+  .updated {
+    margin-top: 3rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font: 400 1.1rem / 1.3 var(--display);
+    text-decoration: none;
+  }
+  .pager a:hover {
+    color: var(--accent);
+  }
+  .pager .newer {
+    text-align: right;
+  }
+</style>

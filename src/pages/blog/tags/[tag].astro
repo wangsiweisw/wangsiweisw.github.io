@@ -1,0 +1,43 @@
+---
+// Tag listing: posts carrying one tag.
+import Base from '../../../layouts/Base.astro';
+import PostList from '../../../components/PostList.astro';
+import { getPosts, allTags, tagSlug } from '../../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return allTags(posts).map(({ slug, tag }) => ({
+    params: { tag: slug },
+    props: { tag, posts: posts.filter((p) => p.data.tags.some((t) => tagSlug(t) === slug)) },
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<Base title={`Posts tagged “${tag}”`}>
+  <header class="page-head">
+    <a class="back" href="/blog/">← All posts</a>
+    <h1>{tag}</h1>
+  </header>
+  <PostList posts={posts} />
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2rem;
+  }
+  .back {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .back:hover {
+    color: var(--fg);
+  }
+  h1 {
+    margin: 0.75rem 0 0;
+    font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+  }
+</style>

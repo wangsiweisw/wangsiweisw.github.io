@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://siweiwang.me/sitemap-index.xml

@@ -1,0 +1,34 @@
+---
+# TODO(owner): placeholder post — stays out of production while draft is true.
+title: Why forecast skill plateaus after day ten
+description: A placeholder post that exercises the blog layout — headings, code, quotes, and the table of contents.
+date: 2026-09-27
+tags: [weather, machine learning]
+draft: true
+---
+
+This is a placeholder post. It exists to test the blog layout and never ships to production while `draft: true` is set.
+
+## The predictability horizon
+
+Small errors in the initial state grow roughly exponentially. After about ten days, the forecast is dominated by that growth rather than by the model.
+
+> Does the flap of a butterfly's wings in Brazil set off a tornado in Texas?
+
+## What ML models change
+
+Learned models are fast enough to run large ensembles, which helps quantify the uncertainty even when the deterministic skill stops improving.
+
+### A tiny example
+
+```python
+import numpy as np
+
+def lorenz(state, sigma=10.0, rho=28.0, beta=8 / 3):
+    x, y, z = state
+    return np.array([sigma * (y - x), x * (rho - z) - y, x * y - beta * z])
+```
+
+## What's next
+
+More posts soon, on evaluation, ensembles, and building LLM tools for forecasters.

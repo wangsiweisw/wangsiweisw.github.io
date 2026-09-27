@@ -1,0 +1,59 @@
+# Single source for /resume and /resume.pdf. Validated by src/lib/resume.ts.
+# TODO(owner): everything below is SAMPLE content — replace with the real resume, then set `sample: false`.
+sample: true
+
+headline: Software Engineer — ML for Weather Forecasting & LLM Applications
+location: New York, NY
+
+summary: >-
+  Software engineer who builds and ships machine learning systems for weather forecasting,
+  from data pipelines and model training to production inference, plus applications built on
+  large language models.
+
+experience:
+  - company: Sample Company A
+    title: Software Engineer, Machine Learning
+    location: New York, NY
+    start: 2023-07
+    end: present
+    bullets:
+      - Built a data-driven global forecasting model that improved medium-range skill over the operational baseline.
+      - Designed training and evaluation pipelines processing multi-terabyte reanalysis datasets.
+      - Shipped an LLM-powered assistant that answers forecasters' questions over internal model output.
+  - company: Sample Company B
+    title: Software Engineer Intern
+    location: Remote
+    start: 2022-06
+    end: 2022-08
+    bullets:
+      - Prototyped a nowcasting model for precipitation using radar sequences.
+      - Cut inference latency by 40% by batching and quantizing the serving path.
+
+education:
+  - school: Sample University
+    degree: M.S. in Computer Science
+    start: 2021-09
+    end: 2023-05
+    notes: Focus on machine learning and scientific computing.
+  - school: Sample University
+    degree: B.S. in Atmospheric Science
+    start: 2017-09
+    end: 2021-05
+
+skills:
+  - group: Machine learning
+    items: [PyTorch, JAX, Transformers, Graph neural networks, Diffusion models]
+  - group: LLM applications
+    items: [Retrieval-augmented generation, Tool use and agents, Evaluation]
+  - group: Engineering
+    items: [Python, TypeScript, Kubernetes, Distributed training, GCP]
+  - group: Weather & climate
+    items: [ERA5, NWP verification, xarray, Zarr]
+
+projects:
+  - name: Sample Project One
+    description: Open-source toolkit for scoring ML weather forecasts against station observations.
+    link: null
+  - name: Sample Project Two
+    description: Chat interface that turns forecast data into plain-language briefings.
+    link: null

@@ -1,0 +1,40 @@
+---
+// Post heading with a hover "#" permalink. Used to override h2/h3 in MDX content.
+interface Props {
+  as: 'h2' | 'h3';
+  id?: string;
+}
+
+const { as: Tag, id, ...rest } = Astro.props;
+---
+
+<Tag id={id} {...rest}>
+  <slot />
+  {
+    id && (
+      <a class="anchor" href={`#${id}`} aria-label="Link to this section">
+        #
+      </a>
+    )
+  }
+</Tag>
+
+<style>
+  .anchor {
+    margin-left: 0.4em;
+    color: var(--muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--ease);
+  }
+  :is(h2, h3):hover .anchor,
+  .anchor:focus-visible {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .anchor {
+      opacity: 0.5;
+    }
+  }
+</style>

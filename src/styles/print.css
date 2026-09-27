@@ -1,0 +1,99 @@
+/* Print styles (used for /resume → resume.pdf): US Letter, light colors, no site chrome. */
+
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in 0.6in;
+  }
+
+  /* html:root beats tokens.css regardless of stylesheet order */
+  html:root,
+  html:root[data-theme='dark'],
+  html:root:not([data-theme='light']) {
+    --bg: #fff;
+    --surface: #fff;
+    --fg: #1a1a1a;
+    --muted: #555;
+    --rule: #d9d9d9;
+    --accent: #9c4523;
+    color-scheme: light;
+  }
+
+  html {
+    font-size: 9.5pt;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    line-height: 1.4;
+  }
+
+  .bullets {
+    margin-top: 3pt !important;
+  }
+
+  .bullets li + li {
+    margin-top: 1pt !important;
+  }
+
+  .entry + .entry {
+    margin-top: 9pt !important;
+  }
+
+  .entry.compact + .entry.compact {
+    margin-top: 6pt !important;
+  }
+
+  .resume section > .kicker {
+    margin-bottom: 7pt !important;
+  }
+
+  .site-header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  .wrap {
+    max-width: none;
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .resume {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .resume h1 {
+    font-size: 24pt !important;
+  }
+
+  .resume section {
+    margin-top: 14pt !important;
+  }
+
+  .resume-header {
+    padding-bottom: 10pt !important;
+  }
+
+  .summary {
+    margin-top: 10pt !important;
+    font-size: 10.5pt !important;
+  }
+
+  .entry,
+  .skills div {
+    break-inside: avoid;
+  }
+
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}

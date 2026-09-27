@@ -1,6 +1,6 @@
 name: Deploy
 
-# Later phases add: daily cron (Phase 5), runs:sync (Phase 5), resume-pdf (Phase 2). See PLAN.md §6.
+# Daily cron and runs:sync are out: running data is on hold (see PLAN.md §5.5).
 on:
   push:
     branches: [main]
@@ -27,6 +27,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm astro check
       - run: pnpm build
+      - name: Print resume PDF
+        if: github.event_name != 'pull_request'
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm resume:pdf
       - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request'
         with:
