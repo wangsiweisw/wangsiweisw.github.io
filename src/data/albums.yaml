@@ -9,7 +9,7 @@
 - id: cherry-blossoms
   title: Cherry Blossoms
   subtitle: Stamford, Connecticut
-  cover: cherry_blossoms/DSC08540.JPG
+  cover: cherry_blossoms/DSC08595.JPG
   # two per row: 08510 and 08512 are a pair
   order:
     - cherry_blossoms/DSC08540.JPG
@@ -21,7 +21,7 @@
 
 - id: new-york
   title: New York
-  cover: new_york/DSC03616.JPG
+  cover: botanical_garden/DSC07701.jpg
 
 - id: san-francisco
   title: San Francisco
