@@ -22,6 +22,7 @@ const person = {
 
 // Link hobby mentions in the bio to their pages once those pages are live.
 const BIO_LINKS: [phrase: string, href: string][] = [
+  ['run', '/running/'],
   ['pour latte art', '/coffee/'],
   ['take photos', '/photos/'],
 ];
@@ -29,11 +30,13 @@ type Part = string | { text: string; href: string };
 const bioParts = BIO_LINKS.reduce<Part[]>(
   (parts, [phrase, href]) =>
     isLive(href.replace(/\/$/, ''))
-      ? parts.flatMap((part) =>
-          typeof part === 'string' && part.includes(phrase)
-            ? part.split(phrase).flatMap((piece, i) => (i === 0 ? [piece] : [{ text: phrase, href }, piece]))
-            : [part],
-        )
+      ? parts.flatMap((part) => {
+          // whole words only, so "run" doesn't also link "running"
+          const re = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+          return typeof part === 'string' && re.test(part)
+            ? part.split(re).flatMap((piece, i) => (i === 0 ? [piece] : [{ text: phrase, href }, piece]))
+            : [part];
+        })
       : parts,
   [site.bio],
 );
