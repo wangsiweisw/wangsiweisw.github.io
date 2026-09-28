@@ -1,15 +1,36 @@
 # Photo albums shown on /photos, in this order (newest trip first). `id` matches the `album` of each photo
 # (folder name in photos-src/, or `album:` in meta.yaml). `cover` is the photo's path in photos-src/.
-# Albums not listed here (e.g. coffee, me) are kept off the gallery.
+# Albums not listed here (e.g. coffee, me, running) are kept off the gallery.
 
 - id: night-sky
   title: Night Sky
   cover: cherry_spring/DSC08969-Min Horizon Noise-2.jpg
 
+- id: cherry-blossoms
+  title: Cherry Blossoms
+  subtitle: Stamford, Connecticut
+  cover: cherry_blossoms/DSC08540.JPG
+  # two per row: 08510 and 08512 are a pair
+  order:
+    - cherry_blossoms/DSC08540.JPG
+    - cherry_blossoms/DSC08634.JPG
+    - cherry_blossoms/DSC08510.JPG
+    - cherry_blossoms/DSC08512.JPG
+    - cherry_blossoms/DSC08595.JPG
+    - cherry_blossoms/DSC08478.JPG
+
 - id: new-york
   title: New York
-  subtitle: Holiday Train Show
-  cover: botanical_garden/DSC07701.jpg
+  cover: new_york/DSC03616.JPG
+
+- id: san-francisco
+  title: San Francisco
+  subtitle: California
+  cover: san_francisco/DSC06043.JPG
+
+- id: washington-dc
+  title: Washington, D.C.
+  cover: washington_dc/DSC03881.JPG
 
 - id: atlanta
   title: Atlanta

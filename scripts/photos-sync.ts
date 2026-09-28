@@ -83,6 +83,10 @@ const metaSchema = z.record(
     blur: z.array(z.tuple([z.number(), z.number(), z.number(), z.number()])).optional(),
     // cat stickers covering things like race bibs: [centerX, centerY, size] as fractions of the image width/height/width
     stickers: z.array(z.tuple([z.number(), z.number(), z.number()])).optional(),
+    // light mosaic for bystanders' faces: [x, y, w, h] as fractions of the image (about 6 blocks across)
+    mosaic: z.array(z.tuple([z.number(), z.number(), z.number(), z.number()])).optional(),
+    // "YYYY-MM" when the file has no EXIF date
+    date: z.string().regex(/^\d{4}-\d{2}$/).optional(),
   }),
 );
 type Meta = z.infer<typeof metaSchema>[string];
@@ -196,6 +200,7 @@ for (const file of files) {
   const hash = createHash('sha256').update(original);
   if (meta[file]?.blur?.length) hash.update(BLUR_VERSION + JSON.stringify(meta[file].blur));
   if (meta[file]?.stickers?.length) hash.update(STICKER_VERSION + JSON.stringify(meta[file].stickers));
+  if (meta[file]?.mosaic?.length) hash.update('mosaic-v1' + JSON.stringify(meta[file].mosaic));
   const id = hash.digest('hex').slice(0, 12);
   seen.add(id);
   const m: Meta = meta[file] ?? {};
@@ -226,6 +231,27 @@ for (const file of files) {
         }),
       );
       base = sharp(await sharp(oriented.data).composite(patches).png().toBuffer());
+    }
+    if (m.mosaic?.length) {
+      const oriented = await base.clone().png().toBuffer({ resolveWithObject: true });
+      const W = oriented.info.width;
+      const H = oriented.info.height;
+      const tiles = await Promise.all(
+        m.mosaic.map(async ([x, y, w, h]) => {
+          const left = Math.max(0, Math.round(x * W));
+          const top = Math.max(0, Math.round(y * H));
+          const width = Math.min(W - left, Math.round(w * W));
+          const height = Math.min(H - top, Math.round(h * H));
+          const block = Math.max(4, Math.round(width / 6));
+          const tiny = await sharp(oriented.data)
+            .extract({ left, top, width, height })
+            .resize(Math.max(1, Math.round(width / block)), Math.max(1, Math.round(height / block)))
+            .toBuffer();
+          const input = await sharp(tiny).resize(width, height, { kernel: 'nearest' }).png().toBuffer();
+          return { input, left, top };
+        }),
+      );
+      base = sharp(await sharp(oriented.data).composite(tiles).png().toBuffer());
     }
     if (m.stickers?.length) {
       const oriented = await base.clone().png().toBuffer({ resolveWithObject: true });
@@ -261,7 +287,7 @@ for (const file of files) {
     const placeholder = `data:image/webp;base64,${tiny.toString('base64')}`;
 
     const hasGps = typeof tags?.latitude === 'number' && typeof tags?.longitude === 'number';
-    const taken: Date | undefined = tags?.DateTimeOriginal ?? tags?.CreateDate;
+    const taken: Date | undefined = tags?.DateTimeOriginal ?? tags?.CreateDate ?? (m.date ? new Date(`${m.date}-15T12:00:00Z`) : undefined);
     const prev = byId.get(id);
     const album = m.album ?? folderAlbum(file);
     // Personal photos (latte art shot at home, the portrait): keep only the month and no camera or location data.

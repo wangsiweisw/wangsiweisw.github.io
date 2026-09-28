@@ -307,6 +307,408 @@
     ]
   },
   {
+    "id": "79ac71db9d36",
+    "file": "cherry_blossoms/DSC08634.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A wide old cherry tree with a dark twisting trunk and a full pink canopy, people picnicking on the grass beyond.",
+    "title": "Old cherry tree",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:24:27.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/5.6",
+      "shutter": "1/160s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRpYAAABXRUJQVlA4IIoAAABwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JaACw7dwLgTZw2+g578iwjqC6AAD+oNia7jGYJ0/rw7HWjeutIQn+2QNu6uDQ9SDBqFHfnesGRZXLtGtQ7hiFKmWGNQ6I/VHAC4Nol/I2IqEoczJU+GzB1xhWJ/YVGrSRq5WjjXHHCJuzJANeFNEAAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/79ac71db9d36-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/79ac71db9d36-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/79ac71db9d36-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/79ac71db9d36-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/79ac71db9d36-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/79ac71db9d36-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/79ac71db9d36-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/79ac71db9d36-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/79ac71db9d36-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/79ac71db9d36-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "05accefd56bd",
+    "file": "cherry_blossoms/DSC08595.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Clusters of pink cherry blossoms on bare branches against a deep blue sky.",
+    "title": "Pink on blue",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:19:59.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/8",
+      "shutter": "1/200s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JbACdAdwA4fjqlnfwAoAA/nJw9WwnDS4LnFq0hVsanyoH4N8phusfspcEvOdDT8KYDExm0+2fTO2ZdP3g2uI4whcgypQGt6DiBQCSHkN+PvBTHlXuJkal/MOGH9aFv4csKAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/05accefd56bd-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/05accefd56bd-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/05accefd56bd-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/05accefd56bd-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/05accefd56bd-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/05accefd56bd-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/05accefd56bd-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/05accefd56bd-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/05accefd56bd-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/05accefd56bd-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "8a886482ba05",
+    "file": "cherry_blossoms/DSC08540.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Two cherry trees arching over a sunny lawn where three people sit talking in the grass.",
+    "title": "Under the canopy",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:14:10.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/6.3",
+      "shutter": "1/160s",
+      "iso": 125
+    },
+    "placeholder": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAAAQBACdASoUAA0APu1iqU2ppaQiMAgBMB2JbACdMoABbVkVuTkCoHX18AD+goAvxiRxDiaZMelRjmiF1iQ3a0N2oTyVT8QlLY8iWyVeZxrB533Doz1EROxHGzZhweAeBwRiPeXIhQYnbqIXciO1wPyZwOeebKCmilYI1RwsivzXOFZsIAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8a886482ba05-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/8a886482ba05-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8a886482ba05-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8a886482ba05-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8a886482ba05-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/8a886482ba05-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/8a886482ba05-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/8a886482ba05-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/8a886482ba05-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/8a886482ba05-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "1a6471d9197d",
+    "file": "cherry_blossoms/DSC08512.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A branch heavy with double pink cherry blossoms against a softly blurred green park.",
+    "title": "In full bloom",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:09:29.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/8",
+      "shutter": "1/160s",
+      "iso": 200
+    },
+    "placeholder": "data:image/webp;base64,UklGRpQAAABXRUJQVlA4IIgAAACwAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JQBWAApiL6pHlF/pIoAD9dXmXLsYrFFI7TSsVq/ZEuQzDEcXvVHSTdIFTcuUD8a697KR2YeNFj8iirqTkHc8AqLPXJWPC29nClEGEZky/QA8JoJb3l7dLGQ6b9QtmanvlOue3mSqKzPywlyBqAAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1a6471d9197d-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/1a6471d9197d-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1a6471d9197d-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1a6471d9197d-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/1a6471d9197d-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1a6471d9197d-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/1a6471d9197d-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1a6471d9197d-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1a6471d9197d-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/1a6471d9197d-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "dde1110eb870",
+    "file": "cherry_blossoms/DSC08510.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Out-of-focus pink blossoms in the foreground framing blooming cherry trees and a park lawn behind.",
+    "title": "Through the blossoms",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:09:23.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/8",
+      "shutter": "1/160s",
+      "iso": 160
+    },
+    "placeholder": "data:image/webp;base64,UklGRqAAAABXRUJQVlA4IJQAAAAQBACdASoUAA0APu1iqU2ppaQiMAgBMB2JQBWCP/wHyzPeRPiBJmlriADgMcnQ1AhlSOluNJj6qdlnjXSQjeuACCJeLZhPDC9HTiRPMr+yL4SpgHvMP2wZySMlkzbVWg5yf0AP5lXhLgz2tweGn5gh2HUIsfnpL+zcoyDYkn2GNcxMe1mo0S+y26AFDPgcByqQWgAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/dde1110eb870-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/dde1110eb870-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/dde1110eb870-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/dde1110eb870-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/dde1110eb870-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/dde1110eb870-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/dde1110eb870-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/dde1110eb870-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/dde1110eb870-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/dde1110eb870-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "10498ec6c170",
+    "file": "cherry_blossoms/DSC08478.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "A blooming cherry tree leaning over a park bench where two people sit, a green lawn and path behind.",
+    "title": "A bench under the blossoms",
+    "caption": null,
+    "album": "cherry-blossoms",
+    "location": "Stamford, Connecticut",
+    "featured": false,
+    "date": "2026-04-18T21:05:42.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/6.3",
+      "shutter": "1/80s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAAAQBACdASoUAA0APu1iqU2ppaOiMAgBMB2JYgCdMoACEicON4hv0P1a9AD96ypdYTH8mtmDhhAa26cumORFA49ujRPTTsihHoWHAzTRi8mqJwbckSAnIlt9UpKm3PJDDc1i3dUKQbcq1FGWBC3bCioINagXIuTJAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/10498ec6c170-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/10498ec6c170-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/10498ec6c170-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/10498ec6c170-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/10498ec6c170-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/10498ec6c170-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/10498ec6c170-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/10498ec6c170-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/10498ec6c170-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/10498ec6c170-2400.webp"
+      }
+    ]
+  },
+  {
     "id": "401600b0b23b",
     "file": "coffee/IMG_7698.HEIC",
     "width": 4284,
@@ -804,6 +1206,330 @@
       {
         "width": 2400,
         "url": "https://img.siweiwang.me/76c4ab620fba-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "c897ace4db78",
+    "file": "san_francisco/DSC06043.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "San Francisco at night seen from above, Market Street a bright line of lights running toward the downtown skyline under low clouds.",
+    "title": "San Francisco from Twin Peaks",
+    "caption": null,
+    "album": "san-francisco",
+    "location": "Twin Peaks, San Francisco",
+    "featured": false,
+    "date": "2025-11-24T03:55:27.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "85mm F1.4 DG DN | Art 020",
+      "focalLength": "85mm",
+      "aperture": "f/2.2",
+      "shutter": "1/30s",
+      "iso": 2500
+    },
+    "placeholder": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAAAwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JYwCdMoADTrrdk5Qba/eP6wAA/tClt0ywGkTvBQakgzFtRBmUTs872gJFCSrypuT/oMxchgZ6YEN5viCZGl4FvEUgQAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/c897ace4db78-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/c897ace4db78-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/c897ace4db78-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/c897ace4db78-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/c897ace4db78-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/c897ace4db78-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/c897ace4db78-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/c897ace4db78-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/c897ace4db78-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/c897ace4db78-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "e8b7d4850b1c",
+    "file": "san_francisco/IMG_2532.HEIC",
+    "width": 4032,
+    "height": 3024,
+    "alt": "The Golden Gate Bridge lit up at night under a cloudy sky, its lights reflected in the water.",
+    "title": "Golden Gate at night",
+    "caption": null,
+    "album": "san-francisco",
+    "location": "Golden Gate Bridge, San Francisco",
+    "featured": false,
+    "date": "2025-11-23T23:17:53.000Z",
+    "coords": {
+      "lat": 37.81,
+      "lon": -122.47
+    },
+    "exif": {
+      "camera": "Apple iPhone 15 Pro",
+      "lens": "iPhone 15 Pro back triple camera 6.765mm f/1.78",
+      "focalLength": "7mm",
+      "aperture": "f/1.7799999713880652",
+      "shutter": "1/2s",
+      "iso": 1250
+    },
+    "placeholder": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAAAwBACdASoUAA8APu1iqU2ppaOiMAgBMB2JZgCdMoACXfF/r+7QfeITZCAA/unp7i7lILUIQ3bVZYkNF87Um2sbGVbS1kLu5lCdYaf/HipDExtNcNIQvn6FGxbonxABYhOnlIQ1BIBPK+5kAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/e8b7d4850b1c-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "3eda8db7e57b",
+    "file": "washington_dc/DSC03881.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "Looking straight up into the U.S. Capitol Rotunda, its coffered dome ringing the painted fresco at the center.",
+    "title": "The Capitol Rotunda",
+    "caption": null,
+    "album": "washington-dc",
+    "location": "U.S. Capitol, Washington, D.C.",
+    "featured": false,
+    "date": "2025-07-15T12:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAAAQBACdASoUAA0APu1iqU2ppaOiMAgBMB2JZwAATrdyF6SiD2jJ0iToAADg/Ov+MIoCe9kRu+/WYI5tf9sTOAiAA5wHNG0dpooIqx60fjtlAL8YgAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/3eda8db7e57b-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "bb7c5df99fea",
+    "file": "washington_dc/DSC03914.JPG",
+    "width": 7008,
+    "height": 4672,
+    "alt": "An ornate brass chandelier hanging beneath a coffered ceiling beside a white marble statue with an eagle.",
+    "title": "Chandelier and statue",
+    "caption": null,
+    "album": "washington-dc",
+    "location": "U.S. Capitol, Washington, D.C.",
+    "featured": false,
+    "date": "2025-07-15T12:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JQBOgA3WbaKydXZp28aEAAPuXnLxdTdbyyjkZAOI2Qzd1EaT03P0TfjkvIk4WMWSBg25rDdj4wk6NVgBr5FbnLT9jxf/IqWXNhG7YJjJrxf5mvjb8J7/gAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bb7c5df99fea-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "ac5965200f93",
+    "file": "new_york/DSC03616.JPG",
+    "width": 2048,
+    "height": 1365,
+    "alt": "The Manhattan Bridge tower rising between red-brick buildings in DUMBO, with the Empire State Building framed under its arch.",
+    "title": "Manhattan Bridge from DUMBO",
+    "caption": null,
+    "album": "new-york",
+    "location": "DUMBO, Brooklyn",
+    "featured": false,
+    "date": "2025-06-19T18:23:27.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "49mm",
+      "aperture": "f/20",
+      "shutter": "1/60s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JQA7AABZstJ5BQeq0tvLQAP7o358+tNftnNZ6+/dgPrnCCMmY02+TjetBYHS7DBG2Qyx98GwD4WlXV5k9X5QFAt7MMy+/tBCNj7/Ur4kCgXns5UQUlZ5gAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ac5965200f93-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/ac5965200f93-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ac5965200f93-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ac5965200f93-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/ac5965200f93-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ac5965200f93-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/ac5965200f93-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ac5965200f93-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ac5965200f93-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/ac5965200f93-2048.webp"
       }
     ]
   },

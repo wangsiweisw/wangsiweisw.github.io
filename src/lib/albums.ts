@@ -10,6 +10,8 @@ const schema = z.array(
     title: z.string(),
     subtitle: z.string().optional(),
     cover: z.string().optional(),
+    // optional explicit photo order (paths in photos-src/); unlisted photos follow, newest first
+    order: z.array(z.string()).optional(),
   }),
 );
 
@@ -39,7 +41,11 @@ function dateRange(list: Photo[]): string {
 const config = schema.parse(parse(readFileSync('src/data/albums.yaml', 'utf8')));
 
 export const albums: Album[] = config.flatMap((a) => {
-  const list = photos.filter((p) => p.album === a.id);
+  const rank = (p: Photo) => {
+    const i = a.order?.indexOf(p.file) ?? -1;
+    return i === -1 ? Infinity : i;
+  };
+  const list = photos.filter((p) => p.album === a.id).sort((x, y) => rank(x) - rank(y));
   if (!list.length) return [];
   const cover = list.find((p) => p.file === a.cover) ?? list.find((p) => p.featured) ?? list[0];
   return [{ ...a, cover, photos: list, when: dateRange(list) }];
