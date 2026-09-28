@@ -22,7 +22,8 @@ import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s
 const SRC = process.env.PHOTOS_SRC ?? 'photos-src';
 const MANIFEST = 'src/data/photos.json';
 const LOCAL_DIR = 'public/photos-local';
-const WIDTHS = [480, 960, 1600, 2400];
+// 720 fills phone-sized slots (~380 CSS px at 1.75–2x) without jumping to 960
+const WIDTHS = [480, 720, 960, 1600, 2400];
 const FORMATS = { avif: { quality: 55, effort: 4 }, webp: { quality: 78 } } as const;
 // bump when the pixelation changes so blurred photos get new files instead of reusing old uploads
 const BLUR_VERSION = 'v2';

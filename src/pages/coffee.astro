@@ -33,6 +33,7 @@ import { srcset } from '../lib/photos';
                   height={p.height}
                   alt={p.alt ?? ''}
                   loading={i < 3 ? 'eager' : 'lazy'}
+                  fetchpriority={i === 0 ? 'high' : undefined}
                   decoding="async"
                 />
               </picture>

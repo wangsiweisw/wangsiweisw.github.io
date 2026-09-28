@@ -44,6 +44,7 @@ const fillLastRow = rowWidth / contentWidth >= 0.6;
                 height={p.height}
                 alt={p.alt ?? ''}
                 loading={i < 6 ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 ? 'high' : undefined}
                 decoding="async"
                 class:list={[{ 'missing-alt': !p.alt }]}
               />

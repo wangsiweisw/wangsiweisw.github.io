@@ -110,7 +110,7 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 1. Read images anywhere under `photos-src/` (one folder per place; the folder name is the default album) plus optional `photos-src/meta.yaml` keyed by relative path (per file: title, **alt**, caption, album, location name, featured, `hide_location`).
 2. Extract EXIF with `exifr`: camera, lens, focal length, aperture, shutter, ISO, capture date, GPS.
 3. **Privacy:** round GPS to 2 decimal places (~1 km) and drop it entirely if `hide_location` is set. **Strip all metadata** from every output file.
-4. With `sharp`, generate widths 480 / 960 / 1600 / 2400 in AVIF and WebP, plus a ~20 px blurred placeholder (base64).
+4. With `sharp`, generate widths 480 / 720 / 960 / 1600 / 2400 (720 added after the Lighthouse pass, for phones) in AVIF and WebP, plus a ~20 px blurred placeholder (base64).
 5. Upload to R2 via the S3-compatible API using content-hash filenames and `Cache-Control: public, max-age=31536000, immutable`. Skip files whose hash already exists.
 6. Merge results into `src/data/photos.json` (id, album, dimensions, srcset URLs, placeholder, EXIF, rounded coords, title, caption, date).
 

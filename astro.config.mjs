@@ -12,6 +12,8 @@ const photosLive = JSON.parse(readFileSync('./src/data/photos.json', 'utf8')).le
 
 export default defineConfig({
   site: 'https://siweiwang.me',
+  // CSS is only a few KB: inline it so first paint doesn't wait on a separate request.
+  build: { inlineStylesheets: 'always' },
   // TODO(owner): drop the /blog filter once the first post is published (also flip `live` in src/data/nav.ts).
   integrations: [
     mdx(),
