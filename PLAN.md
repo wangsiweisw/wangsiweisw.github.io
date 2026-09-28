@@ -131,7 +131,9 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 
 ### 5.5 Running
 
-> ⏸ **On hold (owner decision).** No automatic daily pushes. Data source still to decide: Strava bulk-export CSV (runs sync to Strava from Apple Watch) or Apple Health export — both manual, run locally. Strava API is out: its API Agreement (eff. 2026-06-01) only allows showing a user's data to that same user. Revisit before starting Phase 5.
+> ✅ **Built (owner decisions):** data from a manual Strava bulk export (`strava-export/`, gitignored) → `pnpm running:stats` → `src/data/running.json` (totals only). Hand-kept facts (half PB, Strava Best Efforts, month-only milestones, no race names) in `src/data/running.yaml`. Page: modest intro, totals, best times, milestones, yearly bar chart, two NYC Half photos with the bib covered by cat stickers. No cron. The original plan below is kept for reference.
+>
+> ~~On hold.~~ No automatic daily pushes. Data source still to decide: Strava bulk-export CSV (runs sync to Strava from Apple Watch) or Apple Health export — both manual, run locally. Strava API is out: its API Agreement (eff. 2026-06-01) only allows showing a user's data to that same user. Revisit before starting Phase 5.
 
 **Data — `pnpm runs:sync`** (runs in CI on every build):
 - Refresh the Strava OAuth token using `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`; page through `/athlete/activities`; keep `sport_type` Run and TrailRun.
@@ -177,7 +179,7 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 | 2 | Home (hero), Resume (web + PDF), Blog skeleton, 404 | **MVP shipped** — site is shareable |
 | 3 | Photos pipeline, gallery, lightbox | I can add photos with one command |
 | 4 | Coffee page + CompareSlider | |
-| 5 | ⏸ On hold — running data import (manual) + stats page | Decide data source first |
+| 5 | ✅ Running page from a manual Strava export (no API, no cron) | Done |
 | 6 | Photo map view, home teasers, OG images, Lighthouse pass | All targets in §4 met |
 
 ## 8. Working rules for Claude Code

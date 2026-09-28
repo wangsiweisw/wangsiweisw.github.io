@@ -5,20 +5,21 @@ import { srcset, type Photo } from '../lib/photos';
 interface Props {
   photos: Photo[];
   rowHeight?: number;
+  /** Width the grid is laid out in on desktop (px), used to decide whether the last row may stretch. */
+  contentWidth?: number;
 }
 
-const { photos, rowHeight = 260 } = Astro.props;
+const { photos, rowHeight = 260, contentWidth = 1008 } = Astro.props;
 
 // Simulate flex-wrap at the desktop content width: stretch the last row too if it's already ≥ 60% full,
 // otherwise leave it at its natural size so one lonely photo doesn't blow up.
-const CONTENT_WIDTH = 1008;
 const GAP = 8;
 let rowWidth = 0;
 for (const p of photos) {
   const basis = (p.width / p.height) * rowHeight;
-  rowWidth = rowWidth > 0 && rowWidth + GAP + basis > CONTENT_WIDTH ? basis : rowWidth + (rowWidth > 0 ? GAP : 0) + basis;
+  rowWidth = rowWidth > 0 && rowWidth + GAP + basis > contentWidth ? basis : rowWidth + (rowWidth > 0 ? GAP : 0) + basis;
 }
-const fillLastRow = rowWidth / CONTENT_WIDTH >= 0.6;
+const fillLastRow = rowWidth / contentWidth >= 0.6;
 ---
 
 <ul class:list={["grid", { "fill-last": fillLastRow }]} style={`--row: ${rowHeight}px`}>

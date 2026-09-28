@@ -14,7 +14,9 @@
     "check": "astro check",
     "astro": "astro",
     "resume:pdf": "node scripts/resume-pdf.ts",
-    "photos:sync": "node scripts/photos-sync.ts"
+    "photos:sync": "node scripts/photos-sync.ts",
+    "photos:prune-r2": "node scripts/photos-prune-r2.ts",
+    "running:stats": "node scripts/running-stats.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",

@@ -3,7 +3,7 @@
 ---
 
 <unit-toggle>
-  <button class="toggle" type="button" aria-label="Use metric units" aria-pressed="false">°F</button>
+  <button class="toggle" type="button" aria-label="Show kilometers" aria-pressed="false">mi</button>
 </unit-toggle>
 
 <script>
@@ -14,7 +14,8 @@
       const button = this.querySelector('button')!;
       const sync = () => {
         const metric = getUnits() === 'metric';
-        button.textContent = metric ? '°C' : '°F';
+        button.textContent = metric ? 'km' : 'mi';
+        button.setAttribute('aria-label', metric ? 'Show miles' : 'Show kilometers');
         button.setAttribute('aria-pressed', String(metric));
       };
       sync();

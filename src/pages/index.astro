@@ -43,7 +43,7 @@ const [before, after] = site.positioningEmphasis
   : [site.positioning, undefined];
 ---
 
-<Base title={site.name}>
+<Base title={`${site.name} · Software Engineer`}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
   <section class:list={['hero', { 'has-portrait': portrait }]}>
     {

@@ -1,0 +1,22 @@
+# Hand-kept running facts that Strava's export can't tell us. Totals come from running.json (pnpm running:stats).
+# Race names and bib numbers are deliberately left out; milestone dates are month-only.
+halfMarathons: 5
+halfPB: '1:36:24'
+# From Strava's Best Efforts (app → You → Progress). Overrides the rough whole-run times in running.json.
+bestEfforts:
+  fiveK: '22:08'
+  tenK: '44:57'
+
+milestones:
+  - month: 2024-10
+    title: First 5K race
+    time: '24:21'
+  - month: 2024-12
+    title: First half marathon
+    time: '1:55:27'
+  - month: 2025-05
+    title: Second half marathon
+    time: '1:44:03'
+  - month: 2025-10
+    title: Half marathon PB
+    time: '1:36:24'

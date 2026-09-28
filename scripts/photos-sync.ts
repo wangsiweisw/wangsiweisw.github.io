@@ -24,6 +24,25 @@ const MANIFEST = 'src/data/photos.json';
 const LOCAL_DIR = 'public/photos-local';
 const WIDTHS = [480, 960, 1600, 2400];
 const FORMATS = { avif: { quality: 55, effort: 4 }, webp: { quality: 78 } } as const;
+// bump when the pixelation changes so blurred photos get new files instead of reusing old uploads
+const BLUR_VERSION = 'v2';
+const STICKER_VERSION = 'cat-v1';
+
+// Opaque ginger-cat sticker (white rim, soft shadow) used to cover bib numbers. The face sits in the lower ~60%.
+const CAT_SHAPE = `<path d="M40 86 L46 20 L92 54 Q100 52 108 54 L154 20 L160 86 Q178 110 170 140 Q156 186 100 186 Q44 186 30 140 Q22 110 40 86 Z"/>`;
+const STICKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 210">
+  <g transform="translate(0 7)" fill="#000" opacity=".18" stroke="#000" stroke-width="18" stroke-linejoin="round">${CAT_SHAPE}</g>
+  <g fill="#fff" stroke="#fff" stroke-width="18" stroke-linejoin="round">${CAT_SHAPE}</g>
+  <g fill="#F2A65A">${CAT_SHAPE}</g>
+  <path d="M52 40 L56 76 L80 58 Z" fill="#F7C3B5"/><path d="M148 40 L144 76 L120 58 Z" fill="#F7C3B5"/>
+  <path d="M92 66 L94 84 M100 62 L100 84 M108 66 L106 84" stroke="#D9803A" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="72" cy="118" rx="10" ry="13" fill="#3B2A20"/><ellipse cx="128" cy="118" rx="10" ry="13" fill="#3B2A20"/>
+  <circle cx="75" cy="113" r="3.8" fill="#fff"/><circle cx="131" cy="113" r="3.8" fill="#fff"/>
+  <ellipse cx="54" cy="144" rx="12" ry="7" fill="#F4978E" opacity=".75"/><ellipse cx="146" cy="144" rx="12" ry="7" fill="#F4978E" opacity=".75"/>
+  <path d="M94 136 L106 136 L100 143 Z" fill="#E0707A" stroke="#E0707A" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M100 143 Q100 152 91 152 M100 143 Q100 152 109 152" fill="none" stroke="#3B2A20" stroke-width="4" stroke-linecap="round"/>
+  <path d="M40 132 L64 136 M38 146 L63 144 M160 132 L136 136 M162 146 L137 144" stroke="#3B2A20" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+</svg>`;
 const INPUT_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tif', '.tiff', '.heic', '.heif']);
 
 const { values: args } = parseArgs({ options: { local: { type: 'boolean' }, prune: { type: 'boolean' } } });
@@ -59,6 +78,10 @@ const metaSchema = z.record(
     hide_location: z.boolean().optional(),
     // leave this file out entirely (not processed, not uploaded)
     skip: z.boolean().optional(),
+    // regions to pixelate before anything is published, e.g. race bibs: [x, y, w, h] as fractions of the image
+    blur: z.array(z.tuple([z.number(), z.number(), z.number(), z.number()])).optional(),
+    // cat stickers covering things like race bibs: [centerX, centerY, size] as fractions of the image width/height/width
+    stickers: z.array(z.tuple([z.number(), z.number(), z.number()])).optional(),
   }),
 );
 type Meta = z.infer<typeof metaSchema>[string];
@@ -168,7 +191,11 @@ for (const file of files) {
   }
   const path = join(SRC, file);
   const original = await readFile(path);
-  const id = createHash('sha256').update(original).digest('hex').slice(0, 12);
+  // blur regions are part of the id, so changing them produces fresh files instead of reusing old uploads
+  const hash = createHash('sha256').update(original);
+  if (meta[file]?.blur?.length) hash.update(BLUR_VERSION + JSON.stringify(meta[file].blur));
+  if (meta[file]?.stickers?.length) hash.update(STICKER_VERSION + JSON.stringify(meta[file].stickers));
+  const id = hash.digest('hex').slice(0, 12);
   seen.add(id);
   const m: Meta = meta[file] ?? {};
 
@@ -177,7 +204,41 @@ for (const file of files) {
 
   try {
     // Orientation applied, colour converted to sRGB, and no metadata written (sharp's default).
-    const base = sharp(input).rotate();
+    let base = sharp(input).rotate();
+    if (m.blur?.length) {
+      // Pixelate then blur each region so the covered text can't be recovered, before any resizing.
+      const oriented = await base.clone().png().toBuffer({ resolveWithObject: true });
+      const W = oriented.info.width;
+      const H = oriented.info.height;
+      const patches = await Promise.all(
+        m.blur.map(async ([x, y, w, h]) => {
+          const left = Math.max(0, Math.round(x * W));
+          const top = Math.max(0, Math.round(y * H));
+          const width = Math.min(W - left, Math.round(w * W));
+          const height = Math.min(H - top, Math.round(h * H));
+          const tiny = await sharp(oriented.data)
+            .extract({ left, top, width, height })
+            .resize(Math.max(2, Math.round(width / 90)), Math.max(2, Math.round(height / 90)))
+            .toBuffer();
+          const input = await sharp(tiny).resize(width, height, { kernel: 'nearest' }).blur(Math.max(8, width / 12)).png().toBuffer();
+          return { input, left, top };
+        }),
+      );
+      base = sharp(await sharp(oriented.data).composite(patches).png().toBuffer());
+    }
+    if (m.stickers?.length) {
+      const oriented = await base.clone().png().toBuffer({ resolveWithObject: true });
+      const W = oriented.info.width;
+      const H = oriented.info.height;
+      const layers = await Promise.all(
+        m.stickers.map(async ([cx, cy, size]) => {
+          const px = Math.round(size * W);
+          const input = await sharp(Buffer.from(STICKER_SVG), { density: 600 }).resize(px, px, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+          return { input, left: Math.round(cx * W - px / 2), top: Math.round(cy * H - px / 2) };
+        }),
+      );
+      base = sharp(await sharp(oriented.data).composite(layers).png().toBuffer());
+    }
     const { width = 0, height = 0 } = await base.clone().toBuffer({ resolveWithObject: true }).then((r) => r.info);
     const widths = [...new Set(WIDTHS.map((w) => Math.min(w, width)))];
 
@@ -203,7 +264,7 @@ for (const file of files) {
     const prev = byId.get(id);
     const album = m.album ?? folderAlbum(file);
     // Personal photos (latte art shot at home, the portrait): keep only the month and no camera or location data.
-    const personal = album === 'coffee' || album === 'me';
+    const personal = album === 'coffee' || album === 'me' || album === 'running';
 
     byId.set(id, {
       id,

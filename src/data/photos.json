@@ -319,6 +319,110 @@
     ]
   },
   {
+    "id": "4a40abfda392",
+    "file": "running/IMG_7456.HEIC",
+    "width": 4284,
+    "height": 5712,
+    "alt": "Siwei Wang wrapped in a NYC Half heat sheet, holding a medal, standing next to a NYC Half course sign.",
+    "title": "Wrapped up after the finish",
+    "caption": null,
+    "album": "running",
+    "location": null,
+    "featured": false,
+    "date": "2026-03-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRtAAAABXRUJQVlA4IMQAAABQBQCdASoUABsAPu1qrVEppaQiqAqpMB2JYgCw7YyKXB1kBx9vEe+c5rtNlh23sUETeAAA/o046yXOhr4/mF727xbR33YpTVcYVa0Ks42nEwUMWnlqTOvMxqZ0A+O4FZswM1f02Nt/ZjEszQXNq990Vglo44jFy73I1AiPTLlXRSzIo8kcTxRxR6gI4kkU/nYqpfhepOh7ZiOmU+tuPkBDsOq+b1YK4QqCu4EdTiaEPBD6+4TGUvlXqzItOMDXyjF6AAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4a40abfda392-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4a40abfda392-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4a40abfda392-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4a40abfda392-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/4a40abfda392-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/4a40abfda392-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/4a40abfda392-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/4a40abfda392-2400.webp"
+      }
+    ]
+  },
+  {
+    "id": "bb7448b0d399",
+    "file": "running/IMG_7646.JPG",
+    "width": 2666,
+    "height": 4000,
+    "alt": "Siwei Wang holding up a NYC Half finisher medal in front of the event backdrop, with cat stickers over the race bib.",
+    "title": "NYC Half finisher",
+    "caption": null,
+    "album": "running",
+    "location": null,
+    "featured": false,
+    "date": "2026-03-01T00:00:00.000Z",
+    "coords": null,
+    "exif": {},
+    "placeholder": "data:image/webp;base64,UklGRg4BAABXRUJQVlA4IAIBAADQBQCdASoUAB4APu1mqk2ppaQiMAgBMB2JZAC7MzAOK7VhB4APOD7OnQop9Bpv+zeEfvqXexaAAP697nCvonbCPtt6I/a00wdm9IyxCwVu1etS5etvWQ5QEgbO8u7phyLsGr7vLP4DQR8iYj8ltd4RcnQH4P953GvY1lHh8trEfbxGBWRPL6boogHYvJOgG9kWc078sliDi1Usce4xVK/xTFhiVuEId0Kv/XKMp0UGfUveHNQaQQ7ivi4RwsYY6UvMFIBSSzCC4O1pF617EFDAg5r8NwQOVt6rqtTKyoYXJRc99mjEFAaBAGwhK/nOqedlpr7VZMkaE2daahihoBxIgAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bb7448b0d399-480.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bb7448b0d399-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bb7448b0d399-1600.avif"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bb7448b0d399-2400.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/bb7448b0d399-480.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/bb7448b0d399-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/bb7448b0d399-1600.webp"
+      },
+      {
+        "width": 2400,
+        "url": "https://img.siweiwang.me/bb7448b0d399-2400.webp"
+      }
+    ]
+  },
+  {
     "id": "3a645eb02381",
     "file": "coffee/IMG_6709.heic",
     "width": 5712,

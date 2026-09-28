@@ -1,0 +1,27 @@
+{
+  "since": "2024-09",
+  "through": "2026-09",
+  "runs": 455,
+  "meters": 1773550,
+  "movingHours": 173,
+  "longestMeters": 21447,
+  "fastest5kSeconds": 1382,
+  "fastest10kSeconds": 2913,
+  "years": [
+    {
+      "year": 2024,
+      "runs": 82,
+      "meters": 316164
+    },
+    {
+      "year": 2025,
+      "runs": 259,
+      "meters": 1111875
+    },
+    {
+      "year": 2026,
+      "runs": 114,
+      "meters": 345511
+    }
+  ]
+}
