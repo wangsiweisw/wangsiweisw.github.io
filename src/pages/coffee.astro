@@ -45,6 +45,8 @@ import { srcset } from '../lib/photos';
     }
   </ul>
 
+  <p class="gear">Pulled on a Lelit Bianca, ground on a DF83V.</p>
+
   <Lightbox photos={pours.map((x) => x.photo)} details={false} />
 </Base>
 
@@ -109,5 +111,11 @@ import { srcset } from '../lib/photos';
   }
   a:hover .caption {
     color: var(--accent);
+  }
+  /* a quiet footnote about the setup */
+  .gear {
+    margin: 3.5rem 0 0;
+    color: var(--muted);
+    font: italic 400 1rem / 1.5 var(--display);
   }
 </style>
