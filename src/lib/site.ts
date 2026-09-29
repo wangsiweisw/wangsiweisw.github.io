@@ -15,6 +15,9 @@ const schema = z.object({
     email: z.email().nullable(),
   }),
   portrait: z.string().optional(),
+  education: z
+    .array(z.object({ name: z.string(), alternateName: z.string().optional(), degree: z.string().optional() }))
+    .default([]),
   showEmployerOnHome: z.boolean(),
   weather: z.object({
     city: z.string().nullable(),

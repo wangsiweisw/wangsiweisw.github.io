@@ -18,6 +18,11 @@ const person = {
   jobTitle: 'Software Engineer',
   image: portrait?.webp.find((v) => v.width >= 960)?.url,
   sameAs: [site.links.linkedin],
+  alumniOf: site.education.map((s) => ({
+    '@type': 'CollegeOrUniversity',
+    name: s.name,
+    alternateName: s.alternateName,
+  })),
 };
 
 // Link hobby mentions in the bio to their pages once those pages are live.

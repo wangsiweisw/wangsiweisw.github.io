@@ -5,7 +5,17 @@ positioning: Software engineer building AI weather forecasting models and LLM ap
 # Don't name the current employer here (see showEmployerOnHome).
 bio: >-
   I work on machine learning for weather forecasting and build applications with
-  large language models. Outside of work, I run, pour latte art, and take photos.
+  large language models. I studied software engineering at Southeast University in
+  China, then computer science at NYU. Outside of work, I run, pour latte art, and take photos.
+
+# Schools, for search engines (schema.org alumniOf on the home page).
+education:
+  - name: New York University
+    alternateName: NYU
+    degree: M.S. in Computer Science
+  - name: Southeast University
+    alternateName: 东南大学
+    degree: B.E. in Software Engineering
 description: Siwei Wang is a software engineer building AI weather forecasting models and LLM applications.
 
 links:
