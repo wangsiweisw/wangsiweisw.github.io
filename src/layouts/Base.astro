@@ -66,6 +66,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         />
       )
     }
+    {
+      import.meta.env.PROD && (
+        // Umami: cookie-free analytics with city-level location; production builds only.
+        <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="86f3eed6-bade-4758-ab8c-360b9b983208" />
+      )
+    }
   </head>
   <body>
     <Header showUnits={showUnits} />
