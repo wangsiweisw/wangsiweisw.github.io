@@ -55,6 +55,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       })();
     </script>
     <slot name="head" />
+    {
+      import.meta.env.PROD && (
+        // Cloudflare Web Analytics: cookie-free visit counts; production builds only.
+        <script
+          is:inline
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "254d6e610fef46e193f689dc8c2e2e41"}'
+        />
+      )
+    }
   </head>
   <body>
     <Header showUnits={showUnits} />
