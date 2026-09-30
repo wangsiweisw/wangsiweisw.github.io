@@ -1,0 +1,11 @@
+{
+  "name": "Siwei Wang",
+  "short_name": "Siwei Wang",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#B4532A",
+  "background_color": "#F6F1E9",
+  "display": "browser"
+}
