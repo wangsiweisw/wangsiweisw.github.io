@@ -60,6 +60,609 @@
     ]
   },
   {
+    "id": "a2e95dced868",
+    "file": "lake_powell/DSC09987.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Smooth, wave-like sandstone walls of a slot canyon glowing orange and pink in reflected light.",
+    "title": "Antelope Canyon",
+    "caption": null,
+    "album": "lake-powell",
+    "location": "Antelope Canyon, Arizona",
+    "featured": false,
+    "date": "2026-08-22T17:04:50.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/5",
+      "shutter": "1/40s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRogAAABXRUJQVlA4IHwAAAAwBACdASoUAA0APu1iqU2ppaOiMAgBMB2JaACdMoRwAB8JZYGvXs743sAA/t6kXkHklwvUZx+wBk2yV385lVIRS+wy59WTjWRWW14J0jG2ZVVM9e5sjhY9xMwp0Q6hhWLcf2E5fPv/b/rBQ+N7bYn9H3dS7kdA+WbwAAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2e95dced868-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/a2e95dced868-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2e95dced868-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2e95dced868-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/a2e95dced868-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a2e95dced868-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/a2e95dced868-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a2e95dced868-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a2e95dced868-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/a2e95dced868-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "7766e0f3564a",
+    "file": "lake_powell/DSC09787.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "A deep blue arm of Lake Powell snaking between pale-rimmed canyon walls in a wide red desert under a big sky.",
+    "title": "Canyon lake",
+    "caption": null,
+    "album": "lake-powell",
+    "location": "Lake Powell, Arizona",
+    "featured": false,
+    "date": "2026-08-22T00:39:46.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "103mm",
+      "aperture": "f/5.6",
+      "shutter": "1/320s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQAwCdASoUAA0APu1iqU2ppaQiMAgBMB2JYgCdACHYmkngtpAWBYAA/ug+qdG+m5g2DuX9JcBN6QgZYER9rBwweQpv8Bbfm64PKOD1CNnUunt7Ti48NEIs4MFCBXIA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/7766e0f3564a-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/7766e0f3564a-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/7766e0f3564a-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/7766e0f3564a-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/7766e0f3564a-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/7766e0f3564a-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/7766e0f3564a-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/7766e0f3564a-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/7766e0f3564a-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/7766e0f3564a-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "951fa70068c3",
+    "file": "lake_powell/DSC09772-2.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Blue Lake Powell winding through red desert, a marina of houseboats below and tall sandstone buttes beyond.",
+    "title": "Lake Powell",
+    "caption": null,
+    "album": "lake-powell",
+    "location": "Lake Powell, Arizona",
+    "featured": false,
+    "date": "2026-08-22T00:38:28.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "94mm",
+      "aperture": "f/5.6",
+      "shutter": "1/250s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAADQBACdASoUAA0APu1iqk2ppaQiMAgBMB2JQBOmUGWVodtv8B5BVf49k9a5NuGbAAD9/PubeLbzxlw2/ZvxeqtZ2tp3KhcfSFd6an8bCmwCcpKOEZYwyK6CpfLg+f2Z5Wn7fKpRwh8RM8GSkAN8gfGT578AAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/951fa70068c3-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/951fa70068c3-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/951fa70068c3-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/951fa70068c3-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/951fa70068c3-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/951fa70068c3-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/951fa70068c3-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/951fa70068c3-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/951fa70068c3-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/951fa70068c3-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "9f7c8c4a7eb4",
+    "file": "zion_bryce/DSC09659.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "A small striped chipmunk sitting on smooth orange rock.",
+    "title": "Chipmunk",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Bryce Canyon National Park, Utah",
+    "featured": false,
+    "date": "2026-08-21T17:14:28.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "200mm",
+      "aperture": "f/6.3",
+      "shutter": "1/200s",
+      "iso": 200
+    },
+    "placeholder": "data:image/webp;base64,UklGRmYAAABXRUJQVlA4IFoAAADwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZAC7ACHh/jcBw8kliKlgAP7HqZ23dSGIOOG4fOEWQMvbhc2jLcn4J5ZnDXrW52rZg7Hw4DWgOHUId5oJLmZAAAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/9f7c8c4a7eb4-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "ce96e3779aab",
+    "file": "zion_bryce/DSC09622.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Towering orange rock walls and hoodoos closing in on a narrow sandy trail at the bottom of a slot in Bryce Canyon.",
+    "title": "Wall Street",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Navajo Loop, Bryce Canyon, Utah",
+    "featured": false,
+    "date": "2026-08-21T16:59:07.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/4",
+      "shutter": "1/400s",
+      "iso": 100
+    },
+    "placeholder": "data:image/webp;base64,UklGRoQAAABXRUJQVlA4IHgAAADwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZgCdMoAC942EDnGgz51UAP2KkDXqAVMgiprr4rZXbh7XDg2SAF0G6lbiWPLRzOxi/DtwcN+N3rFo1+5TfgOgYjOoAWAuPdWGRkDRc+r2AhYkO1Wezmd4TdyABJbIPAA=",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ce96e3779aab-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/ce96e3779aab-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ce96e3779aab-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ce96e3779aab-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/ce96e3779aab-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/ce96e3779aab-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/ce96e3779aab-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/ce96e3779aab-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/ce96e3779aab-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/ce96e3779aab-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "1f4af8014402",
+    "file": "zion_bryce/DSC09505-2.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Dark blue storm clouds over Bryce Canyon's hoodoos, with rain falling in the distance and a thin band of light on the horizon.",
+    "title": "Storm over the amphitheater",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Bryce Canyon National Park, Utah",
+    "featured": false,
+    "date": "2026-08-21T01:53:02.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/7.1",
+      "shutter": "1/30s",
+      "iso": 4000
+    },
+    "placeholder": "data:image/webp;base64,UklGRnQAAABXRUJQVlA4IGgAAADwAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JbACdFQAASSGZ4vKQ/UKUAPuGXZZs7Ga8+SXnRTH61Rv4BIb/ULTHeTi3f0ooSnZaZ2pFVAttU2p+w5xuZQp8T64tjES+LeAboJ3ZgLMgAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1f4af8014402-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/1f4af8014402-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1f4af8014402-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1f4af8014402-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/1f4af8014402-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/1f4af8014402-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/1f4af8014402-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/1f4af8014402-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/1f4af8014402-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/1f4af8014402-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "b542ed311287",
+    "file": "zion_bryce/DSC09493.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "A band of golden light under heavy clouds, pine trees silhouetted on a ridge above layered red cliffs.",
+    "title": "Last light",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Bryce Canyon National Park, Utah",
+    "featured": false,
+    "date": "2026-08-21T01:52:14.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "200mm",
+      "aperture": "f/7.1",
+      "shutter": "1/200s",
+      "iso": 10000
+    },
+    "placeholder": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQAwCdASoUAA0APu1iqk2ppaQiMAgBMB2JYwCw7CHXh2OMmQUeVEAA/UNSGT0YJIeeUPPsRwf99juqjdnYjMo+8VRTEo2IiGRwLmM1IKbADfrtAWtL1zo0XgoMAAAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/b542ed311287-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/b542ed311287-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/b542ed311287-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/b542ed311287-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/b542ed311287-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/b542ed311287-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/b542ed311287-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/b542ed311287-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/b542ed311287-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/b542ed311287-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "a0f5d9dc3448",
+    "file": "zion_bryce/DSC09437.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "Looking down into Bryce Canyon's amphitheater, packed with orange and white hoodoos and narrow fins of rock.",
+    "title": "Hoodoos of Bryce",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Bryce Canyon National Park, Utah",
+    "featured": false,
+    "date": "2026-08-21T01:26:49.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/11",
+      "shutter": "1/30s",
+      "iso": 2500
+    },
+    "placeholder": "data:image/webp;base64,UklGRoAAAABXRUJQVlA4IHQAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JQBOmUABoxm9ojF3o8UAA/NiyoyBw4QK+ibjjoVYMv9NPQkLv4/QQ+mxN5buyvudLEzU5TVxjy3tRV0agkvWndnJtH+iIWJlx/CiFYgi96NMumatJrK0ij5AAAA==",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/a0f5d9dc3448-2048.webp"
+      }
+    ]
+  },
+  {
+    "id": "f8bc22c93c2e",
+    "file": "zion_bryce/DSC09297.jpg",
+    "width": 2048,
+    "height": 1365,
+    "alt": "The Virgin River running over rocks through a green, tree-lined canyon toward pale cliffs in Zion.",
+    "title": "The Virgin River",
+    "caption": null,
+    "album": "zion-bryce",
+    "location": "Zion National Park, Utah",
+    "featured": false,
+    "date": "2026-08-20T01:24:16.000Z",
+    "coords": null,
+    "exif": {
+      "camera": "SONY ILCE-7M4",
+      "lens": "E 28-200mm F2.8-5.6 A071",
+      "focalLength": "28mm",
+      "aperture": "f/13",
+      "shutter": "1/30s",
+      "iso": 1000
+    },
+    "placeholder": "data:image/webp;base64,UklGRnYAAABXRUJQVlA4IGoAAADQAwCdASoUAA0APu1iqU2ppaOiMAgBMB2JZQCzgB7D9948JabGM0AA/uaWvI4ktUq2cBHQJscDqdxXDQnYZx/b5YOmxX7NIv5Sd9hE1FymsSt45KQbVEqEWT6fp9KdaFx/zyo4XAhElgAA",
+    "avif": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-480.avif"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-720.avif"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-960.avif"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-1600.avif"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-2048.avif"
+      }
+    ],
+    "webp": [
+      {
+        "width": 480,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-480.webp"
+      },
+      {
+        "width": 720,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-720.webp"
+      },
+      {
+        "width": 960,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-960.webp"
+      },
+      {
+        "width": 1600,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-1600.webp"
+      },
+      {
+        "width": 2048,
+        "url": "https://img.siweiwang.me/f8bc22c93c2e-2048.webp"
+      }
+    ]
+  },
+  {
     "id": "f03d87086b4f",
     "file": "me/DSC09538.JPG",
     "width": 2048,

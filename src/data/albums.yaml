@@ -2,6 +2,27 @@
 # (folder name in photos-src/, or `album:` in meta.yaml). `cover` is the photo's path in photos-src/.
 # Albums not listed here (e.g. coffee, me, running) are kept off the gallery.
 
+- id: zion-bryce
+  title: Zion & Bryce
+  subtitle: Utah
+  cover: zion_bryce/DSC09437.jpg
+  order:
+    - zion_bryce/DSC09437.jpg
+    - zion_bryce/DSC09622.jpg
+    - zion_bryce/DSC09505-2.jpg
+    - zion_bryce/DSC09493.jpg
+    - zion_bryce/DSC09659.jpg
+    - zion_bryce/DSC09297.jpg
+
+- id: lake-powell
+  title: Lake Powell & Antelope Canyon
+  subtitle: Arizona
+  cover: lake_powell/DSC09987.jpg
+  order:
+    - lake_powell/DSC09987.jpg
+    - lake_powell/DSC09772-2.jpg
+    - lake_powell/DSC09787.jpg
+
 - id: night-sky
   title: Night Sky
   cover: cherry_spring/DSC08969-Min Horizon Noise-2.jpg
