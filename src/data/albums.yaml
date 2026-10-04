@@ -49,6 +49,16 @@
   subtitle: California
   cover: san_francisco/DSC06043.JPG
 
+- id: rockefeller
+  title: Rockefeller State Park Preserve
+  subtitle: New York
+  cover: rockefeller/DSC04542.jpg
+  order:
+    - rockefeller/DSC04560.jpg
+    - rockefeller/DSC04625.jpg
+    - rockefeller/DSC04544.jpg
+    - rockefeller/DSC04542.jpg
+
 - id: washington-dc
   title: Washington, D.C.
   cover: washington_dc/DSC03881.JPG
