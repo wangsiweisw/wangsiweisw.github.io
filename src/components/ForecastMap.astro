@@ -1,0 +1,629 @@
+---
+// Forecast map: animated 10-day field (temperature, precipitation, or the ML-minus-physics difference) around the
+// selected city, from AIFS, IFS and GFS via Open-Meteo, drawn on a Leaflet basemap. Loads only when scrolled to.
+import 'leaflet/dist/leaflet.css';
+---
+
+<forecast-map>
+  <div class="map-controls">
+    <div class="chips" role="group" aria-label="Map layer">
+      <button type="button" class="chip" data-layer="temp" aria-pressed="true">Temperature</button>
+      <button type="button" class="chip" data-layer="precip" aria-pressed="false">Precipitation</button>
+      <button type="button" class="chip" data-layer="diff" aria-pressed="false">AIFS − IFS</button>
+    </div>
+    <div class="chips" role="group" aria-label="Model" data-model-group>
+      <button type="button" class="chip" data-model="aifs" aria-pressed="true">AIFS</button>
+      <button type="button" class="chip" data-model="ifs" aria-pressed="false">IFS</button>
+      <button type="button" class="chip" data-model="gfs" aria-pressed="false">GFS</button>
+    </div>
+  </div>
+
+  <div class="map-frame">
+    <div class="map" data-map></div>
+    <p class="map-status" data-map-status>Map loads when you scroll here…</p>
+    <div class="readout" data-readout hidden></div>
+    <div class="legend-bar" data-legend hidden>
+      <span class="legend-title" data-legend-title></span>
+      <span class="ramp" data-ramp></span>
+      <span class="ticks" data-ticks></span>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <button type="button" class="play" data-play aria-label="Play">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg>
+    </button>
+    <input type="range" min="0" max="0" value="0" step="1" data-time aria-label="Forecast time" />
+    <output data-time-label>—</output>
+  </div>
+</forecast-map>
+
+<style>
+  forecast-map {
+    display: block;
+  }
+  .map-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chips[hidden] {
+    display: none;
+  }
+  .chip {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--fg);
+    font: 500 0.85rem var(--body);
+    cursor: pointer;
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+  .map-frame {
+    position: relative;
+    margin-top: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .map {
+    height: min(62vh, 520px);
+    min-height: 320px;
+    background: var(--surface);
+    cursor: crosshair;
+  }
+  .map-status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .map-status[hidden] {
+    display: none;
+  }
+  .readout {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 500;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  .legend-bar {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 500;
+    display: grid;
+    gap: 0.25rem;
+    width: min(260px, 60%);
+    padding: 0.5rem 0.65rem 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    font-size: 0.75rem;
+  }
+  .legend-bar[hidden] {
+    display: none;
+  }
+  .legend-title {
+    color: var(--muted);
+  }
+  .ramp {
+    display: block;
+    height: 8px;
+    border-radius: 4px;
+  }
+  .ticks {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .timeline {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.9rem;
+    margin-top: 0.75rem;
+  }
+  .play {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .play:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .play svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  output {
+    min-width: 9.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  /* keep Leaflet chrome in the site's palette */
+  .map :global(.leaflet-control-attribution) {
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .map :global(.leaflet-control-attribution a) {
+    color: var(--muted);
+  }
+  .map :global(.leaflet-bar a) {
+    background: var(--bg);
+    color: var(--fg);
+    border-color: var(--rule);
+  }
+  .map :global(.osm-muted) {
+    filter: grayscale(1) contrast(0.85) brightness(1.05);
+    opacity: 0.75;
+  }
+  :global([data-effective-theme='dark']) .map :global(.osm-muted) {
+    filter: grayscale(1) invert(1) contrast(0.8) brightness(0.9);
+    opacity: 0.6;
+  }
+  .map :global(.city-dot) {
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    background: var(--fg);
+    box-shadow: 0 0 0 1px var(--fg);
+  }
+</style>
+
+<script>
+  import type * as Leaflet from 'leaflet';
+
+  type City = { id: string; name: string; lat: number; lon: number };
+  type ModelKey = 'aifs' | 'ifs' | 'gfs';
+  type Layer = 'temp' | 'precip' | 'diff';
+
+  const MODELS: Record<ModelKey, { id: string; name: string }> = {
+    aifs: { id: 'ecmwf_aifs025_single', name: 'AIFS (ECMWF, machine learning)' },
+    ifs: { id: 'ecmwf_ifs025', name: 'IFS (ECMWF, physics)' },
+    gfs: { id: 'gfs_global', name: 'GFS (NOAA, physics)' },
+  };
+  const COLS = 10;
+  const ROWS = 8;
+
+  type Grid = {
+    lats: number[]; // north → south
+    lons: number[]; // west → east
+    time: number[]; // ms, shifted so UTC getters read local time
+    temp: Record<ModelKey, Float32Array[]>; // [t] → rows*cols
+    precip: Record<ModelKey, Float32Array[]>;
+  };
+
+  // --- color ramps (validated diverging blue ↔ terracotta, sequential blue) ---
+  type RGB = [number, number, number];
+  const hex = (h: string): RGB => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as RGB;
+  const COLD = ['#0d366b', '#256abf', '#6da7ec', '#b7d3f6'].map(hex);
+  const WARM = ['#f3c9b4', '#e07a4f', '#b4532a', '#7a3418'].map(hex);
+  const BLUE = ['#cde2fb', '#86b6ef', '#3987e5', '#1c5cab', '#0d366b'].map(hex);
+  const lerpRamp = (stops: RGB[], f: number): RGB => {
+    const x = Math.max(0, Math.min(1, f)) * (stops.length - 1);
+    const i = Math.min(stops.length - 2, Math.floor(x));
+    const t = x - i;
+    return stops[i].map((v, k) => Math.round(v + (stops[i + 1][k] - v) * t)) as RGB;
+  };
+  /** f in [-1, 1] → color, with a neutral midpoint */
+  function diverging(f: number, mid: RGB): RGB {
+    if (f < 0) return lerpRamp([...COLD, mid], 1 + f);
+    return lerpRamp([mid, ...WARM], f);
+  }
+
+  // Web Mercator y, so the overlay lines up with the basemap
+  const mercY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+  const invMercY = (y: number) => (360 / Math.PI) * Math.atan(Math.exp(y)) - 90;
+
+  async function loadGrid(city: City): Promise<Grid | null> {
+    const key = `fxmap-${city.id}`;
+    const latSpan = 12;
+    const lonSpan = Math.min(30, (latSpan * 1.45) / Math.cos((city.lat * Math.PI) / 180));
+    const lats = Array.from({ length: ROWS }, (_, r) => +(city.lat + latSpan / 2 - (r * latSpan) / (ROWS - 1)).toFixed(2));
+    const lons = Array.from({ length: COLS }, (_, c) => +(city.lon - lonSpan / 2 + (c * lonSpan) / (COLS - 1)).toFixed(2));
+    let raw: any;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+      if (cached && Date.now() - cached.t < 60 * 60 * 1000) raw = cached.raw;
+    } catch {}
+    if (!raw) {
+      const qLat: number[] = [];
+      const qLon: number[] = [];
+      for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(lo));
+      const models = Object.values(MODELS).map((m) => m.id).join(',');
+      const url =
+        `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=temperature_2m,precipitation` +
+        `&models=${models}&forecast_days=10&temporal_resolution=hourly_3&timezone=auto&timeformat=unixtime`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        // keep only what we draw: compact enough to cache
+        raw = {
+          offset: data[0].utc_offset_seconds,
+          time: data[0].hourly.time,
+          v: data.map((d: any) =>
+            Object.fromEntries(
+              Object.entries(MODELS).flatMap(([k, m]) => [
+                [`t_${k}`, d.hourly[`temperature_2m_${m.id}`]],
+                [`p_${k}`, d.hourly[`precipitation_${m.id}`]],
+              ]),
+            ),
+          ),
+        };
+        try {
+          sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), raw }));
+        } catch {}
+      } catch {
+        return null;
+      }
+    }
+    const T = raw.time.length;
+    const field = (prefix: string, k: ModelKey) =>
+      Array.from({ length: T }, (_, t) => Float32Array.from(raw.v, (loc: any) => loc[`${prefix}_${k}`]?.[t] ?? NaN));
+    const keys = Object.keys(MODELS) as ModelKey[];
+    return {
+      lats,
+      lons,
+      time: raw.time.map((s: number) => (s + raw.offset) * 1000),
+      temp: Object.fromEntries(keys.map((k) => [k, field('t', k)])) as Grid['temp'],
+      precip: Object.fromEntries(keys.map((k) => [k, field('p', k)])) as Grid['precip'],
+    };
+  }
+
+  class ForecastMap extends HTMLElement {
+    L!: typeof Leaflet;
+    map!: Leaflet.Map;
+    overlay?: Leaflet.ImageOverlay;
+    base?: Leaflet.TileLayer;
+    dot?: Leaflet.Marker;
+    city!: City;
+    grid: Grid | null = null;
+    layer: Layer = 'temp';
+    model: ModelKey = 'aifs';
+    t = 0;
+    playing = 0;
+    canvas = document.createElement('canvas');
+    tempRange: [number, number] = [0, 1];
+    started = false;
+    token = 0;
+    picked = false;
+
+    connectedCallback() {
+      const first = document.querySelector<HTMLElement>('forecast-lab');
+      this.city = JSON.parse(first?.dataset.cities ?? '[]')[0];
+      document.addEventListener('fx-city', (e) => {
+        this.city = (e as CustomEvent<City>).detail;
+        this.picked = false;
+        if (this.started) this.load();
+      });
+      // load Leaflet + data only when the map scrolls near the viewport
+      new IntersectionObserver(
+        ([e], obs) => {
+          if (e.isIntersecting) (obs.disconnect(), this.start());
+        },
+        { rootMargin: '200px' },
+      ).observe(this);
+
+      this.querySelectorAll<HTMLButtonElement>('[data-layer]').forEach((b) =>
+        b.addEventListener('click', () => {
+          this.layer = b.dataset.layer as Layer;
+          this.querySelectorAll('[data-layer]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          (this.querySelector('[data-model-group]') as HTMLElement).hidden = this.layer === 'diff';
+          this.computeRange();
+          this.draw();
+        }),
+      );
+      this.querySelectorAll<HTMLButtonElement>('[data-model]').forEach((b) =>
+        b.addEventListener('click', () => {
+          this.model = b.dataset.model as ModelKey;
+          this.querySelectorAll('[data-model]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          this.computeRange();
+          this.draw();
+        }),
+      );
+      const slider = this.querySelector<HTMLInputElement>('[data-time]')!;
+      slider.addEventListener('input', () => {
+        this.stop();
+        this.t = Number(slider.value);
+        this.draw();
+      });
+      this.querySelector('[data-play]')!.addEventListener('click', () => (this.playing ? this.stop() : this.play()));
+      document.addEventListener('unitschange', () => (this.computeRange(), this.draw()));
+      new MutationObserver(() => (this.setTiles(), this.draw())).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-effective-theme'],
+      });
+    }
+
+    async start() {
+      this.started = true;
+      this.L = (await import('leaflet')).default;
+      const L = this.L;
+      this.map = L.map(this.querySelector<HTMLElement>('[data-map]')!, {
+        zoomControl: true,
+        zoomSnap: 0.25,
+        scrollWheelZoom: false,
+        attributionControl: true,
+      });
+      this.setTiles();
+      this.map.on('mousemove', (e: Leaflet.LeafletMouseEvent) => this.readout(e.latlng.lat, e.latlng.lng));
+      // click a spot: move the marker there and send it to the ensemble charts
+      this.map.on('click', (e: Leaflet.LeafletMouseEvent) => {
+        const lat = +e.latlng.lat.toFixed(2);
+        const lon = +L.Util.wrapNum(e.latlng.lng, [-180, 180], true).toFixed(2);
+        this.picked = true;
+        this.dot?.setLatLng([lat, lon]);
+        document.dispatchEvent(new CustomEvent('fx-pick', { detail: { lat, lon } }));
+      });
+      this.map.on('mouseout', () => ((this.querySelector('[data-readout]') as HTMLElement).hidden = true));
+      this.load();
+    }
+
+    setTiles() {
+      if (!this.map || this.base) return;
+      // OpenStreetMap tiles (no key needed), toned down with CSS filters to sit quietly under the data
+      this.base = this.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 10,
+        className: 'osm-muted',
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Data: ECMWF, NOAA via Open-Meteo',
+      }).addTo(this.map);
+    }
+
+    async load() {
+      const token = ++this.token;
+      this.stop();
+      this.status(`Loading the forecast map around ${this.city.name}…`);
+      const grid = await loadGrid(this.city);
+      if (token !== this.token) return;
+      if (!grid) return this.status('Could not load the map data right now. Try again in a bit.');
+      this.grid = grid;
+      const L = this.L;
+      const bounds = L.latLngBounds([grid.lats.at(-1)!, grid.lons[0]], [grid.lats[0], grid.lons.at(-1)!]);
+      this.map.fitBounds(bounds, { padding: [0, 0] });
+      this.map.setMaxBounds(bounds.pad(0.5));
+      this.dot?.remove();
+      this.dot = L.marker([this.city.lat, this.city.lon], {
+        icon: L.divIcon({ className: '', html: '<div class="city-dot"></div>', iconSize: [10, 10] }),
+        interactive: false,
+      }).addTo(this.map);
+      const slider = this.querySelector<HTMLInputElement>('[data-time]')!;
+      slider.max = String(grid.time.length - 1);
+      this.t = 0;
+      slider.value = '0';
+      this.computeRange();
+      this.status('');
+      this.draw();
+    }
+
+    status(text: string) {
+      const s = this.querySelector<HTMLElement>('[data-map-status]')!;
+      s.textContent = text;
+      s.hidden = !text;
+    }
+
+    get metric() {
+      return document.documentElement.dataset.units === 'metric';
+    }
+    conv(c: number) {
+      return this.metric ? c : (c * 9) / 5 + 32;
+    }
+
+    /** fixed color range across all times, so colors keep their meaning while the animation plays */
+    computeRange() {
+      const g = this.grid;
+      if (!g) return;
+      if (this.layer === 'temp') {
+        const all: number[] = [];
+        for (const f of g.temp[this.model]) for (const v of f) if (!isNaN(v)) all.push(this.conv(v));
+        all.sort((a, b) => a - b);
+        this.tempRange = [all[Math.floor(all.length * 0.02)], all[Math.floor(all.length * 0.98)]];
+      } else if (this.layer === 'diff') {
+        // 98th percentile of |AIFS − IFS| so a few extreme cells don't wash out the rest
+        const diffs: number[] = [];
+        g.time.forEach((_, t) => {
+          const a = g.temp.aifs[t];
+          const b = g.temp.ifs[t];
+          for (let i = 0; i < a.length; i++) if (!isNaN(a[i] - b[i])) diffs.push(Math.abs(a[i] - b[i]));
+        });
+        diffs.sort((x, y) => x - y);
+        const m = diffs[Math.floor(diffs.length * 0.98)] ?? 0;
+        const k = this.metric ? 1 : 1.8;
+        this.tempRange = [-Math.max(2, Math.ceil(m * k)), Math.max(2, Math.ceil(m * k))];
+      } else this.tempRange = [0, 10];
+    }
+
+    value(t: number, gx: number, gy: number): number {
+      const g = this.grid!;
+      const sample = (f: Float32Array) => {
+        const c0 = Math.max(0, Math.min(COLS - 2, Math.floor(gx)));
+        const r0 = Math.max(0, Math.min(ROWS - 2, Math.floor(gy)));
+        const fx = gx - c0;
+        const fy = gy - r0;
+        const at = (r: number, c: number) => f[r * COLS + c];
+        return (
+          (at(r0, c0) * (1 - fx) + at(r0, c0 + 1) * fx) * (1 - fy) + (at(r0 + 1, c0) * (1 - fx) + at(r0 + 1, c0 + 1) * fx) * fy
+        );
+      };
+      if (this.layer === 'temp') return this.conv(sample(g.temp[this.model][t]));
+      if (this.layer === 'precip') return sample(g.precip[this.model][t]);
+      const d = sample(g.temp.aifs[t]) - sample(g.temp.ifs[t]);
+      return this.metric ? d : d * 1.8;
+    }
+
+    color(v: number): [number, number, number, number] {
+      const dark = document.documentElement.dataset.effectiveTheme === 'dark';
+      const mid: RGB = dark ? [56, 56, 53] : [240, 239, 236];
+      if (isNaN(v)) return [0, 0, 0, 0];
+      const [lo, hi] = this.tempRange;
+      if (this.layer === 'precip') {
+        if (v < 0.1) return [0, 0, 0, 0];
+        const f = Math.log(1 + v * 3) / Math.log(1 + 15 * 3); // ~0.1–15 mm per 3 h
+        const [r, g, b] = lerpRamp(BLUE, f);
+        return [r, g, b, Math.round(120 + 110 * Math.min(1, f + 0.2))];
+      }
+      const center = this.layer === 'diff' ? 0 : (lo + hi) / 2;
+      const half = this.layer === 'diff' ? hi : (hi - lo) / 2;
+      const [r, g, b] = diverging((v - center) / half, mid);
+      return [r, g, b, 150];
+    }
+
+    draw() {
+      const g = this.grid;
+      if (!g || !this.map) return;
+      const L = this.L;
+      const W = 240;
+      const H = 190;
+      const cv = this.canvas;
+      cv.width = W;
+      cv.height = H;
+      const ctx = cv.getContext('2d')!;
+      const img = ctx.createImageData(W, H);
+      const latN = g.lats[0];
+      const latS = g.lats.at(-1)!;
+      const yN = mercY(latN);
+      const yS = mercY(latS);
+      for (let py = 0; py < H; py++) {
+        const lat = invMercY(yN + ((py + 0.5) / H) * (yS - yN));
+        const gy = ((latN - lat) / (latN - latS)) * (ROWS - 1);
+        for (let px = 0; px < W; px++) {
+          const gx = ((px + 0.5) / W) * (COLS - 1);
+          const c = this.color(this.value(this.t, gx, gy));
+          const o = (py * W + px) * 4;
+          img.data[o] = c[0];
+          img.data[o + 1] = c[1];
+          img.data[o + 2] = c[2];
+          img.data[o + 3] = c[3];
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const url = cv.toDataURL();
+      const bounds = L.latLngBounds([latS, g.lons[0]], [latN, g.lons.at(-1)!]);
+      if (this.overlay) this.overlay.setUrl(url);
+      else this.overlay = L.imageOverlay(url, bounds, { opacity: 1, interactive: false, className: 'fx-field' }).addTo(this.map);
+      this.overlay.setBounds(bounds);
+
+      const time = new Date(g.time[this.t]);
+      this.querySelector('[data-time-label]')!.textContent = time.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        timeZone: 'UTC',
+      });
+      (this.querySelector('[data-time]') as HTMLInputElement).value = String(this.t);
+      this.legend();
+    }
+
+    legend() {
+      const box = this.querySelector<HTMLElement>('[data-legend]')!;
+      const unit = this.metric ? '°C' : '°F';
+      const [lo, hi] = this.tempRange;
+      let title = '';
+      let stops: string[] = [];
+      let ticks: string[] = [];
+      if (this.layer === 'precip') {
+        title = `Precipitation, mm per 3 hours · ${MODELS[this.model].name}`;
+        stops = BLUE.map((c) => `rgb(${c})`);
+        ticks = ['0.1', '1', '5', '15+'];
+      } else {
+        const dark = document.documentElement.dataset.effectiveTheme === 'dark';
+        const mid = dark ? 'rgb(56,56,53)' : 'rgb(240,239,236)';
+        stops = [...COLD.map((c) => `rgb(${c})`), mid, ...WARM.map((c) => `rgb(${c})`)];
+        if (this.layer === 'diff') {
+          title = `AIFS minus IFS temperature (${unit}): red = ML model warmer`;
+          ticks = [`${lo}`, '0', `+${hi}`];
+        } else {
+          title = `Temperature (${unit}) · ${MODELS[this.model].name}`;
+          ticks = [lo, (lo + hi) / 2, hi].map((v) => `${Math.round(v)}°`);
+        }
+      }
+      box.querySelector<HTMLElement>('[data-legend-title]')!.textContent = title;
+      box.querySelector<HTMLElement>('[data-ramp]')!.style.background = `linear-gradient(90deg, ${stops.join(',')})`;
+      box.querySelector<HTMLElement>('[data-ticks]')!.innerHTML = ticks.map((t) => `<span>${t}</span>`).join('');
+      box.hidden = false;
+    }
+
+    readout(lat: number, lon: number) {
+      const g = this.grid;
+      const box = this.querySelector<HTMLElement>('[data-readout]')!;
+      if (!g) return;
+      const gx = ((lon - g.lons[0]) / (g.lons.at(-1)! - g.lons[0])) * (COLS - 1);
+      const gy = ((g.lats[0] - lat) / (g.lats[0] - g.lats.at(-1)!)) * (ROWS - 1);
+      if (gx < 0 || gx > COLS - 1 || gy < 0 || gy > ROWS - 1) return void (box.hidden = true);
+      const v = this.value(this.t, gx, gy);
+      const unit = this.metric ? '°C' : '°F';
+      box.textContent =
+        this.layer === 'precip'
+          ? `${v.toFixed(1)} mm in 3 h`
+          : this.layer === 'diff'
+            ? `AIFS ${v >= 0 ? 'warmer' : 'colder'} by ${Math.abs(v).toFixed(1)}${unit}`
+            : `${Math.round(v)}${unit}`;
+      box.hidden = false;
+    }
+
+    play() {
+      if (!this.grid) return;
+      const btn = this.querySelector<HTMLElement>('[data-play]')!;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"></path></svg>';
+      btn.setAttribute('aria-label', 'Pause');
+      this.playing = window.setInterval(() => {
+        this.t = (this.t + 1) % this.grid!.time.length;
+        this.draw();
+      }, 220);
+    }
+
+    stop() {
+      if (!this.playing) return;
+      clearInterval(this.playing);
+      this.playing = 0;
+      const btn = this.querySelector<HTMLElement>('[data-play]')!;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"></path></svg>';
+      btn.setAttribute('aria-label', 'Play');
+    }
+  }
+
+  customElements.define('forecast-map', ForecastMap);
+</script>

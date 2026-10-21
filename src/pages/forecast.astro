@@ -2,6 +2,7 @@
 // Forecast lab: 15-day ensemble forecasts from ECMWF's ML model (AIFS ENS), its physics model (IFS ENS) and NOAA's GEFS,
 // fetched live from Open-Meteo and drawn as plumes (median + 10–90% band, optional individual runs).
 import Base from '../layouts/Base.astro';
+import ForecastMap from '../components/ForecastMap.astro';
 
 const cities = [
   { id: 'nyc', name: 'New York', lat: 40.71, lon: -74.01 },
@@ -32,6 +33,7 @@ const models = [
     <div class="controls">
       <div class="chips" role="group" aria-label="City">
         {cities.map((c, i) => <button type="button" class="chip" data-city={c.id} aria-pressed={i === 0 ? 'true' : 'false'}>{c.name}</button>)}
+        <button type="button" class="chip pin" data-pin aria-pressed="false" hidden></button>
       </div>
       <div class="chips" role="group" aria-label="Variable">
         <button type="button" class="chip" data-var="temp" aria-pressed="true">Temperature</button>
@@ -71,6 +73,12 @@ const models = [
     </details>
   </forecast-lab>
 
+  <section class="map-section">
+    <h2 class="section-title">Across the region</h2>
+    <p class="section-intro">The same models on a map: press play to watch the next 10 days, switch to <em>AIFS − IFS</em> to see where the machine-learning model and the physics model disagree, or <strong>click anywhere</strong> to see that spot's ensemble forecast above.</p>
+    <ForecastMap />
+  </section>
+
   <section class="notes">
     <h2 class="kicker">Reading the chart</h2>
     <ul>
@@ -80,7 +88,6 @@ const models = [
     </ul>
     <p class="credit">
       Data: ECMWF AIFS ENS and IFS ENS (CC BY 4.0) and NOAA GEFS, via <a href="https://open-meteo.com/">Open-Meteo</a>.
-      Fetched live in your browser; nothing is stored.
     </p>
   </section>
 </Base>
@@ -122,6 +129,9 @@ const models = [
   }
   .chip:hover {
     border-color: var(--fg);
+  }
+  .chip[hidden] {
+    display: none;
   }
   .chip[aria-pressed='true'] {
     background: var(--fg);
@@ -273,6 +283,19 @@ const models = [
   .table-view :global(td:first-child) {
     text-align: left;
   }
+  .map-section {
+    margin-top: 3.5rem;
+  }
+  .section-title {
+    margin: 0;
+    font: 400 1.8rem / 1.2 var(--display);
+    letter-spacing: -0.02em;
+  }
+  .section-intro {
+    max-width: 40rem;
+    margin: 0.5rem 0 1.25rem;
+    color: var(--muted);
+  }
   .notes {
     max-width: 44rem;
     margin-top: 3rem;
@@ -373,6 +396,8 @@ const models = [
         b.addEventListener('click', () => {
           this.city = this.cities.find((c) => c.id === b.dataset.city)!;
           this.press('[data-city]', b);
+          (this.querySelector('[data-pin]') as HTMLElement).setAttribute('aria-pressed', 'false');
+          document.dispatchEvent(new CustomEvent('fx-city', { detail: this.city }));
           this.load();
         }),
       );
@@ -395,6 +420,19 @@ const models = [
       this.querySelector<HTMLInputElement>('[data-runs]')!.addEventListener('change', (e) => {
         this.showRuns = (e.target as HTMLInputElement).checked;
         this.render();
+      });
+      // a spot clicked on the map below becomes the chart's location
+      const pin = this.querySelector<HTMLButtonElement>('[data-pin]')!;
+      document.addEventListener('fx-pick', (e) => {
+        const { lat, lon } = (e as CustomEvent<{ lat: number; lon: number }>).detail;
+        const name = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+        this.city = { id: `pt${lat.toFixed(2)}_${lon.toFixed(2)}`, name, lat, lon };
+        pin.textContent = `📍 ${name}`;
+        pin.hidden = false;
+        this.querySelectorAll('[data-city]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+        pin.setAttribute('aria-pressed', 'true');
+        this.load();
+        this.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
       });
       document.addEventListener('unitschange', () => this.render());
       new MutationObserver(() => this.render()).observe(document.documentElement, {
