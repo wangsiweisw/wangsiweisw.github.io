@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import { site } from '../lib/site';
 import { isLive } from '../data/nav';
 import { photos, srcset } from '../lib/photos';
+import WindField from '../components/WindField.astro';
 
 const portrait = site.portrait ? photos.find((p) => p.file === site.portrait) : undefined;
 
@@ -54,6 +55,7 @@ const [before, after] = site.positioningEmphasis
 <Base title={site.nameZh ? `${site.name} ${site.nameZh}` : site.name}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
   <section class:list={['hero', { 'has-portrait': portrait }]}>
+    <WindField />
     {
       portrait && (
         <figure class="portrait">
@@ -91,13 +93,22 @@ const [before, after] = site.positioningEmphasis
         <a class="btn" href={site.links.linkedin}>LinkedIn ↗</a>
         {site.links.email && <a class="btn" href={`mailto:${site.links.email}`}>Email</a>}
       </div>
+      <p class="wind-caption" data-wind-caption hidden>
+        <span class="dot"></span><span data-wind-text>Live wind over New York</span>
+      </p>
     </div>
   </section>
 </Base>
 
 <style>
   .hero {
+    position: relative;
     padding: 4rem 0 2rem;
+  }
+  .hero > .text,
+  .hero > .portrait {
+    position: relative;
+    z-index: 1;
   }
   /* portrait: small, above the name on phones; beside the text on wide screens */
   .portrait {
@@ -181,6 +192,30 @@ const [before, after] = site.positioningEmphasis
   .bio a:hover {
     color: var(--fg);
     text-decoration-color: currentColor;
+  }
+  .wind-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+  }
+  .wind-caption[hidden] {
+    display: none;
+  }
+  .wind-caption .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
   }
   .actions {
     display: flex;

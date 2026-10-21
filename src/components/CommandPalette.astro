@@ -1,0 +1,269 @@
+---
+// ⌘K / Ctrl+K command palette: jump to any page or album, switch theme, copy email.
+import { visibleNav } from '../data/nav';
+import { albums } from '../lib/albums';
+import { site } from '../lib/site';
+
+type Item = { label: string; hint: string; group: string; href?: string; action?: string; keywords?: string };
+
+const items: Item[] = [
+  { label: 'Home', hint: '/', group: 'Pages', href: '/' },
+  ...visibleNav.map((n) => ({ label: n.label, hint: n.href, group: 'Pages', href: `${n.href}/` })),
+  ...albums.map((a) => ({
+    label: a.title,
+    hint: [a.subtitle, a.when].filter(Boolean).join(' · '),
+    group: 'Photography',
+    href: `/photos/${a.id}/`,
+    keywords: a.photos.map((p) => [p.title, p.location].filter(Boolean).join(' ')).join(' '),
+  })),
+  { label: 'Toggle dark mode', hint: 'Theme', group: 'Actions', action: 'theme' },
+  ...(site.links.email ? [{ label: 'Copy email address', hint: site.links.email, group: 'Actions', action: 'copy-email' }] : []),
+  { label: 'LinkedIn', hint: 'Open profile', group: 'Actions', href: site.links.linkedin },
+];
+---
+
+<command-palette data-email={site.links.email ?? ''}>
+  <script type="application/json" set:html={JSON.stringify(items)} />
+  <dialog class="cmdk" aria-label="Search the site">
+    <div class="box">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="text" placeholder="Search pages, places, photos…" aria-label="Search" autocomplete="off" spellcheck="false" />
+        <kbd>esc</kbd>
+      </div>
+      <ul class="results" role="listbox"></ul>
+      <p class="empty" hidden>No matches.</p>
+    </div>
+  </dialog>
+</command-palette>
+
+<style>
+  .cmdk {
+    width: min(36rem, calc(100vw - 32px));
+    max-height: min(32rem, 80vh);
+    margin: 12vh auto auto;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: 0 24px 64px -24px rgba(30, 20, 10, 0.45);
+    overflow: hidden;
+  }
+  .cmdk::backdrop {
+    background: rgba(20, 16, 12, 0.35);
+    backdrop-filter: blur(2px);
+  }
+  .cmdk[open] {
+    animation: pop 0.16s ease-out;
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+  }
+  .box {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .search svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--muted);
+    flex: none;
+  }
+  input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--fg);
+    font: 400 1.05rem var(--body);
+  }
+  kbd {
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--muted);
+    font: 0.75rem var(--body);
+  }
+  .results {
+    margin: 0;
+    padding: 0.4rem;
+    list-style: none;
+    overflow-y: auto;
+  }
+  .results :global(.group) {
+    padding: 0.6rem 0.7rem 0.3rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .results :global(.item) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .results :global(.item[aria-selected='true']) {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .results :global(.item .label) {
+    font: 400 1rem var(--display);
+  }
+  .results :global(.item[aria-selected='true'] .label) {
+    color: var(--accent);
+  }
+  .results :global(.item .hint) {
+    color: var(--muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .empty {
+    margin: 0;
+    padding: 1.5rem;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+
+<script>
+  import { effectiveTheme, setTheme } from '../scripts/prefs';
+
+  type Item = { label: string; hint: string; group: string; href?: string; action?: string; keywords?: string };
+
+  class CommandPalette extends HTMLElement {
+    items: Item[] = [];
+    shown: Item[] = [];
+    sel = 0;
+
+    connectedCallback() {
+      this.items = JSON.parse(this.querySelector('script')!.textContent!);
+      const dialog = this.querySelector('dialog')!;
+      const input = this.querySelector('input')!;
+      const list = this.querySelector('.results')!;
+
+      const open = () => {
+        if (dialog.open) return;
+        input.value = '';
+        this.render('');
+        dialog.showModal();
+        input.focus();
+      };
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          dialog.open ? dialog.close() : open();
+        }
+      });
+      document.addEventListener('click', (e) => {
+        if ((e.target as Element).closest('[data-open-cmdk]')) open();
+      });
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close();
+      });
+      input.addEventListener('input', () => this.render(input.value));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const n = this.shown.length;
+          if (!n) return;
+          this.sel = (this.sel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n;
+          this.highlight();
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const item = this.shown[this.sel];
+          if (item) this.run(item);
+        }
+      });
+      list.addEventListener('click', (e) => {
+        const li = (e.target as Element).closest<HTMLElement>('.item');
+        if (li) this.run(this.shown[Number(li.dataset.i)]);
+      });
+      list.addEventListener('mousemove', (e) => {
+        const li = (e.target as Element).closest<HTMLElement>('.item');
+        if (li && Number(li.dataset.i) !== this.sel) ((this.sel = Number(li.dataset.i)), this.highlight());
+      });
+    }
+
+    /** Simple fuzzy match: every query word must appear somewhere in label, hint, group or keywords. */
+    render(query: string) {
+      const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+      this.shown = this.items.filter((it) => {
+        const hay = `${it.label} ${it.hint} ${it.group} ${it.keywords ?? ''}`.toLowerCase();
+        return words.every((w) => hay.includes(w));
+      });
+      this.sel = 0;
+      const list = this.querySelector('.results')!;
+      list.replaceChildren();
+      let group = '';
+      this.shown.forEach((it, i) => {
+        if (it.group !== group) {
+          group = it.group;
+          const g = document.createElement('li');
+          g.className = 'group';
+          g.textContent = group;
+          g.setAttribute('role', 'presentation');
+          list.append(g);
+        }
+        const li = document.createElement('li');
+        li.className = 'item';
+        li.dataset.i = String(i);
+        li.setAttribute('role', 'option');
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = it.label;
+        const hint = document.createElement('span');
+        hint.className = 'hint';
+        hint.textContent = it.hint;
+        li.append(label, hint);
+        list.append(li);
+      });
+      (this.querySelector('.empty') as HTMLElement).hidden = this.shown.length > 0;
+      this.highlight();
+    }
+
+    highlight() {
+      this.querySelectorAll<HTMLElement>('.item').forEach((li) => {
+        const on = Number(li.dataset.i) === this.sel;
+        li.setAttribute('aria-selected', String(on));
+        if (on) li.scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    run(item: Item) {
+      const dialog = this.querySelector('dialog')!;
+      if (item.href) {
+        dialog.close();
+        if (/^https?:/.test(item.href)) window.open(item.href, '_blank', 'noopener');
+        else location.href = item.href;
+      } else if (item.action === 'theme') {
+        setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark');
+        document.querySelector('theme-toggle button')?.setAttribute('aria-pressed', String(effectiveTheme() === 'dark'));
+        dialog.close();
+      } else if (item.action === 'copy-email') {
+        navigator.clipboard?.writeText(this.dataset.email ?? '');
+        const hint = this.querySelectorAll('.item .hint')[this.sel];
+        if (hint) hint.textContent = 'Copied ✓';
+        setTimeout(() => dialog.close(), 700);
+      }
+    }
+  }
+
+  customElements.define('command-palette', CommandPalette);
+</script>
