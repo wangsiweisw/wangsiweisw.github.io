@@ -1,0 +1,73 @@
+---
+// Thin bar across the top of the page, colored by the current temperature at the site's weather location.
+import { site } from '../lib/site';
+---
+
+<temp-band class="band" data-lat={site.weather.lat} data-lon={site.weather.lon} data-city={site.weather.city} aria-hidden="true"></temp-band>
+
+<style>
+  .band {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: block;
+    height: 4px;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .band.on {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  // °C → color: cold blue … mild sand … hot terracotta
+  const STOPS: [number, [number, number, number]][] = [
+    [-10, [70, 110, 190]],
+    [5, [110, 165, 215]],
+    [15, [205, 190, 150]],
+    [25, [222, 140, 80]],
+    [35, [180, 70, 40]],
+  ];
+  function colorFor(c: number) {
+    if (c <= STOPS[0][0]) return STOPS[0][1];
+    for (let i = 1; i < STOPS.length; i++) {
+      const [t1, c1] = STOPS[i];
+      const [t0, c0] = STOPS[i - 1];
+      if (c <= t1) {
+        const f = (c - t0) / (t1 - t0);
+        return c0.map((v, k) => Math.round(v + (c1[k] - v) * f)) as [number, number, number];
+      }
+    }
+    return STOPS.at(-1)![1];
+  }
+
+  class TempBand extends HTMLElement {
+    async connectedCallback() {
+      const { lat, lon, city } = this.dataset;
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`);
+        if (!res.ok) return;
+        const c = (await res.json()).current.temperature_2m as number;
+        const [r, g, b] = colorFor(c);
+        const [r2, g2, b2] = colorFor(c + 4);
+        this.style.background = `linear-gradient(90deg, rgb(${r},${g},${b}), rgb(${r2},${g2},${b2}))`;
+        this.classList.add('on');
+
+        const caption = document.querySelector<HTMLElement>('[data-hero-caption]');
+        const text = caption?.querySelector('[data-hero-caption-text]');
+        if (caption && text && !caption.dataset.owner) {
+          caption.dataset.owner = 'band';
+          const metric = document.documentElement.dataset.units === 'metric';
+          const t = Math.round(metric ? c : (c * 9) / 5 + 32);
+          text.textContent = `The line up top is today's temperature in ${city}: ${t}°${metric ? 'C' : 'F'}`;
+          caption.hidden = false;
+        }
+      } catch {}
+    }
+  }
+
+  customElements.define('temp-band', TempBand);
+</script>

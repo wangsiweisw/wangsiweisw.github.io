@@ -44,6 +44,9 @@ a {
 
 /* Buttons */
 .btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -53,11 +56,43 @@ a {
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
-  transition: border-color var(--ease), transform var(--ease);
+  transition: border-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* ink fills the pill from the left on hover */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--fg);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .btn:hover {
   border-color: var(--fg);
+  color: var(--bg);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -14px rgba(40, 30, 20, 0.45);
+}
+
+.btn:hover::before {
+  transform: scaleX(1);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn .arrow {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.btn:hover .arrow {
+  transform: translate(2px, -2px);
 }
 
 .btn-primary {
@@ -66,9 +101,12 @@ a {
   color: var(--accent-fg);
 }
 
+.btn-primary::before {
+  background: var(--fg);
+}
+
 .btn-primary:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
+  border-color: var(--fg);
 }
 
 /* Small round icon/text buttons in the header (theme, units) */
@@ -88,7 +126,17 @@ a {
 }
 
 .toggle:hover {
-  border-color: var(--muted);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.toggle svg {
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.toggle:hover svg {
+  transform: rotate(-12deg) scale(1.08);
 }
 
 .toggle svg {

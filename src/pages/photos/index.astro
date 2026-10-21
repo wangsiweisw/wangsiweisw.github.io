@@ -43,7 +43,7 @@ const total = albums.reduce((n, a) => n + a.photos.length, 0);
                 </picture>
               </span>
               <span class="meta">
-                <span class="title">{a.title}</span>
+                <span class="title">{a.title}<span class="go" aria-hidden="true">→</span></span>
                 <span class="sub">
                   {[a.subtitle, a.when].filter(Boolean).join(' · ')}
                   <span class="count">
@@ -145,5 +145,24 @@ const total = albums.reduce((n, a) => n + a.photos.length, 0);
   }
   .empty {
     color: var(--muted);
+  }
+  .cover {
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.45s ease;
+  }
+  .card:hover .cover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 40px -26px rgba(40, 30, 20, 0.55);
+  }
+  .go {
+    display: inline-block;
+    margin-left: 0.4rem;
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+  }
+  .card:hover .go,
+  .card:focus-visible .go {
+    opacity: 1;
+    transform: none;
   }
 </style>

@@ -5,6 +5,12 @@ import { site } from '../lib/site';
 import { isLive } from '../data/nav';
 import { photos, srcset } from '../lib/photos';
 import WindField from '../components/WindField.astro';
+import IsobarField from '../components/IsobarField.astro';
+import PrecipField from '../components/PrecipField.astro';
+import WeatherCard from '../components/WeatherCard.astro';
+import TempBand from '../components/TempBand.astro';
+
+const fx = new Set(site.heroEffects);
 
 const portrait = site.portrait ? photos.find((p) => p.file === site.portrait) : undefined;
 
@@ -55,7 +61,10 @@ const [before, after] = site.positioningEmphasis
 <Base title={site.nameZh ? `${site.name} ${site.nameZh}` : site.name}>
   <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
   <section class:list={['hero', { 'has-portrait': portrait }]}>
-    <WindField />
+    {fx.has('band') && <TempBand />}
+    {fx.has('isobars') && <IsobarField />}
+    {fx.has('wind') && <WindField />}
+    {fx.has('precip') && <PrecipField />}
     {
       portrait && (
         <figure class="portrait">
@@ -90,11 +99,12 @@ const [before, after] = site.positioningEmphasis
       </p>
       <div class="actions">
         {isLive('/resume') && <a class="btn btn-primary" href="/resume">Resume</a>}
-        <a class="btn" href={site.links.linkedin}>LinkedIn ↗</a>
+        <a class="btn" href={site.links.linkedin}>LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
         {site.links.email && <a class="btn" href={`mailto:${site.links.email}`}>Email</a>}
       </div>
-      <p class="wind-caption" data-wind-caption hidden>
-        <span class="dot"></span><span data-wind-text>Live wind over New York</span>
+      {fx.has('card') && <WeatherCard />}
+      <p class="wind-caption" data-hero-caption hidden>
+        <span class="dot"></span><span data-hero-caption-text></span>
       </p>
     </div>
   </section>
@@ -183,15 +193,34 @@ const [before, after] = site.positioningEmphasis
     margin: 1.25rem 0 0;
     color: var(--muted);
   }
+  /* hobby links: a thin rule that draws in with the accent on hover */
   .bio a {
     color: inherit;
-    text-decoration-color: var(--rule);
-    text-underline-offset: 0.2em;
-    transition: text-decoration-color var(--ease), color var(--ease);
+    text-decoration: none;
+    background:
+      linear-gradient(var(--accent), var(--accent)) 0 100% / 0 1.5px no-repeat,
+      linear-gradient(var(--rule), var(--rule)) 0 100% / 100% 1px no-repeat;
+    transition: background-size 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.25s ease;
   }
   .bio a:hover {
     color: var(--fg);
-    text-decoration-color: currentColor;
+    background-size: 100% 1.5px, 100% 1px;
+  }
+  /* staggered entrance */
+  .text > *,
+  .portrait {
+    animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .text > :nth-child(2) { animation-delay: 0.06s; }
+  .text > :nth-child(3) { animation-delay: 0.12s; }
+  .text > :nth-child(4) { animation-delay: 0.18s; }
+  .text > :nth-child(n + 5) { animation-delay: 0.24s; }
+  .portrait { animation-delay: 0.15s; }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
   }
   .wind-caption {
     display: inline-flex;

@@ -1,0 +1,199 @@
+---
+// Small live weather card: current conditions plus today/tomorrow highs and lows (Open-Meteo). Hidden on any error.
+import { site } from '../lib/site';
+const { city, lat, lon, caption } = site.weather;
+---
+
+<weather-card class="wx is-loading" data-lat={lat} data-lon={lon} hidden>
+  <div class="wx-head">
+    <span class="wx-label">Right now in {city}</span>
+  </div>
+  <div class="wx-body">
+    <div class="wx-now">
+      <span class="wx-icon" data-icon></span>
+      <span class="wx-temp" data-temp>—</span>
+      <span class="wx-cond" data-cond></span>
+    </div>
+    <ul class="wx-days">
+      <li><span>Today</span><span class="wx-day-icon" data-icon-0></span><span class="hilo"><b data-hi-0></b><i data-lo-0></i></span></li>
+      <li><span>Tomorrow</span><span class="wx-day-icon" data-icon-1></span><span class="hilo"><b data-hi-1></b><i data-lo-1></i></span></li>
+    </ul>
+  </div>
+  <p class="wx-caption">{caption}</p>
+</weather-card>
+
+<style>
+  .wx {
+    display: block;
+    max-width: 26rem;
+    margin-top: 2.25rem;
+    padding: 1.1rem 1.25rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--surface);
+    box-shadow: 0 1px 0 var(--rule), 0 18px 40px -30px rgba(60, 40, 20, 0.35);
+  }
+  .wx[hidden] {
+    display: none;
+  }
+  .wx-label {
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .wx-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 0.6rem;
+  }
+  .wx-now {
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 0.6rem;
+    align-items: center;
+  }
+  .wx-icon {
+    grid-row: span 2;
+    display: flex;
+    color: var(--accent);
+  }
+  .wx-icon :global(svg) {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+  .wx-temp {
+    font: 300 2.6rem/1 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .wx-cond {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .wx-days {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.88rem;
+  }
+  .wx-days li {
+    display: grid;
+    grid-template-columns: 1fr auto 4.6rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+  }
+  .wx-days li + li {
+    border-top: 1px dashed var(--rule);
+  }
+  .wx-day-icon {
+    display: flex;
+    color: var(--muted);
+  }
+  .wx-day-icon :global(svg) {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+  .hilo {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .hilo b {
+    font-weight: 500;
+  }
+  .hilo i {
+    color: var(--muted);
+    font-style: normal;
+  }
+  .wx-caption {
+    margin: 0.8rem 0 0;
+    font: italic 400 1rem/1.4 var(--display);
+  }
+  @media (max-width: 480px) {
+    .wx-body {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  const P = (d: string) =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const CLOUD = '<path d="M7 19h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 11.3 3.9 3.9 0 0 0 7 19z"/>';
+  const CLOUD_UP = '<path d="M7 15h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7.3 3.9 3.9 0 0 0 7 15z"/>';
+  const ICONS: Record<string, string> = {
+    clear: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    night: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    partly: '<path d="M8 3v1.5M3.5 7.5H2M4.8 4.3l1 1M11.2 4.3l-1 1"/><path d="M5.3 10.2A3.5 3.5 0 0 1 11.4 7"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1A3 3 0 0 0 9 20z"/>',
+    cloudy: CLOUD,
+    fog: '<path d="M4 9h16M3 13h18M5 17h14"/>',
+    rain: CLOUD_UP + '<path d="M9 17.5l-1 3M13 17.5l-1 3M17 17.5l-1 3"/>',
+    snow: CLOUD_UP + '<path d="M8.5 18.5h.01M12 20.5h.01M15.5 18.5h.01"/>',
+    thunder: CLOUD_UP + '<path d="M12.5 15l-2 3.5h3l-2 3.5"/>',
+  };
+  function describe(code: number, isDay = 1): [string, string] {
+    if (code === 0) return [isDay ? 'clear' : 'night', 'Clear'];
+    if (code <= 2) return ['partly', 'Partly cloudy'];
+    if (code === 3) return ['cloudy', 'Overcast'];
+    if (code === 45 || code === 48) return ['fog', 'Fog'];
+    if (code >= 51 && code <= 57) return ['rain', 'Drizzle'];
+    if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return ['rain', 'Rain'];
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return ['snow', 'Snow'];
+    if (code >= 95) return ['thunder', 'Thunderstorm'];
+    return ['cloudy', 'Cloudy'];
+  }
+
+  class WeatherCard extends HTMLElement {
+    data: any = null;
+
+    async connectedCallback() {
+      const { lat, lon } = this.dataset;
+      const key = `wx-card-${lat},${lon}`;
+      try {
+        const c = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+        if (c && Date.now() - c.t < 30 * 60 * 1000) this.data = c.d;
+      } catch {}
+      if (!this.data) {
+        try {
+          const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=2&timezone=auto`,
+          );
+          if (!res.ok) return;
+          this.data = await res.json();
+          try {
+            sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: this.data }));
+          } catch {}
+        } catch {
+          return; // never show a broken card
+        }
+      }
+      this.render();
+      this.hidden = false;
+      document.addEventListener('unitschange', () => this.render());
+    }
+
+    render() {
+      const d = this.data;
+      const metric = document.documentElement.dataset.units === 'metric';
+      const t = (c: number) => `${Math.round(metric ? c : (c * 9) / 5 + 32)}°`;
+      const [icon, label] = describe(d.current.weather_code, d.current.is_day);
+      const q = (s: string) => this.querySelector<HTMLElement>(s)!;
+      q('[data-icon]').innerHTML = P(ICONS[icon]);
+      q('[data-temp]').textContent = t(d.current.temperature_2m) + (metric ? 'C' : 'F');
+      q('[data-cond]').textContent = label;
+      for (const i of [0, 1]) {
+        q(`[data-icon-${i}]`).innerHTML = P(ICONS[describe(d.daily.weather_code[i])[0]]);
+        q(`[data-hi-${i}]`).textContent = t(d.daily.temperature_2m_max[i]);
+        q(`[data-lo-${i}]`).textContent = t(d.daily.temperature_2m_min[i]);
+      }
+      this.classList.remove('is-loading');
+    }
+  }
+
+  customElements.define('weather-card', WeatherCard);
+</script>

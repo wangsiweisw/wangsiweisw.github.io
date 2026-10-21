@@ -19,10 +19,11 @@ const schema = z.object({
     .array(z.object({ name: z.string(), alternateName: z.string().optional(), degree: z.string().optional() }))
     .default([]),
   showEmployerOnHome: z.boolean(),
+  heroEffects: z.array(z.enum(['wind', 'isobars', 'precip', 'card', 'band'])).default(['wind']),
   weather: z.object({
-    city: z.string().nullable(),
-    lat: z.number().nullable(),
-    lon: z.number().nullable(),
+    city: z.string(),
+    lat: z.number(),
+    lon: z.number(),
     caption: z.string(),
   }),
 });

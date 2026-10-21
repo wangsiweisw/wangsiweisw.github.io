@@ -27,9 +27,15 @@ portrait: me/DSC09538.JPG
 
 showEmployerOnHome: false
 
-# Weather card is parked (not on Home). Placement, city and caption are TBD.
+# Home page weather effects, any combination of:
+#   wind (live wind particles) · isobars (live pressure contours) · precip (rain/snow when it's falling)
+#   card (small live weather card) · band (thin bar colored by temperature)
+# Use [] for none.
+heroEffects: [wind]
+
+# Location used by the live weather effects above.
 weather:
-  city: null
-  lat: null
-  lon: null
+  city: New York
+  lat: 40.71
+  lon: -74.01
   caption: I build ML models that try to get this right.

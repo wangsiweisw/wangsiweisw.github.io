@@ -1,0 +1,769 @@
+---
+// Forecast lab: 15-day ensemble forecasts from ECMWF's ML model (AIFS ENS), its physics model (IFS ENS) and NOAA's GEFS,
+// fetched live from Open-Meteo and drawn as plumes (median + 10–90% band, optional individual runs).
+import Base from '../layouts/Base.astro';
+
+const cities = [
+  { id: 'nyc', name: 'New York', lat: 40.71, lon: -74.01 },
+  { id: 'london', name: 'London', lat: 51.51, lon: -0.13 },
+  { id: 'beijing', name: 'Beijing', lat: 39.9, lon: 116.4 },
+  { id: 'sf', name: 'San Francisco', lat: 37.77, lon: -122.42 },
+  { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.69 },
+];
+const models = [
+  { id: 'ecmwf_aifs025', name: 'AIFS ENS', org: 'ECMWF · machine learning', key: 'aifs' },
+  { id: 'ecmwf_ifs025', name: 'IFS ENS', org: 'ECMWF · physics', key: 'ifs' },
+  { id: 'gfs025', name: 'GEFS', org: 'NOAA · physics', key: 'gefs' },
+];
+---
+
+<Base title="Forecast lab" description="Live 15-day ensemble forecasts: ECMWF's machine-learning AIFS against its physics-based IFS and NOAA's GEFS." showUnits>
+  <header class="page-head">
+    <p class="kicker">Forecast lab</p>
+    <h1>How sure is the forecast?</h1>
+    <p class="intro">
+      A weather forecast isn't one answer. Forecast centers run a model dozens of times from slightly different starting
+      points, an <em>ensemble</em>, and the spread of those runs tells you how confident to be. Below are today's 15-day
+      ensembles from ECMWF's machine-learning model (AIFS), its traditional physics model (IFS), and NOAA's GEFS.
+    </p>
+  </header>
+
+  <forecast-lab data-cities={JSON.stringify(cities)} data-models={JSON.stringify(models)}>
+    <div class="controls">
+      <div class="chips" role="group" aria-label="City">
+        {cities.map((c, i) => <button type="button" class="chip" data-city={c.id} aria-pressed={i === 0 ? 'true' : 'false'}>{c.name}</button>)}
+      </div>
+      <div class="chips" role="group" aria-label="Variable">
+        <button type="button" class="chip" data-var="temp" aria-pressed="true">Temperature</button>
+        <button type="button" class="chip" data-var="precip" aria-pressed="false">Chance of rain</button>
+      </div>
+    </div>
+
+    <div class="legend" role="group" aria-label="Models">
+      {
+        models.map((m) => (
+          <button type="button" class="model" data-model={m.key} aria-pressed="true">
+            <span class={`swatch s-${m.key}`} aria-hidden="true" />
+            <span class="m-name">{m.name}</span>
+            <span class="m-org">{m.org}</span>
+          </button>
+        ))
+      }
+      <label class="runs"><input type="checkbox" data-runs /> Show every run</label>
+    </div>
+
+    <figure class="chart-wrap">
+      <figcaption class="chart-title" data-title>Temperature, next 15 days</figcaption>
+      <div class="chart" data-chart>
+        <p class="status" data-status>Loading today's ensembles…</p>
+      </div>
+      <div class="tip" data-tip hidden></div>
+    </figure>
+
+    <figure class="chart-wrap small" data-spread-wrap>
+      <figcaption class="chart-title">How uncertainty grows: spread between the 10th and 90th percentile runs</figcaption>
+      <div class="chart" data-spread></div>
+    </figure>
+
+    <details class="table-view">
+      <summary>Show as a table</summary>
+      <div data-table></div>
+    </details>
+  </forecast-lab>
+
+  <section class="notes">
+    <h2 class="kicker">Reading the chart</h2>
+    <ul>
+      <li><strong>Solid line</strong>: the median run. <strong>Shaded band</strong>: where the middle 80% of runs fall.</li>
+      <li>A narrow band means the runs agree. Watch it widen after a few days: that's chaos at work.</li>
+      <li>AIFS is ECMWF's data-driven model, trained on decades of reanalysis. Where it and IFS disagree is where it gets interesting.</li>
+    </ul>
+    <p class="credit">
+      Data: ECMWF AIFS ENS and IFS ENS (CC BY 4.0) and NOAA GEFS, via <a href="https://open-meteo.com/">Open-Meteo</a>.
+      Fetched live in your browser; nothing is stored.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    padding: 3rem 0 2rem;
+  }
+  h1 {
+    margin: 0.4rem 0 0;
+    font: 400 clamp(2.2rem, 5.5vw, 3.25rem) / 1.05 var(--display);
+    letter-spacing: -0.03em;
+  }
+  .intro {
+    max-width: 40rem;
+    margin: 1rem 0 0;
+    font: 400 1.15rem / 1.55 var(--display);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chip {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--fg);
+    font: 500 0.85rem var(--body);
+    cursor: pointer;
+    transition: border-color var(--ease), background var(--ease), color var(--ease);
+  }
+  .chip:hover {
+    border-color: var(--fg);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    margin-top: 1.25rem;
+  }
+  .model {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.2rem 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    cursor: pointer;
+    font: inherit;
+  }
+  .model[aria-pressed='false'] {
+    opacity: 0.4;
+  }
+  .swatch {
+    align-self: center;
+    width: 14px;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .m-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .m-org {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .runs {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  forecast-lab {
+    display: block;
+    --c-aifs: #b4532a;
+    --c-ifs: #2f6db5;
+    --c-gefs: #2a8a5a;
+  }
+  :global([data-effective-theme='dark']) forecast-lab {
+    --c-aifs: #d4683f;
+    --c-ifs: #5a8fd6;
+    --c-gefs: #3fa06e;
+  }
+  .s-aifs { background: var(--c-aifs); }
+  .s-ifs { background: var(--c-ifs); }
+  .s-gefs { background: var(--c-gefs); }
+  .chart-wrap {
+    position: relative;
+    margin: 1.5rem 0 0;
+    padding: 1.25rem 1.25rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .chart-wrap.small {
+    margin-top: 1rem;
+  }
+  .chart-title {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .chart {
+    position: relative;
+    margin-top: 0.5rem;
+    min-height: 120px;
+  }
+  .chart :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-family: var(--body);
+  }
+  .status {
+    display: grid;
+    place-items: center;
+    min-height: 300px;
+    margin: 0;
+    color: var(--muted);
+  }
+  .tip {
+    position: absolute;
+    z-index: 2;
+    min-width: 13rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: var(--bg);
+    box-shadow: 0 12px 30px -18px rgba(30, 20, 10, 0.5);
+    font-size: 0.82rem;
+    pointer-events: none;
+  }
+  .tip :global(.when) {
+    margin-bottom: 0.35rem;
+    color: var(--muted);
+  }
+  .tip :global(.row) {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .tip :global(.row i) {
+    width: 14px;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .tip :global(.row small) {
+    color: var(--muted);
+  }
+  .table-view {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .table-view summary {
+    cursor: pointer;
+  }
+  .table-view :global(table) {
+    width: 100%;
+    margin-top: 0.75rem;
+    border-collapse: collapse;
+    color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .table-view :global(th),
+  .table-view :global(td) {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--rule);
+    text-align: right;
+  }
+  .table-view :global(th:first-child),
+  .table-view :global(td:first-child) {
+    text-align: left;
+  }
+  .notes {
+    max-width: 44rem;
+    margin-top: 3rem;
+  }
+  .notes ul {
+    margin: 0.75rem 0 0;
+    padding-left: 1.1rem;
+  }
+  .notes li + li {
+    margin-top: 0.4rem;
+  }
+  .credit {
+    margin-top: 1.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 640px) {
+    .runs {
+      margin-left: 0;
+    }
+    .chart-wrap {
+      padding: 1rem 0.5rem 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  type City = { id: string; name: string; lat: number; lon: number };
+  type Model = { id: string; name: string; org: string; key: string };
+  type Series = { key: string; time: number[]; members: (number | null)[][]; precip: (number | null)[][] };
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag: string, attrs: Record<string, string | number> = {}) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    return e;
+  };
+  const pct = (sorted: number[], p: number) => {
+    if (!sorted.length) return NaN;
+    const i = (sorted.length - 1) * p;
+    const lo = Math.floor(i);
+    return sorted[lo] + (sorted[Math.min(lo + 1, sorted.length - 1)] - sorted[lo]) * (i - lo);
+  };
+
+  async function fetchModel(city: City, model: Model): Promise<Series | null> {
+    const key = `fx-${city.id}-${model.key}`;
+    try {
+      const c = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+      if (c && Date.now() - c.t < 60 * 60 * 1000) return c.s;
+    } catch {}
+    const url =
+      `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${city.lat}&longitude=${city.lon}` +
+      `&hourly=temperature_2m,precipitation&models=${model.id}&forecast_days=16&timezone=auto&timeformat=unixtime`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const j = await res.json();
+      const h = j.hourly;
+      const tKeys = Object.keys(h).filter((k) => k.startsWith('temperature_2m'));
+      const pKeys = Object.keys(h).filter((k) => k.startsWith('precipitation'));
+      // keep every 3rd hour: plenty for a 15-day plume, a third of the work
+      const idx = h.time.map((_: number, i: number) => i).filter((i: number) => i % 3 === 0);
+      const offset = j.utc_offset_seconds as number;
+      const s: Series = {
+        key: model.key,
+        time: idx.map((i: number) => (h.time[i] + offset) * 1000), // shifted so UTC getters read local time
+        members: tKeys.map((k) => idx.map((i: number) => h[k][i])),
+        // precipitation stays hourly (summed per day later)
+        precip: pKeys.map((k) => h[k]),
+      };
+      (s as any).ptime = (h.time as number[]).map((t) => (t + offset) * 1000);
+      try {
+        sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), s }));
+      } catch {}
+      return s;
+    } catch {
+      return null;
+    }
+  }
+
+  class ForecastLab extends HTMLElement {
+    cities: City[] = [];
+    models: Model[] = [];
+    city!: City;
+    variable: 'temp' | 'precip' = 'temp';
+    on = new Set<string>();
+    showRuns = false;
+    data = new Map<string, Series | null>();
+    loadToken = 0;
+
+    connectedCallback() {
+      this.cities = JSON.parse(this.dataset.cities!);
+      this.models = JSON.parse(this.dataset.models!);
+      this.city = this.cities[0];
+      this.models.forEach((m) => this.on.add(m.key));
+
+      this.querySelectorAll<HTMLButtonElement>('[data-city]').forEach((b) =>
+        b.addEventListener('click', () => {
+          this.city = this.cities.find((c) => c.id === b.dataset.city)!;
+          this.press('[data-city]', b);
+          this.load();
+        }),
+      );
+      this.querySelectorAll<HTMLButtonElement>('[data-var]').forEach((b) =>
+        b.addEventListener('click', () => {
+          this.variable = b.dataset.var as 'temp' | 'precip';
+          this.press('[data-var]', b);
+          this.render();
+        }),
+      );
+      this.querySelectorAll<HTMLButtonElement>('[data-model]').forEach((b) =>
+        b.addEventListener('click', () => {
+          const k = b.dataset.model!;
+          if (this.on.has(k) && this.on.size > 1) this.on.delete(k);
+          else this.on.add(k);
+          b.setAttribute('aria-pressed', String(this.on.has(k)));
+          this.render();
+        }),
+      );
+      this.querySelector<HTMLInputElement>('[data-runs]')!.addEventListener('change', (e) => {
+        this.showRuns = (e.target as HTMLInputElement).checked;
+        this.render();
+      });
+      document.addEventListener('unitschange', () => this.render());
+      new MutationObserver(() => this.render()).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-effective-theme'],
+      });
+      let rt = 0;
+      window.addEventListener('resize', () => (clearTimeout(rt), (rt = window.setTimeout(() => this.render(), 150))));
+      this.load();
+    }
+
+    press(sel: string, btn: HTMLElement) {
+      this.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+    }
+
+    async load() {
+      const token = ++this.loadToken;
+      this.status(`Loading today's ensembles for ${this.city.name}…`);
+      const results = await Promise.all(this.models.map((m) => fetchModel(this.city, m)));
+      if (token !== this.loadToken) return; // a newer city was picked meanwhile
+      this.data = new Map(this.models.map((m, i) => [m.key, results[i]]));
+      if (results.every((r) => !r)) return this.status('Could not load the forecasts right now. Try again in a bit.');
+      this.render();
+    }
+
+    status(text: string) {
+      const chart = this.querySelector<HTMLElement>('[data-chart]')!;
+      chart.innerHTML = `<p class="status">${text}</p>`;
+      (this.querySelector('[data-spread]') as HTMLElement).innerHTML = '';
+    }
+
+    color(key: string) {
+      return getComputedStyle(this).getPropertyValue(`--c-${key}`).trim();
+    }
+
+    active() {
+      return this.models.filter((m) => this.on.has(m.key) && this.data.get(m.key));
+    }
+
+    render() {
+      if (!this.data.size) return;
+      this.querySelector('[data-title]')!.textContent =
+        this.variable === 'temp'
+          ? `Temperature in ${this.city.name}, next 15 days`
+          : `Chance of at least 1 mm of rain each day in ${this.city.name}`;
+      (this.querySelector('[data-spread-wrap]') as HTMLElement).hidden = this.variable !== 'temp';
+      (this.querySelector('.runs') as HTMLElement).hidden = this.variable !== 'temp';
+      if (this.variable === 'temp') {
+        this.renderTemp();
+        this.renderSpread();
+      } else this.renderPrecip();
+      this.renderTable();
+    }
+
+    get metric() {
+      return document.documentElement.dataset.units === 'metric';
+    }
+    conv(c: number) {
+      return this.metric ? c : (c * 9) / 5 + 32;
+    }
+
+    /** median, p10, p90 per time step, in display units */
+    stats(s: Series) {
+      return s.time.map((_, i) => {
+        const vals = s.members.map((m) => m[i]).filter((v): v is number => v != null).map((v) => this.conv(v)).sort((a, b) => a - b);
+        return vals.length ? { med: pct(vals, 0.5), p10: pct(vals, 0.1), p90: pct(vals, 0.9) } : null;
+      });
+    }
+
+    renderTemp() {
+      const host = this.querySelector<HTMLElement>('[data-chart]')!;
+      const W = Math.max(320, host.clientWidth);
+      const H = W < 560 ? 260 : 340;
+      const m = { l: 36, r: 12, t: 10, b: 28 };
+      const act = this.active();
+      const stats = new Map(act.map((md) => [md.key, this.stats(this.data.get(md.key)!)]));
+      const t0 = Math.min(...act.map((md) => this.data.get(md.key)!.time[0]));
+      const t1 = Math.max(...act.map((md) => this.data.get(md.key)!.time.at(-1)!));
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const md of act) {
+        const s = this.data.get(md.key)!;
+        for (const [i, st] of stats.get(md.key)!.entries()) {
+          if (!st) continue;
+          const vals = this.showRuns
+            ? s.members.map((mm) => mm[i]).filter((v): v is number => v != null).map((v) => this.conv(v))
+            : [st.p10, st.p90];
+          for (const v of vals) ((lo = Math.min(lo, v)), (hi = Math.max(hi, v)));
+        }
+      }
+      const step = this.metric ? 5 : 10;
+      lo = Math.floor(lo / step) * step;
+      hi = Math.ceil(hi / step) * step;
+      const x = (t: number) => m.l + ((t - t0) / (t1 - t0)) * (W - m.l - m.r);
+      const y = (v: number) => m.t + (1 - (v - lo) / (hi - lo)) * (H - m.t - m.b);
+
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': this.summary() });
+      // grid + y labels
+      for (let v = lo; v <= hi; v += step) {
+        svg.append(el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: 'var(--rule)', 'stroke-width': 1 }));
+        const lab = el('text', { x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--muted)' });
+        lab.textContent = `${v}°`;
+        svg.append(lab);
+      }
+      // day ticks
+      const DAY = 864e5;
+      const startDay = Math.ceil(t0 / DAY) * DAY;
+      const every = W < 560 ? 3 : 2;
+      for (let d = startDay, n = 0; d <= t1; d += DAY, n++) {
+        svg.append(el('line', { x1: x(d), x2: x(d), y1: H - m.b, y2: H - m.b + 4, stroke: 'var(--rule)' }));
+        if (n % every === 0) {
+          const date = new Date(d);
+          const lab = el('text', { x: x(d), y: H - 8, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)' });
+          lab.textContent = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+          svg.append(lab);
+        }
+      }
+      // plumes
+      for (const md of act) {
+        const s = this.data.get(md.key)!;
+        const st = stats.get(md.key)!;
+        const c = this.color(md.key);
+        const pts = st.map((v, i) => (v ? [x(s.time[i]), v] as const : null)).filter(Boolean) as (readonly [number, { med: number; p10: number; p90: number }])[];
+        const band =
+          'M' + pts.map(([px, v]) => `${px},${y(v.p90)}`).join('L') + 'L' + pts.slice().reverse().map(([px, v]) => `${px},${y(v.p10)}`).join('L') + 'Z';
+        svg.append(el('path', { d: band, fill: c, 'fill-opacity': this.showRuns ? 0.06 : 0.14 }));
+        if (this.showRuns) {
+          for (const mem of s.members) {
+            const d = mem.map((v, i) => (v == null ? '' : `${i && mem[i - 1] != null ? 'L' : 'M'}${x(s.time[i])},${y(this.conv(v))}`)).join('');
+            svg.append(el('path', { d, fill: 'none', stroke: c, 'stroke-width': 0.6, 'stroke-opacity': 0.35 }));
+          }
+        }
+        svg.append(el('path', { d: 'M' + pts.map(([px, v]) => `${px},${y(v.med)}`).join('L'), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+        // direct label at the end of each median line
+        const last = pts.at(-1)!;
+        const lab = el('text', { x: Math.min(last[0] + 4, W - m.r), y: y(last[1].med) - 6, 'font-size': 11, 'font-weight': 600, fill: 'var(--fg)', 'text-anchor': last[0] > W - 70 ? 'end' : 'start' });
+        lab.textContent = md.name;
+        svg.append(lab);
+      }
+      // hover layer
+      const cross = el('line', { y1: m.t, y2: H - m.b, stroke: 'var(--muted)', 'stroke-dasharray': '3 3', opacity: 0 });
+      const dots = act.map((md) => {
+        const dot = el('circle', { r: 4, fill: this.color(md.key), stroke: 'var(--surface)', 'stroke-width': 2, opacity: 0 });
+        svg.append(dot);
+        return dot;
+      });
+      svg.append(cross);
+      const hit = el('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: 'transparent' });
+      svg.append(hit);
+      host.replaceChildren(svg);
+
+      const tip = this.querySelector<HTMLElement>('[data-tip]')!;
+      const unit = this.metric ? '°C' : '°F';
+      const move = (clientX: number) => {
+        const r = svg.getBoundingClientRect();
+        const px = ((clientX - r.left) / r.width) * W;
+        const t = t0 + ((px - m.l) / (W - m.l - m.r)) * (t1 - t0);
+        let html = `<div class="when">${new Date(t).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', timeZone: 'UTC' })}</div>`;
+        let cx = 0;
+        act.forEach((md, k) => {
+          const s = this.data.get(md.key)!;
+          let i = s.time.findIndex((tt) => tt >= t);
+          if (i < 0) i = s.time.length - 1;
+          const v = stats.get(md.key)![i];
+          if (!v || Math.abs(s.time[i] - t) > 3 * 3600e3) return void dots[k].setAttribute('opacity', '0');
+          cx = x(s.time[i]);
+          dots[k].setAttribute('cx', String(cx));
+          dots[k].setAttribute('cy', String(y(v.med)));
+          dots[k].setAttribute('opacity', '1');
+          html += `<div class="row"><i style="background:${this.color(md.key)}"></i><span>${md.name}</span><span>${Math.round(v.med)}${unit} <small>${Math.round(v.p10)}–${Math.round(v.p90)}</small></span></div>`;
+        });
+        cross.setAttribute('x1', String(cx));
+        cross.setAttribute('x2', String(cx));
+        cross.setAttribute('opacity', '1');
+        tip.innerHTML = html;
+        tip.hidden = false;
+        const wrap = this.querySelector<HTMLElement>('.chart-wrap')!.getBoundingClientRect();
+        const left = clientX - wrap.left + 16;
+        tip.style.left = `${Math.min(left, wrap.width - tip.offsetWidth - 8)}px`;
+        tip.style.top = `${r.top - wrap.top + 12}px`;
+        if (left + tip.offsetWidth > wrap.width - 8) tip.style.left = `${clientX - wrap.left - tip.offsetWidth - 16}px`;
+      };
+      const leave = () => {
+        tip.hidden = true;
+        cross.setAttribute('opacity', '0');
+        dots.forEach((d) => d.setAttribute('opacity', '0'));
+      };
+      hit.addEventListener('pointermove', (e) => move((e as PointerEvent).clientX));
+      hit.addEventListener('pointerleave', leave);
+    }
+
+    renderSpread() {
+      const host = this.querySelector<HTMLElement>('[data-spread]')!;
+      const W = Math.max(320, host.clientWidth);
+      const H = 150;
+      const m = { l: 36, r: 12, t: 8, b: 24 };
+      const act = this.active();
+      // daily mean spread (p90 - p10) by lead day
+      const series = act.map((md) => {
+        const s = this.data.get(md.key)!;
+        const st = this.stats(s);
+        const byDay = new Map<number, number[]>();
+        st.forEach((v, i) => {
+          if (!v) return;
+          const day = Math.floor((s.time[i] - s.time[0]) / 864e5);
+          (byDay.get(day) ?? byDay.set(day, []).get(day)!).push(v.p90 - v.p10);
+        });
+        return { md, pts: [...byDay.entries()].map(([d, a]) => [d + 1, a.reduce((p, q) => p + q, 0) / a.length] as [number, number]) };
+      });
+      const maxDay = Math.max(...series.flatMap((s) => s.pts.map((p) => p[0])));
+      const maxV = Math.max(...series.flatMap((s) => s.pts.map((p) => p[1])));
+      const step = this.metric ? 5 : 10;
+      const top = Math.max(step, Math.ceil(maxV / step) * step);
+      const x = (d: number) => m.l + ((d - 1) / (maxDay - 1)) * (W - m.l - m.r);
+      const y = (v: number) => m.t + (1 - v / top) * (H - m.t - m.b);
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Ensemble spread by forecast day' });
+      for (let v = 0; v <= top; v += step) {
+        svg.append(el('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: 'var(--rule)' }));
+        const lab = el('text', { x: m.l - 8, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--muted)' });
+        lab.textContent = `${v}°`;
+        svg.append(lab);
+      }
+      for (let d = 1; d <= maxDay; d += W < 560 ? 3 : 2) {
+        const lab = el('text', { x: x(d), y: H - 6, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)' });
+        lab.textContent = d === 1 ? 'Day 1' : String(d);
+        svg.append(lab);
+      }
+      for (const { md, pts } of series) {
+        const c = this.color(md.key);
+        svg.append(el('path', { d: 'M' + pts.map(([d, v]) => `${x(d)},${y(v)}`).join('L'), fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+        const [ld, lv] = pts.at(-1)!;
+        svg.append(el('circle', { cx: x(ld), cy: y(lv), r: 4, fill: c, stroke: 'var(--surface)', 'stroke-width': 2 }));
+      }
+      host.replaceChildren(svg);
+    }
+
+    /** probability of >= 1 mm per local day, per model */
+    rainChances(md: Model) {
+      const s = this.data.get(md.key)!;
+      const ptime = (s as any).ptime as number[];
+      const days = new Map<number, number[]>(); // day -> per-member totals
+      ptime.forEach((t, i) => {
+        const day = Math.floor(t / 864e5);
+        const totals = days.get(day) ?? days.set(day, new Array(s.precip.length).fill(0)).get(day)!;
+        s.precip.forEach((mem, k) => (totals[k] += mem[i] ?? 0));
+      });
+      return [...days.entries()]
+        .filter(([, tot]) => tot.some((v) => v > 0) || true)
+        .map(([day, tot]) => ({ day, p: tot.filter((v) => v >= 1).length / tot.length }));
+    }
+
+    renderPrecip() {
+      const host = this.querySelector<HTMLElement>('[data-chart]')!;
+      const W = Math.max(320, host.clientWidth);
+      const H = W < 560 ? 240 : 300;
+      const m = { l: 40, r: 8, t: 10, b: 28 };
+      const act = this.active();
+      const chances = act.map((md) => ({ md, days: this.rainChances(md) }));
+      const allDays = [...new Set(chances.flatMap((c) => c.days.map((d) => d.day)))].sort((a, b) => a - b).slice(0, 16);
+      const band = (W - m.l - m.r) / allDays.length;
+      const barW = Math.max(3, (band - 8 - 2 * (act.length - 1)) / act.length);
+      const y = (p: number) => m.t + (1 - p) * (H - m.t - m.b);
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': `Daily chance of rain in ${this.city.name}` });
+      for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+        svg.append(el('line', { x1: m.l, x2: W - m.r, y1: y(p), y2: y(p), stroke: 'var(--rule)' }));
+        const lab = el('text', { x: m.l - 8, y: y(p) + 4, 'text-anchor': 'end', 'font-size': 11, fill: 'var(--muted)' });
+        lab.textContent = `${p * 100}%`;
+        svg.append(lab);
+      }
+      const tip = this.querySelector<HTMLElement>('[data-tip]')!;
+      allDays.forEach((day, di) => {
+        const x0 = m.l + di * band + 4;
+        const date = new Date(day * 864e5);
+        if (di % (W < 560 ? 3 : 2) === 0) {
+          const lab = el('text', { x: x0 + (band - 8) / 2, y: H - 8, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)' });
+          lab.textContent = date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+          svg.append(lab);
+        }
+        chances.forEach(({ md, days }, k) => {
+          const d = days.find((dd) => dd.day === day);
+          if (!d) return;
+          const h = Math.max(0, y(0) - y(d.p));
+          const bx = x0 + k * (barW + 2);
+          const r = Math.min(4, barW / 2, h);
+          // rounded top corners only
+          svg.append(
+            el('path', {
+              d: `M${bx},${y(0)}V${y(0) - h + r}Q${bx},${y(0) - h} ${bx + r},${y(0) - h}H${bx + barW - r}Q${bx + barW},${y(0) - h} ${bx + barW},${y(0) - h + r}V${y(0)}Z`,
+              fill: this.color(md.key),
+            }),
+          );
+        });
+        const hit = el('rect', { x: m.l + di * band, y: m.t, width: band, height: H - m.t - m.b, fill: 'transparent' });
+        hit.addEventListener('pointerenter', (e) => {
+          let html = `<div class="when">${date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' })}</div>`;
+          chances.forEach(({ md, days }) => {
+            const dd = days.find((q) => q.day === day);
+            if (dd) html += `<div class="row"><i style="background:${this.color(md.key)}"></i><span>${md.name}</span><span>${Math.round(dd.p * 100)}%</span></div>`;
+          });
+          tip.innerHTML = html;
+          tip.hidden = false;
+          const wrap = this.querySelector<HTMLElement>('.chart-wrap')!.getBoundingClientRect();
+          const cx = (e as PointerEvent).clientX - wrap.left;
+          tip.style.left = `${cx + 16 + tip.offsetWidth > wrap.width ? cx - tip.offsetWidth - 16 : cx + 16}px`;
+          tip.style.top = '3rem';
+        });
+        hit.addEventListener('pointerleave', () => (tip.hidden = true));
+        svg.append(hit);
+      });
+      host.replaceChildren(svg);
+    }
+
+    summary() {
+      const parts = this.active().map((md) => {
+        const st = this.stats(this.data.get(md.key)!).filter(Boolean) as { med: number }[];
+        const meds = st.map((v) => v.med);
+        return `${md.name} median ranges ${Math.round(Math.min(...meds))} to ${Math.round(Math.max(...meds))} degrees`;
+      });
+      return `15-day temperature ensembles for ${this.city.name}: ${parts.join('; ')}.`;
+    }
+
+    renderTable() {
+      const act = this.active();
+      const host = this.querySelector<HTMLElement>('[data-table]')!;
+      const unit = this.metric ? '°C' : '°F';
+      if (this.variable === 'precip') {
+        const ch = act.map((md) => ({ md, days: this.rainChances(md) }));
+        const days = [...new Set(ch.flatMap((c) => c.days.map((d) => d.day)))].sort((a, b) => a - b);
+        host.innerHTML =
+          `<table><thead><tr><th>Day</th>${act.map((m) => `<th>${m.name}</th>`).join('')}</tr></thead><tbody>` +
+          days
+            .map(
+              (day) =>
+                `<tr><td>${new Date(day * 864e5).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</td>${ch
+                  .map(({ days: dd }) => {
+                    const v = dd.find((q) => q.day === day);
+                    return `<td>${v ? Math.round(v.p * 100) + '%' : '–'}</td>`;
+                  })
+                  .join('')}</tr>`,
+            )
+            .join('') +
+          '</tbody></table>';
+        return;
+      }
+      // daily median high / low per model
+      const perModel = act.map((md) => {
+        const s = this.data.get(md.key)!;
+        const st = this.stats(s);
+        const days = new Map<number, number[]>();
+        st.forEach((v, i) => v && (days.get(Math.floor(s.time[i] / 864e5)) ?? days.set(Math.floor(s.time[i] / 864e5), []).get(Math.floor(s.time[i] / 864e5))!).push(v.med));
+        return { md, days };
+      });
+      const days = [...new Set(perModel.flatMap((p) => [...p.days.keys()]))].sort((a, b) => a - b);
+      host.innerHTML =
+        `<table><thead><tr><th>Day</th>${act.map((m) => `<th>${m.name} high / low</th>`).join('')}</tr></thead><tbody>` +
+        days
+          .map(
+            (day) =>
+              `<tr><td>${new Date(day * 864e5).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })}</td>${perModel
+                .map(({ days: dd }) => {
+                  const v = dd.get(day);
+                  return `<td>${v ? `${Math.round(Math.max(...v))} / ${Math.round(Math.min(...v))}${unit}` : '–'}</td>`;
+                })
+                .join('')}</tr>`,
+          )
+          .join('') +
+        '</tbody></table>';
+    }
+  }
+
+  customElements.define('forecast-lab', ForecastLab);
+</script>

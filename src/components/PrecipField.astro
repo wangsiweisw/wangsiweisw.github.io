@@ -1,0 +1,159 @@
+---
+// Live precipitation: faint rain streaks or snowflakes when it's raining or snowing at the site's weather location.
+// Shows nothing in dry weather. Preview with ?weather=rain or ?weather=snow.
+import { site } from '../lib/site';
+---
+
+<precip-field class="precip" aria-hidden="true" data-lat={site.weather.lat} data-lon={site.weather.lon} data-city={site.weather.city}>
+  <canvas></canvas>
+</precip-field>
+
+<style>
+  .precip {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+
+<script>
+  type Kind = 'rain' | 'snow';
+
+  async function current(lat: string, lon: string) {
+    const key = `precip-${lat},${lon}`;
+    try {
+      const c = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+      if (c && Date.now() - c.t < 15 * 60 * 1000) return c.d;
+    } catch {}
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,precipitation,wind_speed_10m,wind_direction_10m`,
+    );
+    if (!res.ok) return null;
+    const d = (await res.json()).current;
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d }));
+    } catch {}
+    return d;
+  }
+
+  function kindOf(code: number): Kind | null {
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) return 'rain';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
+    return null;
+  }
+
+  class PrecipField extends HTMLElement {
+    connectedCallback() {
+      this.start();
+    }
+
+    async start() {
+      const forced = new URLSearchParams(location.search).get('weather');
+      let kind: Kind | null = forced === 'rain' || forced === 'snow' ? forced : null;
+      let intensity = 0.6;
+      let windX = 0.25; // horizontal drift per unit fall
+      if (!kind) {
+        const d = await current(this.dataset.lat!, this.dataset.lon!).catch(() => null);
+        if (!d) return;
+        kind = kindOf(d.weather_code);
+        if (!kind) return; // dry: nothing to draw
+        intensity = Math.min(1, 0.3 + (d.precipitation ?? 0) / 4);
+        windX = -Math.sin((d.wind_direction_10m * Math.PI) / 180) * Math.min(1, d.wind_speed_10m / 40) * 0.6;
+      }
+
+      const caption = document.querySelector<HTMLElement>('[data-hero-caption]');
+      const text = caption?.querySelector('[data-hero-caption-text]');
+      if (caption && text && !caption.dataset.owner) {
+        caption.dataset.owner = 'precip';
+        text.textContent = `${kind === 'rain' ? 'Raining' : 'Snowing'} in ${this.dataset.city} right now`;
+        caption.hidden = false;
+      }
+
+      const canvas = this.querySelector('canvas')!;
+      const ctx = canvas.getContext('2d')!;
+      let W = 0;
+      let H = 0;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const resize = () => {
+        W = canvas.clientWidth;
+        H = canvas.clientHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let redrawStill = () => {};
+      resize();
+      // resizing clears the canvas; in reduced-motion mode nothing repaints it, so redraw the still frame
+      new ResizeObserver(() => (resize(), redrawStill())).observe(canvas);
+
+      const n = Math.round(((W * H) / (kind === 'rain' ? 3500 : 6000)) * intensity);
+      const drops = Array.from({ length: n }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        z: 0.4 + Math.random() * 0.6, // depth: nearer = bigger, faster
+        ph: Math.random() * Math.PI * 2,
+      }));
+      const color = () => getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#6e675d';
+
+      const step = (t: number) => {
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = ctx.fillStyle = color();
+        for (const p of drops) {
+          if (kind === 'rain') {
+            const v = 7 * p.z;
+            p.y += v;
+            p.x += v * windX;
+            ctx.globalAlpha = 0.25 * p.z;
+            ctx.lineWidth = p.z;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - v * windX * 2.2, p.y - v * 2.2);
+            ctx.stroke();
+          } else {
+            p.y += 0.6 * p.z;
+            p.x += Math.sin(t / 1400 + p.ph) * 0.35 + windX * 0.6;
+            ctx.globalAlpha = 0.45 * p.z;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1.6 * p.z + 0.4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (p.y > H + 10) ((p.y = -10), (p.x = Math.random() * W));
+          if (p.x > W + 10) p.x = -10;
+          if (p.x < -10) p.x = W + 10;
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      if (still) {
+        redrawStill = () => step(0);
+        redrawStill();
+        return;
+      }
+      let running = true;
+      let raf = 0;
+      const loop = (t: number) => {
+        step(t);
+        raf = requestAnimationFrame(loop);
+      };
+      const setRunning = (on: boolean) => {
+        if (on && !running) ((running = true), (raf = requestAnimationFrame(loop)));
+        if (!on && running) ((running = false), cancelAnimationFrame(raf));
+      };
+      new IntersectionObserver(([e]) => setRunning(e.isIntersecting && !document.hidden)).observe(canvas);
+      document.addEventListener('visibilitychange', () => setRunning(!document.hidden));
+      raf = requestAnimationFrame(loop);
+    }
+  }
+
+  customElements.define('precip-field', PrecipField);
+</script>

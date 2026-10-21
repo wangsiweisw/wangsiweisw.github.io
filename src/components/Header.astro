@@ -13,11 +13,14 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 ---
 
 <header class="site-header wrap">
-  <a class="brand" href="/">Siwei Wang</a>
+  <a class="brand" href="/" aria-label="Siwei Wang, home">
+    <span class="brand-roll" aria-hidden="true"><span>Siwei Wang</span><span lang="zh-Hans">王思为</span></span>
+  </a>
   <nav class="nav" aria-label="Main">
     {
       visibleNav.length > 0 && (
-        <ul class="nav-links">
+        <ul class="nav-links" data-nav>
+          <li class="nav-pill" aria-hidden="true" />
           {visibleNav.map((item) => (
             <li>
               <a href={item.href} aria-current={current.startsWith(item.href) ? 'page' : undefined}>
@@ -52,6 +55,33 @@ const current = Astro.url.pathname.replace(/\/$/, '');
     letter-spacing: -0.01em;
     text-decoration: none;
   }
+  /* hover the name: it rolls up to the Chinese name */
+  .brand-roll {
+    display: inline-grid;
+    height: 1.4em;
+    overflow: hidden;
+    line-height: 1.4em;
+  }
+  .brand-roll span {
+    grid-area: 1 / 1;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+  }
+  .brand-roll span + span {
+    transform: translateY(100%);
+    opacity: 0;
+    letter-spacing: 0.12em;
+  }
+  .brand:hover .brand-roll span:first-child,
+  .brand:focus-visible .brand-roll span:first-child {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  .brand:hover .brand-roll span + span,
+  .brand:focus-visible .brand-roll span + span {
+    transform: none;
+    opacity: 1;
+    color: var(--accent);
+  }
   .nav {
     display: flex;
     align-items: center;
@@ -59,11 +89,32 @@ const current = Astro.url.pathname.replace(/\/$/, '');
     font-size: 0.95rem;
   }
   .nav-links {
+    position: relative;
     display: flex;
     gap: 1.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+  /* a soft pill that glides to whichever tab you point at, and rests on the current page */
+  .nav-links .nav-pill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 2rem;
+    width: 0;
+    margin-top: -1rem;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      opacity 0.25s ease;
+  }
+  .nav-links li {
+    position: relative;
   }
   /* phones: name + toggles on the first row, section links on a second row */
   @media (max-width: 719px) {
@@ -92,8 +143,46 @@ const current = Astro.url.pathname.replace(/\/$/, '');
   .nav-links a[aria-current='page'] {
     color: var(--fg);
   }
+  .nav-links a[aria-current='page'] {
+    color: var(--accent);
+  }
+  @media (hover: none) {
+    .nav-pill {
+      display: none;
+    }
+  }
   .toggles {
     display: flex;
     gap: 0.25rem;
   }
 </style>
+
+<script>
+  // Glide the pill behind the hovered/focused tab; rest it on the current page (or hide it).
+  document.querySelectorAll<HTMLElement>('[data-nav]').forEach((list) => {
+    const pill = list.querySelector<HTMLElement>('.nav-pill')!;
+    const PAD = 12;
+    const moveTo = (a: HTMLElement | null) => {
+      if (!a) return void (pill.style.opacity = '0');
+      const l = list.getBoundingClientRect();
+      const r = a.getBoundingClientRect();
+      pill.style.width = `${r.width + PAD * 2}px`;
+      pill.style.transform = `translateX(${r.left - l.left - PAD}px)`;
+      pill.style.opacity = '1';
+    };
+    const current = () => list.querySelector<HTMLElement>('a[aria-current="page"]');
+    // place instantly on load, then animate from there
+    pill.style.transition = 'none';
+    moveTo(current());
+    requestAnimationFrame(() => (pill.style.transition = ''));
+    list.querySelectorAll<HTMLElement>('a').forEach((a) => {
+      a.addEventListener('mouseenter', () => moveTo(a));
+      a.addEventListener('focus', () => moveTo(a));
+    });
+    list.addEventListener('mouseleave', () => moveTo(current()));
+    list.addEventListener('focusout', (e) => {
+      if (!list.contains(e.relatedTarget as Node)) moveTo(current());
+    });
+    window.addEventListener('resize', () => moveTo(current()));
+  });
+</script>

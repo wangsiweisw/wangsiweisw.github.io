@@ -1,0 +1,201 @@
+---
+// Live isobars: sea-level pressure contours over the US Northeast (Open-Meteo), drawn with marching squares.
+---
+
+<isobar-field class="isobars" aria-hidden="true">
+  <canvas></canvas>
+</isobar-field>
+
+<style>
+  .isobars {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(ellipse 80% 80% at 55% 50%, #000 45%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 80% at 55% 50%, #000 45%, transparent 100%);
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+
+<script>
+  const LAT = [47, 45, 43, 41, 39, 37, 35];
+  const LON = [-84, -81, -78, -75, -72, -69, -66];
+  const NYC = { r: 3, c: 3 }; // 41N, 75W — nearest grid point to New York
+  const CACHE_KEY = 'isobar-grid-v1';
+
+  async function loadGrid(): Promise<number[][] | null> {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? 'null');
+      if (cached && Date.now() - cached.t < 30 * 60 * 1000) return cached.g;
+    } catch {}
+    const lats: number[] = [];
+    const lons: number[] = [];
+    for (const la of LAT) for (const lo of LON) (lats.push(la), lons.push(lo));
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=pressure_msl`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const g = LAT.map((_, r) => LON.map((_, c) => data[r * LON.length + c].current.pressure_msl as number));
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), g }));
+      } catch {}
+      return g;
+    } catch {
+      return null;
+    }
+  }
+
+  // Catmull-Rom bicubic sample of grid g at fractional grid coords (gx, gy)
+  function bicubic(g: number[][], gx: number, gy: number) {
+    const R = g.length;
+    const C = g[0].length;
+    const at = (r: number, c: number) => g[Math.max(0, Math.min(R - 1, r))][Math.max(0, Math.min(C - 1, c))];
+    const cr = (p0: number, p1: number, p2: number, p3: number, t: number) =>
+      p1 + 0.5 * t * (p2 - p0 + t * (2 * p0 - 5 * p1 + 4 * p2 - p3 + t * (3 * (p1 - p2) + p3 - p0)));
+    const c0 = Math.floor(gx);
+    const r0 = Math.floor(gy);
+    const tx = gx - c0;
+    const ty = gy - r0;
+    const rows = [-1, 0, 1, 2].map((dr) =>
+      cr(at(r0 + dr, c0 - 1), at(r0 + dr, c0), at(r0 + dr, c0 + 1), at(r0 + dr, c0 + 2), tx),
+    );
+    return cr(rows[0], rows[1], rows[2], rows[3], ty);
+  }
+
+  class IsobarField extends HTMLElement {
+    connectedCallback() {
+      this.start();
+    }
+
+    async start() {
+      const canvas = this.querySelector('canvas')!;
+      const ctx = canvas.getContext('2d')!;
+      const grid = await loadGrid();
+      if (!grid) return;
+
+      const caption = document.querySelector<HTMLElement>('[data-hero-caption]');
+      const text = caption?.querySelector('[data-hero-caption-text]');
+      if (caption && text && !caption.dataset.owner) {
+        caption.dataset.owner = 'isobars';
+        text.textContent = `Live sea-level pressure over the Northeast · ${Math.round(grid[NYC.r][NYC.c])} hPa near New York`;
+        caption.hidden = false;
+      }
+
+      const readAccent = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#b4532a';
+      const readMuted = () => getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#6e675d';
+      const readFont = () => getComputedStyle(document.documentElement).getPropertyValue('--body').trim() || 'sans-serif';
+
+      type Seg = [number, number, number, number];
+      let lines: { level: number; major: boolean; segs: Seg[] }[] = [];
+      let W = 0;
+      let H = 0;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+      const compute = () => {
+        W = canvas.clientWidth;
+        H = canvas.clientHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const CELL = 10;
+        const nx = Math.ceil(W / CELL) + 1;
+        const ny = Math.ceil(H / CELL) + 1;
+        const f: number[][] = [];
+        let min = Infinity;
+        let max = -Infinity;
+        for (let j = 0; j < ny; j++) {
+          f.push([]);
+          for (let i = 0; i < nx; i++) {
+            const v = bicubic(grid, ((i * CELL) / W) * (LON.length - 1), ((j * CELL) / H) * (LAT.length - 1));
+            f[j].push(v);
+            min = Math.min(min, v);
+            max = Math.max(max, v);
+          }
+        }
+        const step = max - min < 6 ? 1 : 2;
+        lines = [];
+        for (let level = Math.ceil(min / step) * step; level <= max; level += step) {
+          const segs: Seg[] = [];
+          for (let j = 0; j < ny - 1; j++) {
+            for (let i = 0; i < nx - 1; i++) {
+              const a = f[j][i];
+              const b = f[j][i + 1];
+              const c = f[j + 1][i + 1];
+              const d = f[j + 1][i];
+              const pts: [number, number][] = [];
+              const x0 = i * CELL;
+              const y0 = j * CELL;
+              const cross = (v1: number, v2: number) => (level - v1) / (v2 - v1);
+              if ((a < level) !== (b < level)) pts.push([x0 + cross(a, b) * CELL, y0]);
+              if ((b < level) !== (c < level)) pts.push([x0 + CELL, y0 + cross(b, c) * CELL]);
+              if ((d < level) !== (c < level)) pts.push([x0 + cross(d, c) * CELL, y0 + CELL]);
+              if ((a < level) !== (d < level)) pts.push([x0, y0 + cross(a, d) * CELL]);
+              if (pts.length >= 2) segs.push([pts[0][0], pts[0][1], pts[1][0], pts[1][1]]);
+              if (pts.length === 4) segs.push([pts[2][0], pts[2][1], pts[3][0], pts[3][1]]);
+            }
+          }
+          lines.push({ level, major: level % (step * 4) === 0, segs });
+        }
+      };
+
+      let offset = 0;
+      const draw = () => {
+        const accent = readAccent();
+        ctx.clearRect(0, 0, W, H);
+        ctx.setLineDash([14, 10]);
+        ctx.lineDashOffset = -offset;
+        for (const line of lines) {
+          ctx.strokeStyle = accent;
+          ctx.globalAlpha = line.major ? 0.5 : 0.28;
+          ctx.lineWidth = line.major ? 1.4 : 1;
+          ctx.beginPath();
+          for (const [x1, y1, x2, y2] of line.segs) {
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+          }
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        // one pressure label per line, toward the right side
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = readMuted();
+        ctx.font = `11px ${readFont()}`;
+        for (const line of lines) {
+          const seg = line.segs.find(([x1, y1]) => x1 > W * 0.62 && x1 < W * 0.95 && y1 > H * 0.1 && y1 < H * 0.9);
+          if (seg) ctx.fillText(String(line.level), seg[0] + 3, seg[1] - 3);
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      compute();
+      draw();
+      new ResizeObserver(() => (compute(), draw())).observe(canvas);
+      new MutationObserver(draw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-effective-theme'] });
+
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      // dashes creep slowly along the contours
+      let running = true;
+      let raf = 0;
+      const loop = () => {
+        offset += 0.15;
+        draw();
+        raf = requestAnimationFrame(loop);
+      };
+      const setRunning = (on: boolean) => {
+        if (on && !running) ((running = true), (raf = requestAnimationFrame(loop)));
+        if (!on && running) ((running = false), cancelAnimationFrame(raf));
+      };
+      new IntersectionObserver(([e]) => setRunning(e.isIntersecting && !document.hidden)).observe(canvas);
+      document.addEventListener('visibilitychange', () => setRunning(!document.hidden));
+      raf = requestAnimationFrame(loop);
+    }
+  }
+
+  customElements.define('isobar-field', IsobarField);
+</script>

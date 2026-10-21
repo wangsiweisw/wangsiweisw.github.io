@@ -16,6 +16,7 @@ export const nav: NavItem[] = [
   { href: '/photos', label: 'Photography', live: albums.length > 0 },
   { href: '/coffee', label: 'Latte art', live: pours.length > 0 },
   { href: '/running', label: 'Running', live: true },
+  { href: '/forecast', label: 'Forecast', live: true },
   // Flip to live once the first post is published (drafts are excluded from production).
   { href: '/blog', label: 'Blog', live: false },
 ];

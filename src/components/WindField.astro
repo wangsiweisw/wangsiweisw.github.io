@@ -82,9 +82,10 @@
       const grid = await loadGrid();
       if (!grid) return; // no data: stay blank rather than fake it
 
-      const caption = document.querySelector<HTMLElement>('[data-wind-caption]');
-      const text = caption?.querySelector('[data-wind-text]');
-      if (caption && text) {
+      const caption = document.querySelector<HTMLElement>('[data-hero-caption]');
+      const text = caption?.querySelector('[data-hero-caption-text]');
+      if (caption && text && !caption.dataset.owner) {
+        caption.dataset.owner = 'wind';
         const imperial = document.documentElement.dataset.units !== 'metric';
         const speed = imperial ? `${Math.round(grid.speedKmh / 1.609)} mph` : `${Math.round(grid.speedKmh)} km/h`;
         const from = COMPASS[Math.round(grid.dirDeg / 45) % 8];
@@ -102,8 +103,11 @@
         canvas.height = H * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       };
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let redrawStill = () => {};
       resize();
-      new ResizeObserver(resize).observe(canvas);
+      // resizing clears the canvas; in reduced-motion mode nothing repaints it, so redraw the still frame
+      new ResizeObserver(() => (resize(), redrawStill())).observe(canvas);
 
       // bilinear sample of the wind grid at canvas position (x, y)
       const sample = (x: number, y: number): [number, number] => {
@@ -154,8 +158,14 @@
         ctx.globalAlpha = 1;
       };
 
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        for (let i = 0; i < 60; i++) step(); // a still snapshot of the flow
+      if (still) {
+        // a still snapshot of the flow: longer, stronger trails instead of motion
+        redrawStill = () => {
+          ctx.clearRect(0, 0, W, H);
+          for (const p of parts) Object.assign(p, spawn(), { age: 0 });
+          for (let i = 0; i < 70; i++) step();
+        };
+        redrawStill();
         return;
       }
 
