@@ -295,8 +295,8 @@ import 'leaflet/dist/leaflet.css';
   /** Grid covering box (the visible map, padded), so data follows you wherever the map is dragged. */
   async function loadGrid(box: Box, aspect: number): Promise<Grid | null> {
     const wide = aspect >= 1;
-    const ROWS = wide ? 10 : 12;
-    const COLS = wide ? 12 : 10;
+    const ROWS = wide ? 8 : 10;
+    const COLS = wide ? 10 : 8;
     // round to whole degrees so nearby views share the cache
     const r = (x: number) => Math.round(x);
     const key = `fxmap3-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
@@ -372,6 +372,7 @@ import 'leaflet/dist/leaflet.css';
     token = 0;
     picked = false;
     loading = false;
+    pending = false;
 
     connectedCallback() {
       const first = document.querySelector<HTMLElement>('forecast-lab');
@@ -488,7 +489,9 @@ import 'leaflet/dist/leaflet.css';
     /** Re-fetch when the view leaves the loaded area, or zooms in far enough that the grid looks coarse. */
     maybeReload() {
       const g = this.grid;
-      if (!g || this.loading) return;
+      if (!g) return;
+      // a fetch is still running: check again as soon as it lands
+      if (this.loading) return void (this.pending = true);
       const b = this.map.getBounds();
       const inside = b.getSouth() >= g.lats.at(-1)! && b.getNorth() <= g.lats[0] && b.getWest() >= g.lons[0] && b.getEast() <= g.lons.at(-1)!;
       const tooCoarse = b.getNorth() - b.getSouth() < (g.lats[0] - g.lats.at(-1)!) / 4;
@@ -505,7 +508,12 @@ import 'leaflet/dist/leaflet.css';
       this.loading = false;
       if (token !== this.token) return;
       this.badge('');
-      if (!grid) return fresh ? this.status('Could not load the map data right now. Try again in a bit.') : undefined;
+      if (!grid) {
+        if (fresh) return this.status('Could not load the map data right now. Try again in a bit.');
+        this.badge('Could not load this area — try moving the map again');
+        setTimeout(() => this.badge(''), 3000);
+        return;
+      }
       const keepRange = !fresh && this.grid;
       const prev = this.tempRange;
       this.grid = grid;
@@ -517,12 +525,17 @@ import 'leaflet/dist/leaflet.css';
       if (keepRange && this.layer !== 'precip') this.tempRange = [Math.min(prev[0], this.tempRange[0]), Math.max(prev[1], this.tempRange[1])];
       this.status('');
       this.draw();
+      // the map may have moved while we were fetching
+      if (this.pending) {
+        this.pending = false;
+        this.maybeReload();
+      }
     }
 
     badge(text: string) {
       const r = this.querySelector<HTMLElement>('[data-readout]')!;
       if (text) ((r.textContent = text), (r.hidden = false));
-      else if (r.textContent?.startsWith('Loading')) r.hidden = true;
+      else if (/^(Loading|Could not)/.test(r.textContent ?? '')) r.hidden = true;
     }
 
     async load() {
