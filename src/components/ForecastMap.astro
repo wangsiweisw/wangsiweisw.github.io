@@ -86,7 +86,7 @@ import 'leaflet/dist/leaflet.css';
     .map {
       height: auto;
       min-height: 0;
-      aspect-ratio: 4 / 5;
+      aspect-ratio: 1;
     }
   }
   .map {
@@ -210,6 +210,30 @@ import 'leaflet/dist/leaflet.css';
     filter: grayscale(1) invert(1) contrast(0.8) brightness(0.9);
     opacity: 0.6;
   }
+  .map :global(.pick-popup .leaflet-popup-content-wrapper),
+  .map :global(.pick-popup .leaflet-popup-tip) {
+    background: var(--bg);
+    color: var(--fg);
+    box-shadow: 0 10px 24px -14px rgba(30, 20, 10, 0.5);
+  }
+  .map :global(.pick-popup .leaflet-popup-content) {
+    margin: 0.55rem 0.7rem;
+  }
+  .map :global(.pick) {
+    display: grid;
+    gap: 0.4rem;
+    font: 0.8rem var(--body);
+    font-variant-numeric: tabular-nums;
+  }
+  .map :global(.pick button) {
+    padding: 0.3rem 0.7rem;
+    border: 0;
+    border-radius: 99px;
+    background: var(--fg);
+    color: var(--bg);
+    font: 500 0.8rem var(--body);
+    cursor: pointer;
+  }
   .map :global(.city-dot) {
     width: 10px;
     height: 10px;
@@ -265,20 +289,19 @@ import 'leaflet/dist/leaflet.css';
   const mercY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
   const invMercY = (y: number) => (360 / Math.PI) * Math.atan(Math.exp(y)) - 90;
 
-  /** Grid around the city shaped like the map box (aspect = width / height), so data fills the view on any screen. */
-  async function loadGrid(city: City, aspect: number): Promise<Grid | null> {
+  type Box = { s: number; n: number; w: number; e: number };
+  const wrapLon = (x: number) => ((((x + 180) % 360) + 360) % 360) - 180;
+
+  /** Grid covering box (the visible map, padded), so data follows you wherever the map is dragged. */
+  async function loadGrid(box: Box, aspect: number): Promise<Grid | null> {
     const wide = aspect >= 1;
     const ROWS = wide ? 10 : 12;
     const COLS = wide ? 12 : 10;
-    const key = `fxmap2-${city.id}-${wide ? 'w' : 't'}`;
-    const cosLat = Math.cos((city.lat * Math.PI) / 180);
-    // fetch ~1.7× the visible area so the map can be dragged around the city
-    const PAD = 1.7;
-    // on Web Mercator, 1° of longitude looks cos(lat) as wide as 1° of latitude
-    const latSpan = PAD * (wide ? 12 : Math.min(22, 12 / Math.max(0.5, aspect)));
-    const lonSpan = Math.min(60, (latSpan * Math.max(aspect, 0.5)) / cosLat);
-    const lats = Array.from({ length: ROWS }, (_, r) => +(city.lat + latSpan / 2 - (r * latSpan) / (ROWS - 1)).toFixed(2));
-    const lons = Array.from({ length: COLS }, (_, c) => +(city.lon - lonSpan / 2 + (c * lonSpan) / (COLS - 1)).toFixed(2));
+    // round to whole degrees so nearby views share the cache
+    const r = (x: number) => Math.round(x);
+    const key = `fxmap3-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
+    const lats = Array.from({ length: ROWS }, (_, i) => +(box.n - (i * (box.n - box.s)) / (ROWS - 1)).toFixed(2));
+    const lons = Array.from({ length: COLS }, (_, i) => +(box.w + (i * (box.e - box.w)) / (COLS - 1)).toFixed(2));
     let raw: any;
     try {
       const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
@@ -287,7 +310,7 @@ import 'leaflet/dist/leaflet.css';
     if (!raw) {
       const qLat: number[] = [];
       const qLon: number[] = [];
-      for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(lo));
+      for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(+wrapLon(lo).toFixed(2)));
       const models = Object.values(MODELS).map((m) => m.id).join(',');
       const url =
         `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=temperature_2m,precipitation` +
@@ -348,6 +371,7 @@ import 'leaflet/dist/leaflet.css';
     started = false;
     token = 0;
     picked = false;
+    loading = false;
 
     connectedCallback() {
       const first = document.querySelector<HTMLElement>('forecast-lab');
@@ -403,7 +427,9 @@ import 'leaflet/dist/leaflet.css';
       this.map = L.map(this.querySelector<HTMLElement>('[data-map]')!, {
         zoomControl: true,
         zoomSnap: 0.25,
-        maxBoundsViscosity: 0.9,
+        minZoom: 3,
+        maxZoom: 9,
+        worldCopyJump: true,
         scrollWheelZoom: true,
         wheelPxPerZoomLevel: 120,
         attributionControl: true,
@@ -411,12 +437,25 @@ import 'leaflet/dist/leaflet.css';
       this.setTiles();
       this.map.on('mousemove', (e: Leaflet.LeafletMouseEvent) => this.readout(e.latlng.lat, e.latlng.lng));
       // click a spot: move the marker there and send it to the ensemble charts
+      // tap/click a spot: a small popup offers that spot's forecast (no accidental page jumps on phones)
       this.map.on('click', (e: Leaflet.LeafletMouseEvent) => {
         const lat = +e.latlng.lat.toFixed(2);
-        const lon = +L.Util.wrapNum(e.latlng.lng, [-180, 180], true).toFixed(2);
-        this.picked = true;
-        this.dot?.setLatLng([lat, lon]);
-        document.dispatchEvent(new CustomEvent('fx-pick', { detail: { lat, lon } }));
+        const lon = +wrapLon(e.latlng.lng).toFixed(2);
+        const label = `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+        const html = `<div class="pick"><span>${label}</span><button type="button" data-pick>Forecast here ↑</button></div>`;
+        const popup = L.popup({ closeButton: false, autoPan: false, className: 'pick-popup' }).setLatLng(e.latlng).setContent(html).openOn(this.map);
+        popup.getElement()?.querySelector('[data-pick]')?.addEventListener('click', () => {
+          this.picked = true;
+          this.dot?.setLatLng([lat, lon]);
+          this.map.closePopup();
+          document.dispatchEvent(new CustomEvent('fx-pick', { detail: { lat, lon } }));
+        });
+      });
+      // dragged or zoomed past the loaded data: fetch the new area
+      let mt = 0;
+      this.map.on('moveend', () => {
+        clearTimeout(mt);
+        mt = window.setTimeout(() => this.maybeReload(), 250);
       });
       this.map.on('mouseout', () => ((this.querySelector('[data-readout]') as HTMLElement).hidden = true));
       this.load();
@@ -433,37 +472,76 @@ import 'leaflet/dist/leaflet.css';
       }).addTo(this.map);
     }
 
-    async load() {
+    /** Visible map box, padded 50% on each side. */
+    viewBox(): Box {
+      const b = this.map.getBounds();
+      const padLat = (b.getNorth() - b.getSouth()) * 0.5;
+      const padLon = (b.getEast() - b.getWest()) * 0.5;
+      return {
+        s: Math.max(-85, b.getSouth() - padLat),
+        n: Math.min(85, b.getNorth() + padLat),
+        w: b.getWest() - padLon,
+        e: b.getEast() + padLon,
+      };
+    }
+
+    /** Re-fetch when the view leaves the loaded area, or zooms in far enough that the grid looks coarse. */
+    maybeReload() {
+      const g = this.grid;
+      if (!g || this.loading) return;
+      const b = this.map.getBounds();
+      const inside = b.getSouth() >= g.lats.at(-1)! && b.getNorth() <= g.lats[0] && b.getWest() >= g.lons[0] && b.getEast() <= g.lons.at(-1)!;
+      const tooCoarse = b.getNorth() - b.getSouth() < (g.lats[0] - g.lats.at(-1)!) / 4;
+      if (!inside || tooCoarse) this.fetchView(false);
+    }
+
+    async fetchView(fresh: boolean) {
       const token = ++this.token;
-      this.stop();
-      this.status(`Loading the forecast map around ${this.city.name}…`);
+      this.loading = true;
+      if (fresh) this.status(`Loading the forecast map around ${this.city.name}…`);
+      else this.badge('Loading this area…');
       const box = this.querySelector<HTMLElement>('[data-map]')!;
-      const grid = await loadGrid(this.city, box.clientWidth / Math.max(1, box.clientHeight));
+      const grid = await loadGrid(this.viewBox(), box.clientWidth / Math.max(1, box.clientHeight));
+      this.loading = false;
       if (token !== this.token) return;
-      if (!grid) return this.status('Could not load the map data right now. Try again in a bit.');
+      this.badge('');
+      if (!grid) return fresh ? this.status('Could not load the map data right now. Try again in a bit.') : undefined;
+      const keepRange = !fresh && this.grid;
+      const prev = this.tempRange;
       this.grid = grid;
+      const slider = this.querySelector<HTMLInputElement>('[data-time]')!;
+      slider.max = String(grid.time.length - 1);
+      this.t = Math.min(this.t, grid.time.length - 1);
+      this.computeRange();
+      // keep colors stable while exploring: only widen the scale, never shrink it
+      if (keepRange && this.layer !== 'precip') this.tempRange = [Math.min(prev[0], this.tempRange[0]), Math.max(prev[1], this.tempRange[1])];
+      this.status('');
+      this.draw();
+    }
+
+    badge(text: string) {
+      const r = this.querySelector<HTMLElement>('[data-readout]')!;
+      if (text) ((r.textContent = text), (r.hidden = false));
+      else if (r.textContent?.startsWith('Loading')) r.hidden = true;
+    }
+
+    async load() {
+      this.stop();
       const L = this.L;
-      const bounds = L.latLngBounds([grid.lats.at(-1)!, grid.lons[0]], [grid.lats[0], grid.lons.at(-1)!]);
-      // open zoomed in on the city with room to drag; zooming out stops where the data ends
-      this.map.setMinZoom(0);
-      this.map.setMaxBounds(undefined as any);
       this.map.invalidateSize();
-      const cover = this.map.getBoundsZoom(bounds, true);
-      this.map.setMinZoom(cover);
-      this.map.setMaxBounds(bounds);
-      this.map.setView([this.city.lat, this.city.lon], cover + 0.75, { animate: false });
+      // about a 12°-tall region around the city
+      const box = this.querySelector<HTMLElement>('[data-map]')!;
+      const aspect = box.clientWidth / Math.max(1, box.clientHeight);
+      const half = 6 * Math.max(1, 1 / aspect);
+      this.map.fitBounds(L.latLngBounds([this.city.lat - half, this.city.lon - 1], [this.city.lat + half, this.city.lon + 1]), { animate: false });
+      this.map.setView([this.city.lat, this.city.lon], this.map.getZoom(), { animate: false });
       this.dot?.remove();
       this.dot = L.marker([this.city.lat, this.city.lon], {
         icon: L.divIcon({ className: '', html: '<div class="city-dot"></div>', iconSize: [10, 10] }),
         interactive: false,
       }).addTo(this.map);
-      const slider = this.querySelector<HTMLInputElement>('[data-time]')!;
-      slider.max = String(grid.time.length - 1);
       this.t = 0;
-      slider.value = '0';
-      this.computeRange();
-      this.status('');
-      this.draw();
+      await this.fetchView(true);
     }
 
     status(text: string) {
