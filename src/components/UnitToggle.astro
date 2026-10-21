@@ -1,9 +1,15 @@
 ---
 // Imperial/metric toggle. Pages that show units listen for the `unitschange` event on document.
+interface Props {
+  /** what the page measures: labels the button mi/km or °F/°C */
+  kind?: 'distance' | 'temperature';
+}
+const { kind = 'distance' } = Astro.props;
+const [imp] = kind === 'temperature' ? ['°F'] : ['mi'];
 ---
 
-<unit-toggle>
-  <button class="toggle" type="button" aria-label="Show kilometers" aria-pressed="false">mi</button>
+<unit-toggle data-kind={kind}>
+  <button class="toggle" type="button" aria-pressed="false">{imp}</button>
 </unit-toggle>
 
 <script>
@@ -12,10 +18,14 @@
   class UnitToggle extends HTMLElement {
     connectedCallback() {
       const button = this.querySelector('button')!;
+      const temp = this.dataset.kind === 'temperature';
+      const [impLabel, metLabel, impName, metName] = temp
+        ? ['°F', '°C', 'Fahrenheit', 'Celsius']
+        : ['mi', 'km', 'miles', 'kilometers'];
       const sync = () => {
         const metric = getUnits() === 'metric';
-        button.textContent = metric ? 'km' : 'mi';
-        button.setAttribute('aria-label', metric ? 'Show miles' : 'Show kilometers');
+        button.textContent = metric ? metLabel : impLabel;
+        button.setAttribute('aria-label', `Show ${metric ? impName : metName}`);
         button.setAttribute('aria-pressed', String(metric));
       };
       sync();

@@ -10,7 +10,8 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  showUnits?: boolean;
+  /** show the imperial/metric toggle, labeled for what the page measures */
+  showUnits?: boolean | 'distance' | 'temperature';
   ogType?: 'website' | 'article';
 }
 

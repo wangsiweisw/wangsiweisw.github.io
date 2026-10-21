@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle.astro';
 import UnitToggle from './UnitToggle.astro';
 
 interface Props {
-  showUnits?: boolean;
+  showUnits?: boolean | 'distance' | 'temperature';
 }
 
 const { showUnits = false } = Astro.props;
@@ -35,7 +35,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
       <button class="toggle search-btn" type="button" data-open-cmdk aria-label="Search (⌘K)" title="Search (⌘K)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4-4"></path></svg>
       </button>
-      {showUnits && <UnitToggle />}
+      {showUnits && <UnitToggle kind={showUnits === 'temperature' ? 'temperature' : 'distance'} />}
       <ThemeToggle />
     </div>
   </nav>
