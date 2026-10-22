@@ -25,7 +25,7 @@ const total = albums.reduce((n, a) => n + a.photos.length, 0);
         {albums.map((a, i) => (
           <li>
             <a href={`/photos/${a.id}/`} class="card">
-              <span class="cover">
+              <span class="cover" style={`view-transition-name: cover-${a.id}`}>
                 <span class="ph" style={`background-image: url(${a.cover.placeholder})`} aria-hidden="true" />
                 <picture>
                   <source type="image/avif" srcset={srcset(a.cover.avif)} sizes="(min-width: 720px) 34rem, 100vw" />
@@ -43,7 +43,9 @@ const total = albums.reduce((n, a) => n + a.photos.length, 0);
                 </picture>
               </span>
               <span class="meta">
-                <span class="title">{a.title}<span class="go" aria-hidden="true">→</span></span>
+                <span class="title">
+                  <span style={`view-transition-name: title-${a.id}`}>{a.title}</span><span class="go" aria-hidden="true">→</span>
+                </span>
                 <span class="sub">
                   {[a.subtitle, a.when].filter(Boolean).join(' · ')}
                   <span class="count">

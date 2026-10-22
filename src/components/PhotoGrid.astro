@@ -7,9 +7,11 @@ interface Props {
   rowHeight?: number;
   /** Width the grid is laid out in on desktop (px), used to decide whether the last row may stretch. */
   contentWidth?: number;
+  /** give this photo a view-transition name so the gallery cover glides into it (only if it sits near the top) */
+  morph?: { id: string; name: string };
 }
 
-const { photos, rowHeight = 260, contentWidth = 1008 } = Astro.props;
+const { photos, rowHeight = 260, contentWidth = 1008, morph } = Astro.props;
 
 // Simulate flex-wrap at the desktop content width: stretch the last row too if it's already ≥ 60% full,
 // otherwise leave it at its natural size so one lonely photo doesn't blow up.
@@ -30,7 +32,7 @@ const fillLastRow = rowWidth / contentWidth >= 0.6;
         <li
           class="item"
           data-album={p.album}
-          style={`--ar: ${ar.toFixed(4)}; flex-grow: ${(ar * 100).toFixed(1)}; flex-basis: ${Math.round(ar * rowHeight)}px`}
+          style={`--ar: ${ar.toFixed(4)}; flex-grow: ${(ar * 100).toFixed(1)}; flex-basis: ${Math.round(ar * rowHeight)}px${morph?.id === p.id && i < 4 ? `; view-transition-name: ${morph.name}` : ''}`}
         >
           <a href={`#photo-${p.id}`} data-photo={p.id} aria-label={p.title ?? p.alt ?? 'Open photo'}>
             <span class="ph" style={`background-image: url(${p.placeholder})`} aria-hidden="true" />

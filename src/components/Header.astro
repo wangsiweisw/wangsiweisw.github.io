@@ -12,7 +12,7 @@ const { showUnits = false } = Astro.props;
 const current = Astro.url.pathname.replace(/\/$/, '');
 ---
 
-<header class="site-header wrap">
+<header class="site-header wrap" style="view-transition-name: site-header">
   <a class="brand" href="/" aria-label="Siwei Wang, home">
     <span class="brand-roll" aria-hidden="true"><span>Siwei Wang</span><span lang="zh-Hans">王思为</span></span>
   </a>

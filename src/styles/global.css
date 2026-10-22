@@ -157,6 +157,16 @@ a {
   navigation: auto;
 }
 
+/* Named elements (album covers and titles) glide between pages; everything else crossfades. */
+::view-transition-group(*) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.25s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
     navigation: none;

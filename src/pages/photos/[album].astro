@@ -25,11 +25,11 @@ const n = album.photos.length;
 <Base title={`${album.title} · Photography`} description={`Photographs from ${album.title}${album.subtitle ? `, ${album.subtitle}` : ''}.`} og={`album-${album.id}`}>
   <header class="page-head">
     <a class="back" href="/photos/">← Photography</a>
-    <h1>{album.title}</h1>
+    <h1 style={`view-transition-name: title-${album.id}`}>{album.title}</h1>
     <p class="sub">{[album.subtitle, album.when, `${n} ${n === 1 ? 'photo' : 'photos'}`].filter(Boolean).join(' · ')}</p>
   </header>
 
-  <PhotoGrid photos={album.photos} rowHeight={320} />
+  <PhotoGrid photos={album.photos} rowHeight={320} morph={{ id: album.cover.id, name: `cover-${album.id}` }} />
   <Lightbox photos={album.photos} />
 
   <nav class="pager" aria-label="Other places">
@@ -51,6 +51,8 @@ const n = album.photos.length;
     color: var(--fg);
   }
   h1 {
+    /* shrink-wrap so the gallery title scales into it at the right size */
+    width: fit-content;
     margin: 0.75rem 0 0;
     font: 400 clamp(2.4rem, 6vw, 3.5rem) / 1 var(--display);
     letter-spacing: -0.03em;
