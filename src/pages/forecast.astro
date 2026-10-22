@@ -4,14 +4,10 @@
 import Base from '../layouts/Base.astro';
 import ForecastMap from '../components/ForecastMap.astro';
 import ForecastVerify from '../components/ForecastVerify.astro';
+import citiesData from '../data/forecast-cities.json';
 
-const cities = [
-  { id: 'nyc', name: 'New York', lat: 40.71, lon: -74.01 },
-  { id: 'london', name: 'London', lat: 51.51, lon: -0.13 },
-  { id: 'beijing', name: 'Beijing', lat: 39.9, lon: 116.4 },
-  { id: 'sf', name: 'San Francisco', lat: 37.77, lon: -122.42 },
-  { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.69 },
-];
+// shared with scripts/forecast-data/build.py, which prepares the map data for these regions
+const cities = citiesData;
 const models = [
   { id: 'ecmwf_aifs025', name: 'AIFS ENS', org: 'ECMWF · machine learning', key: 'aifs' },
   { id: 'ecmwf_ifs025', name: 'IFS ENS', org: 'ECMWF · physics', key: 'ifs' },

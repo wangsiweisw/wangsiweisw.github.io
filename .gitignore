@@ -31,3 +31,6 @@ public/resume.pdf
 
 # Strava bulk export (raw activity data, never commit)
 strava-export/
+
+# forecast map data, generated in CI by scripts/forecast-data/build.py
+public/fx/

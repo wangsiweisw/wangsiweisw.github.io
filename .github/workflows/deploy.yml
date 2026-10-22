@@ -1,11 +1,14 @@
 name: Deploy
 
-# Daily cron and runs:sync are out: running data is on hold (see PLAN.md §5.5).
+# Running data is on hold (see PLAN.md §5.5). The schedule refreshes the forecast map data every 6 hours.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # shortly after each new model run is published
+    - cron: '40 1,7,13,19 * * *'
 
 permissions:
   contents: read
@@ -26,6 +29,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm astro check
+      # Forecast map data (public/fx/). If it fails the site still deploys, and the map falls back to live Open-Meteo.
+      - uses: actions/setup-python@v6
+        if: github.event_name != 'pull_request'
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/forecast-data/requirements.txt
+      - name: Forecast map data
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        timeout-minutes: 40
+        run: |
+          pip install -r scripts/forecast-data/requirements.txt
+          python scripts/forecast-data/build.py
       - run: pnpm build
       - name: Print resume PDF
         if: github.event_name != 'pull_request'

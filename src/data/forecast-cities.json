@@ -1,0 +1,7 @@
+[
+  {"id": "nyc", "name": "New York", "lat": 40.71, "lon": -74.01, "tz": "America/New_York"},
+  {"id": "london", "name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London"},
+  {"id": "beijing", "name": "Beijing", "lat": 39.9, "lon": 116.4, "tz": "Asia/Shanghai"},
+  {"id": "sf", "name": "San Francisco", "lat": 37.77, "lon": -122.42, "tz": "America/Los_Angeles"},
+  {"id": "tokyo", "name": "Tokyo", "lat": 35.68, "lon": 139.69, "tz": "Asia/Tokyo"}
+]
