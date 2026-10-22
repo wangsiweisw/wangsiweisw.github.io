@@ -1,0 +1,205 @@
+---
+// Verification: how far off each model's past forecasts were, scored against ERA5. Logic in src/scripts/forecast-verify.ts.
+interface Props {
+  city: { id: string; name: string; lat: number; lon: number };
+}
+const { city } = Astro.props;
+---
+
+<forecast-verify data-city={JSON.stringify(city)}>
+  <p class="finding" data-finding aria-live="polite"></p>
+
+  <figure class="vchart">
+    <figcaption>Average error by how far ahead the forecast was made (hourly temperature)</figcaption>
+    <div class="plot" data-mae></div>
+  </figure>
+
+  <figure class="vchart">
+    <figcaption>
+      Daily highs, last 30 days: <span class="key"><i class="sw truth"></i>what happened</span> vs. each model’s forecast from
+      5 days before
+    </figcaption>
+    <p class="legend" aria-hidden="true">
+      <span><i class="sw truth"></i>Actual</span>
+      <span><i class="sw" style="background: var(--aifs)"></i>AIFS</span>
+      <span><i class="sw" style="background: var(--ifs)"></i>IFS</span>
+      <span><i class="sw" style="background: var(--gfs)"></i>GFS</span>
+    </p>
+    <div class="plot" data-daily></div>
+    <div class="tip" data-tip hidden></div>
+  </figure>
+
+  <details class="table-view">
+    <summary>Show errors as a table</summary>
+    <div data-table></div>
+  </details>
+</forecast-verify>
+
+<script>
+  import '../scripts/forecast-verify.ts';
+</script>
+
+<style>
+  forecast-verify {
+    display: block;
+    --aifs: #b4532a;
+    --ifs: #2f6db5;
+    --gfs: #2a8a5a;
+  }
+  :global([data-effective-theme='dark']) forecast-verify {
+    --aifs: #d4683f;
+    --ifs: #5a8fd6;
+    --gfs: #3fa06e;
+  }
+  .finding {
+    max-width: var(--measure);
+    min-height: 3em;
+    margin: 0 0 1.5rem;
+    font: 400 1.15rem / 1.5 var(--display);
+  }
+  .finding :global(strong) {
+    font-weight: 500;
+  }
+  .vchart {
+    position: relative;
+    margin: 0 0 2rem;
+  }
+  figcaption {
+    margin-bottom: 0.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .plot {
+    min-height: 240px;
+  }
+  .plot :global(svg) {
+    display: block;
+    overflow: visible;
+  }
+  .plot :global(.grid) {
+    stroke: var(--rule);
+  }
+  .plot :global(.axis) {
+    fill: var(--muted);
+    font: 12px var(--body);
+    font-variant-numeric: tabular-nums;
+  }
+  .plot :global(.label) {
+    fill: var(--fg);
+    font: 500 12px var(--body);
+  }
+  .plot :global(.line) {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .plot :global(.line.thin) {
+    stroke-width: 1.5;
+    opacity: 0.85;
+  }
+  .plot :global(.line.truth) {
+    stroke: var(--fg);
+    stroke-width: 2.5;
+  }
+  .plot :global(.dot) {
+    stroke: var(--bg);
+    stroke-width: 2;
+  }
+  .plot :global(.c-aifs) {
+    stroke: var(--aifs);
+  }
+  .plot :global(.dot.c-aifs) {
+    fill: var(--aifs);
+  }
+  .plot :global(.c-ifs) {
+    stroke: var(--ifs);
+  }
+  .plot :global(.dot.c-ifs) {
+    fill: var(--ifs);
+  }
+  .plot :global(.c-gfs) {
+    stroke: var(--gfs);
+  }
+  .plot :global(.dot.c-gfs) {
+    fill: var(--gfs);
+  }
+  .plot :global(.hit) {
+    fill: transparent;
+  }
+  .plot :global(.cross) {
+    stroke: var(--muted);
+    stroke-dasharray: 3 3;
+  }
+  .sw,
+  .tip :global(.sw) {
+    display: inline-block;
+    width: 12px;
+    height: 3px;
+    margin-right: 0.35rem;
+    border-radius: 2px;
+    vertical-align: middle;
+    background: var(--muted);
+  }
+  .sw.truth,
+  .tip :global(.sw.truth) {
+    background: var(--fg);
+  }
+  .tip :global(.sw.c-aifs) {
+    background: var(--aifs);
+  }
+  .tip :global(.sw.c-ifs) {
+    background: var(--ifs);
+  }
+  .tip :global(.sw.c-gfs) {
+    background: var(--gfs);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+  }
+  .key {
+    color: var(--fg);
+    white-space: nowrap;
+  }
+  .tip {
+    position: absolute;
+    top: 3.5rem;
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 0.8rem;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+  }
+  .tip[hidden] {
+    display: none;
+  }
+  .tip :global(b) {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .table-view summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .table-view :global(table) {
+    margin-top: 0.75rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .table-view :global(th),
+  .table-view :global(td) {
+    padding: 0.3rem 1rem 0.3rem 0;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+  }
+</style>

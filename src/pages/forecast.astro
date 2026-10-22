@@ -3,6 +3,7 @@
 // fetched live from Open-Meteo and drawn as plumes (median + 10–90% band, optional individual runs).
 import Base from '../layouts/Base.astro';
 import ForecastMap from '../components/ForecastMap.astro';
+import ForecastVerify from '../components/ForecastVerify.astro';
 
 const cities = [
   { id: 'nyc', name: 'New York', lat: 40.71, lon: -74.01 },
@@ -79,6 +80,15 @@ const models = [
     <ForecastMap />
   </section>
 
+  <section class="map-section">
+    <h2 class="section-title">How did the models do?</h2>
+    <p class="section-intro">
+      Every day each model forecasts the week ahead. Here are those forecasts, made 1 to 7 days in advance, checked
+      against what actually happened (ERA5, ECMWF's reconstruction of past weather) for the same place as above.
+    </p>
+    <ForecastVerify city={cities[0]} />
+  </section>
+
   <section class="notes">
     <h2 class="kicker">Reading the chart</h2>
     <ul>
@@ -87,7 +97,7 @@ const models = [
       <li>AIFS is ECMWF's data-driven model, trained on decades of reanalysis. Where it and IFS disagree is where it gets interesting.</li>
     </ul>
     <p class="credit">
-      Data: ECMWF AIFS ENS and IFS ENS (CC BY 4.0) and NOAA GEFS, via <a href="https://open-meteo.com/">Open-Meteo</a>.
+      Data: ECMWF AIFS, IFS and ERA5 (CC BY 4.0) and NOAA GEFS and GFS, via <a href="https://open-meteo.com/">Open-Meteo</a>.
     </p>
   </section>
 </Base>
