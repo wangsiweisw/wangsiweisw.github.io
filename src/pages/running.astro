@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import PhotoGrid from '../components/PhotoGrid.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { running, runningPhotos, METERS_PER_MILE, duration } from '../lib/running';
+import weather from '../data/running-weather.json';
 
 const miles = (m: number) => Math.round(m / METERS_PER_MILE).toLocaleString('en-US');
 const since = new Date(`${running.since}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -27,6 +28,30 @@ const bars = running.years.map((y, i) => {
 // rounded top corners only (4px), square at the baseline
 const barPath = (x: number, y: number, w: number, h: number, r = 4) =>
   `M${x},${base} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${base} Z`;
+
+// Heart rate by dew point (build-time SVG): one dot per bin, pace written underneath.
+const fToC = (f: number) => Math.round(((f - 32) * 5) / 9);
+const dew = weather.dewPoint.filter((b) => b.runs >= 5 && b.heartRate && b.paceSecPerKm);
+const dewLabel = (b: (typeof dew)[number], c = false) => {
+  const t = (f: number) => (c ? fToC(f) : f);
+  const u = c ? '°C' : '°F';
+  return b.loF == null ? `below ${t(b.hiF!)}${u}` : b.hiF == null ? `${t(b.loF)}${u}+` : `${t(b.loF)}–${t(b.hiF)}${u}`;
+};
+const pace = (secPerKm: number) => {
+  const s = Math.round(secPerKm * (METERS_PER_MILE / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /mi`;
+};
+const hrs = dew.map((b) => b.heartRate!);
+const [hrLo, hrHi] = [Math.min(...hrs) - 4, Math.max(...hrs) + 4];
+const WW = 640;
+const WH = 214;
+const wTop = 40;
+const wBase = 140;
+const wSlot = WW / Math.max(1, dew.length);
+const dots = dew.map((b) => ({ ...b, x: 0, y: wBase - ((b.heartRate! - hrLo) / (hrHi - hrLo)) * (wBase - wTop) }));
+dots.forEach((d, i) => (d.x = wSlot * i + wSlot / 2));
+const [dry, muggy] = [dew[0], dew.at(-1)];
+const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
 ---
 
 <Base title="Running" description="Siwei Wang's running: totals since 2024, and a couple of race-day photos." showUnits="distance" og="running">
@@ -103,6 +128,43 @@ const barPath = (x: number, y: number, w: number, h: number, r = 4) =>
     </svg>
   </section>
 
+  {
+    dots.length >= 3 && hrGap > 0 && (
+      <section class="chart weather" aria-labelledby="weather-title">
+        <h2 id="weather-title" class="kicker">Heart rate vs. humidity (dew point)</h2>
+        <p class="finding">
+          On muggy days my heart works about <strong>{hrGap} bpm</strong> harder than on dry ones, while my pace barely
+          changes.
+        </p>
+        <svg viewBox={`0 0 ${WW} ${WH}`} role="img" aria-labelledby="weather-title weather-desc">
+          <desc id="weather-desc">
+            {dots.map((d) => `Dew point ${dewLabel(d)}: median heart rate ${d.heartRate} bpm, pace ${pace(d.paceSecPerKm!)}, ${d.runs} runs`).join('; ')}
+          </desc>
+          <polyline points={dots.map((d) => `${d.x},${d.y}`).join(' ')} class="line" />
+          {
+            dots.map((d) => (
+              <g class="pt" tabindex="0" aria-label={`Dew point ${dewLabel(d)}: ${d.heartRate} bpm over ${d.runs} runs`}>
+                <title>{`Dew point ${dewLabel(d)} · ${d.heartRate} bpm · ${pace(d.paceSecPerKm!)} · ${d.runs} runs`}</title>
+                <rect x={d.x - wSlot / 2} y="0" width={wSlot} height={WH} class="hit" />
+                <circle cx={d.x} cy={d.y} r="6" class="dot" />
+                <text x={d.x} y={d.y - 16} class="value">{d.heartRate} bpm</text>
+                <text x={d.x} y={wBase + 40} class="year" data-dew-f={dewLabel(d)} data-dew-c={dewLabel(d, true)}>
+                  {dewLabel(d)}
+                </text>
+                <text x={d.x} y={wBase + 60} class="note" data-pace={d.paceSecPerKm}>
+                  {pace(d.paceSecPerKm!)}
+                </text>
+              </g>
+            ))
+          }
+        </svg>
+        <p class="method">
+          Dew point at the time of each run, from <a href="https://open-meteo.com/">Open-Meteo</a>’s historical weather.
+          Medians of {weather.runs} outdoor runs; treadmill runs left out.
+        </p>
+      </section>
+    )
+  }
   {
     runningPhotos.length > 0 && (
       <section class="photos">
@@ -276,6 +338,42 @@ const barPath = (x: number, y: number, w: number, h: number, r = 4) =>
     font: 400 13px var(--body);
     text-anchor: middle;
   }
+  .finding {
+    margin: 0 0 1.25rem;
+    font: 400 1.15rem / 1.5 var(--display);
+  }
+  .finding strong {
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .line {
+    fill: none;
+    stroke: var(--bar);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .dot {
+    fill: var(--bar);
+    stroke: var(--bg);
+    stroke-width: 2;
+    transition: r var(--ease);
+  }
+  .pt:hover .dot,
+  .pt:focus-visible .dot {
+    r: 8;
+  }
+  .pt:focus-visible {
+    outline: none;
+  }
+  .method {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .method a {
+    color: inherit;
+  }
   .photos {
     max-width: 44rem;
     margin-top: 3.5rem;
@@ -291,6 +389,13 @@ const barPath = (x: number, y: number, w: number, h: number, r = 4) =>
       const m = Number(el.dataset.meters);
       const value = metric ? m / 1000 : m / (1000 * KM_PER_MILE);
       el.textContent = `${Math.round(value).toLocaleString('en-US')} ${metric ? 'km' : 'mi'}`;
+    });
+    document.querySelectorAll<SVGTextElement>('[data-dew-f]').forEach((el) => {
+      el.textContent = (metric ? el.dataset.dewC : el.dataset.dewF) ?? '';
+    });
+    document.querySelectorAll<SVGTextElement>('[data-pace]').forEach((el) => {
+      const s = Math.round(Number(el.dataset.pace) * (metric ? 1 : KM_PER_MILE));
+      el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /${metric ? 'km' : 'mi'}`;
     });
   }
   render();

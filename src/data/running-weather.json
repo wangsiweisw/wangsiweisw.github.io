@@ -1,0 +1,77 @@
+{
+  "runs": 158,
+  "temperature": [
+    {
+      "loF": null,
+      "hiF": 45,
+      "runs": 49,
+      "paceSecPerKm": 349,
+      "heartRate": 153
+    },
+    {
+      "loF": 45,
+      "hiF": 55,
+      "runs": 25,
+      "paceSecPerKm": 348,
+      "heartRate": 155
+    },
+    {
+      "loF": 55,
+      "hiF": 65,
+      "runs": 36,
+      "paceSecPerKm": 352,
+      "heartRate": 149
+    },
+    {
+      "loF": 65,
+      "hiF": 75,
+      "runs": 43,
+      "paceSecPerKm": 355,
+      "heartRate": 159
+    },
+    {
+      "loF": 75,
+      "hiF": null,
+      "runs": 5,
+      "paceSecPerKm": 351,
+      "heartRate": 153
+    }
+  ],
+  "dewPoint": [
+    {
+      "loF": null,
+      "hiF": 40,
+      "runs": 70,
+      "paceSecPerKm": 349,
+      "heartRate": 152
+    },
+    {
+      "loF": 40,
+      "hiF": 50,
+      "runs": 23,
+      "paceSecPerKm": 348,
+      "heartRate": 154
+    },
+    {
+      "loF": 50,
+      "hiF": 60,
+      "runs": 38,
+      "paceSecPerKm": 355,
+      "heartRate": 155
+    },
+    {
+      "loF": 60,
+      "hiF": 65,
+      "runs": 14,
+      "paceSecPerKm": 353,
+      "heartRate": 159
+    },
+    {
+      "loF": 65,
+      "hiF": null,
+      "runs": 13,
+      "paceSecPerKm": 355,
+      "heartRate": 162
+    }
+  ]
+}
