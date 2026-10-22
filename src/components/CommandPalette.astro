@@ -17,6 +17,8 @@ const items: Item[] = [
     keywords: a.photos.map((p) => [p.title, p.location].filter(Boolean).join(' ')).join(' '),
   })),
   { label: 'Toggle dark mode', hint: 'Theme', group: 'Actions', action: 'theme' },
+  { label: 'Make it rain', hint: 'or type “rain”', group: 'Actions', action: 'rain', keywords: 'weather easter egg' },
+  { label: 'Let it snow', hint: 'or type “snow”', group: 'Actions', action: 'snow', keywords: 'weather easter egg winter' },
   ...(site.links.email ? [{ label: 'Copy email address', hint: site.links.email, group: 'Actions', action: 'copy-email' }] : []),
   { label: 'LinkedIn', hint: 'Open profile', group: 'Actions', href: site.links.linkedin },
 ];
@@ -144,6 +146,7 @@ const items: Item[] = [
 
 <script>
   import { effectiveTheme, setTheme } from '../scripts/prefs';
+  import '../scripts/weather-egg';
 
   type Item = { label: string; hint: string; group: string; href?: string; action?: string; keywords?: string };
 
@@ -256,6 +259,9 @@ const items: Item[] = [
         setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark');
         document.querySelector('theme-toggle button')?.setAttribute('aria-pressed', String(effectiveTheme() === 'dark'));
         dialog.close();
+      } else if (item.action === 'rain' || item.action === 'snow') {
+        dialog.close();
+        document.dispatchEvent(new CustomEvent('weather-egg', { detail: item.action }));
       } else if (item.action === 'copy-email') {
         navigator.clipboard?.writeText(this.dataset.email ?? '');
         const hint = this.querySelectorAll('.item .hint')[this.sel];

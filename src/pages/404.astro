@@ -1,16 +1,38 @@
 ---
-// Not found page, in the site's voice.
+// Not found page, written as a forecast, with a light drizzle falling (the rain easter egg, kept on).
 import Base from '../layouts/Base.astro';
+
+const outlook: [string, string][] = [
+  ['Chance of this page existing', '0%'],
+  ['Visibility', 'Low'],
+  ['Wind', 'Light, from the wrong direction'],
+  ['Outlook', 'Clearing toward the homepage'],
+];
 ---
 
 <Base title="Page not found">
   <section class="nf">
-    <p class="kicker">Error 404</p>
-    <h1>Forecast: 100% chance of a wrong URL.</h1>
-    <p>The page you're looking for isn't here. It may have moved, or it never existed.</p>
+    <p class="kicker">Error 404 · Forecast for this page</p>
+    <h1>Scattered links, with a chance of getting lost.</h1>
+    <dl class="card">
+      {
+        outlook.map(([k, v]) => (
+          <div>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <p class="note">The page you're looking for isn't here. It may have moved, or it never existed.</p>
     <a class="btn btn-primary" href="/">Back to home</a>
   </section>
 </Base>
+
+<script>
+  import { startWeather } from '../scripts/weather-egg';
+  startWeather('rain', { forever: true, intensity: 0.45 });
+</script>
 
 <style>
   .nf {
@@ -22,8 +44,32 @@ import Base from '../layouts/Base.astro';
     font: 400 clamp(2.2rem, 6vw, 3.5rem) / 1.05 var(--display);
     letter-spacing: -0.03em;
   }
-  p:not(.kicker) {
-    margin: 1.25rem 0 2rem;
+  .card {
+    display: grid;
+    margin: 2rem 0 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .card div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.1rem;
+  }
+  .card div + div {
+    border-top: 1px solid var(--rule);
+  }
+  dt {
+    color: var(--muted);
+  }
+  dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .note {
+    margin: 1.5rem 0 2rem;
     color: var(--muted);
   }
 </style>

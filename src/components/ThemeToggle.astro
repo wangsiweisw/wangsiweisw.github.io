@@ -37,19 +37,23 @@
 </style>
 
 <script>
-  import { effectiveTheme, setTheme } from '../scripts/prefs';
+  import { autoTheme, effectiveTheme, setTheme } from '../scripts/prefs';
 
   class ThemeToggle extends HTMLElement {
     connectedCallback() {
       const button = this.querySelector('button')!;
       const sync = () => button.setAttribute('aria-pressed', String(effectiveTheme() === 'dark'));
       sync();
-      // Follow OS theme changes until the visitor picks one explicitly.
-      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      // Until the visitor picks a theme, follow the OS setting and sunrise/sunset (checked every minute).
+      const follow = () => {
         if (document.documentElement.dataset.theme) return;
-        document.documentElement.dataset.effectiveTheme = e.matches ? 'dark' : 'light';
+        const next = autoTheme();
+        if (document.documentElement.dataset.effectiveTheme === next) return;
+        document.documentElement.dataset.effectiveTheme = next;
         sync();
-      });
+      };
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', follow);
+      setInterval(follow, 60_000);
       button.addEventListener('click', () => {
         setTheme(effectiveTheme() === 'dark' ? 'light' : 'dark');
         sync();

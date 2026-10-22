@@ -10,7 +10,7 @@ import 'leaflet/dist/leaflet.css';
       <button type="button" class="chip" data-layer="temp" aria-pressed="true">Temperature</button>
       <button type="button" class="chip" data-layer="precip" aria-pressed="false">Precipitation</button>
       <button type="button" class="chip" data-layer="wind" aria-pressed="false">Wind</button>
-      <button type="button" class="chip" data-layer="diff" aria-pressed="false">AIFS − IFS</button>
+      <button type="button" class="chip" data-layer="diff" aria-pressed="false">Temp: AIFS − IFS</button>
     </div>
     <div class="chips" role="group" aria-label="Model" data-model-group>
       <button type="button" class="chip" data-model="aifs" aria-pressed="true">AIFS</button>
@@ -97,11 +97,29 @@ import 'leaflet/dist/leaflet.css';
   .map-status {
     position: absolute;
     inset: 0;
+    /* above Leaflet's panes (z-index up to 700), or tiles hide it */
+    z-index: 800;
     display: grid;
-    place-items: center;
+    place-content: center;
+    justify-items: center;
+    gap: 0.6rem;
     margin: 0;
-    color: var(--muted);
+    padding: 1rem;
+    color: var(--fg);
+    text-align: center;
     pointer-events: none;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+  }
+  .map-status :global(button) {
+    pointer-events: auto;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
   }
   .map-status[hidden] {
     display: none;
@@ -273,8 +291,10 @@ import 'leaflet/dist/leaflet.css';
     time: number[]; // ms, shifted so UTC getters read local time
     temp: Record<ModelKey, Float32Array[]>; // [t] → rows*cols
     precip: Record<ModelKey, Float32Array[]>;
-    u: Record<ModelKey, Float32Array[]>; // wind toward the east, km/h
-    v: Record<ModelKey, Float32Array[]>; // wind toward the north, km/h
+    box: Box;
+    // wind is fetched only when the Wind layer is first shown
+    u?: Record<ModelKey, Float32Array[]>; // wind toward the east, km/h
+    v?: Record<ModelKey, Float32Array[]>; // wind toward the north, km/h
   };
 
   // --- color ramps (validated diverging blue ↔ terracotta, sequential blue) ---
@@ -285,6 +305,7 @@ import 'leaflet/dist/leaflet.css';
   const BLUE = ['#cde2fb', '#86b6ef', '#3987e5', '#1c5cab', '#0d366b'].map(hex);
   const TEAL = ['#dcefeb', '#9fd1c6', '#5aa898', '#2c7a6b', '#134d43'].map(hex);
   const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const smooth = (t: number) => t * t * (3 - 2 * t);
   const lerpRamp = (stops: RGB[], f: number): RGB => {
     const x = Math.max(0, Math.min(1, f)) * (stops.length - 1);
     const i = Math.min(stops.length - 2, Math.floor(x));
@@ -304,81 +325,92 @@ import 'leaflet/dist/leaflet.css';
   type Box = { s: number; n: number; w: number; e: number };
   const wrapLon = (x: number) => ((((x + 180) % 360) + 360) % 360) - 180;
 
-  /** Grid covering box (the visible map, padded), so data follows you wherever the map is dragged. */
-  async function loadGrid(box: Box, aspect: number): Promise<Grid | null> {
-    const wide = aspect >= 1;
-    const ROWS = 12;
-    const COLS = 14;
-    // round to whole degrees so nearby views share the cache
+  const ROWS = 16;
+  const COLS = 20;
+  const KEYS = Object.keys(MODELS) as ModelKey[];
+  const axes = (box: Box) => ({
+    lats: Array.from({ length: ROWS }, (_, i) => +(box.n - (i * (box.n - box.s)) / (ROWS - 1)).toFixed(2)),
+    lons: Array.from({ length: COLS }, (_, i) => +(box.w + (i * (box.e - box.w)) / (COLS - 1)).toFixed(2)),
+  });
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  type Raw = { offset: number; time: number[]; v: Record<string, (number | null)[]>[] };
+
+  /** `vars` from all three models at every grid point, in one request. Cached for an hour; retried once, since
+   *  Open-Meteo's limits are per visitor per minute. */
+  async function fetchPoints(box: Box, vars: string[], tag: string): Promise<Raw | null> {
     const r = (x: number) => Math.round(x);
-    const key = `fxmap4-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
-    const lats = Array.from({ length: ROWS }, (_, i) => +(box.n - (i * (box.n - box.s)) / (ROWS - 1)).toFixed(2));
-    const lons = Array.from({ length: COLS }, (_, i) => +(box.w + (i * (box.e - box.w)) / (COLS - 1)).toFixed(2));
-    let raw: any;
+    const key = `fxmap5-${tag}-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
     try {
       const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
-      if (cached && Date.now() - cached.t < 60 * 60 * 1000) raw = cached.raw;
+      if (cached && Date.now() - cached.t < 60 * 60 * 1000) return cached.raw;
     } catch {}
-    if (!raw) {
-      const qLat: number[] = [];
-      const qLon: number[] = [];
-      for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(+wrapLon(lo).toFixed(2)));
-      const models = Object.values(MODELS).map((m) => m.id).join(',');
-      const url =
-        `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m` +
-        `&models=${models}&forecast_days=10&temporal_resolution=hourly_3&timezone=auto&timeformat=unixtime`;
+    const { lats, lons } = axes(box);
+    const qLat: number[] = [];
+    const qLon: number[] = [];
+    for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(+wrapLon(lo).toFixed(2)));
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=${vars.join(',')}` +
+      `&models=${KEYS.map((k) => MODELS[k].id).join(',')}&forecast_days=10&temporal_resolution=hourly_3&timezone=auto&timeformat=unixtime`;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt) await sleep(3000);
       try {
         const res = await fetch(url);
-        if (!res.ok) return null;
+        if (!res.ok) continue;
         const data = await res.json();
         // keep only what we draw: compact enough to cache
-        raw = {
+        const raw: Raw = {
           offset: data[0].utc_offset_seconds,
           time: data[0].hourly.time,
           v: data.map((d: any) =>
-            Object.fromEntries(
-              Object.entries(MODELS).flatMap(([k, m]) => [
-                [`t_${k}`, d.hourly[`temperature_2m_${m.id}`]],
-                [`p_${k}`, d.hourly[`precipitation_${m.id}`]],
-                [`s_${k}`, d.hourly[`wind_speed_10m_${m.id}`]],
-                [`d_${k}`, d.hourly[`wind_direction_10m_${m.id}`]],
-              ]),
-            ),
+            Object.fromEntries(KEYS.flatMap((k) => vars.map((name) => [`${name}_${k}`, d.hourly[`${name}_${MODELS[k].id}`]]))),
           ),
         };
         try {
           sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), raw }));
         } catch {}
-      } catch {
-        return null;
-      }
+        return raw;
+      } catch {}
     }
-    const T = raw.time.length;
-    const field = (prefix: string, k: ModelKey) =>
-      Array.from({ length: T }, (_, t) => Float32Array.from(raw.v, (loc: any) => loc[`${prefix}_${k}`]?.[t] ?? NaN));
-    const keys = Object.keys(MODELS) as ModelKey[];
-    // speed + "blowing from" direction → components of the flow
-    const wind = (k: ModelKey, comp: 'u' | 'v') => {
-      const sp = field('s', k);
-      const dir = field('d', k);
-      return sp.map((f, t) =>
-        f.map((speed, i) => {
-          const rad = (dir[t][i] * Math.PI) / 180;
-          return comp === 'u' ? -speed * Math.sin(rad) : -speed * Math.cos(rad);
-        }),
-      );
-    };
+    return null;
+  }
+
+  /** one Float32Array (rows*cols) per time step */
+  const field = (raw: Raw, name: string, k: ModelKey) =>
+    Array.from({ length: raw.time.length }, (_, t) => Float32Array.from(raw.v, (loc) => loc[`${name}_${k}`]?.[t] ?? NaN));
+
+  /** Temperature and precipitation over box. */
+  async function loadGrid(box: Box): Promise<Grid | null> {
+    const raw = await fetchPoints(box, ['temperature_2m', 'precipitation'], 'tp');
+    if (!raw) return null;
     return {
       rows: ROWS,
       cols: COLS,
-      lats,
-      lons,
-      time: raw.time.map((s: number) => (s + raw.offset) * 1000),
-      temp: Object.fromEntries(keys.map((k) => [k, field('t', k)])) as Grid['temp'],
-      precip: Object.fromEntries(keys.map((k) => [k, field('p', k)])) as Grid['precip'],
-      u: Object.fromEntries(keys.map((k) => [k, wind(k, 'u')])) as Grid['u'],
-      v: Object.fromEntries(keys.map((k) => [k, wind(k, 'v')])) as Grid['v'],
+      ...axes(box),
+      box,
+      time: raw.time.map((s) => (s + raw.offset) * 1000),
+      temp: Object.fromEntries(KEYS.map((k) => [k, field(raw, 'temperature_2m', k)])) as Grid['temp'],
+      precip: Object.fromEntries(KEYS.map((k) => [k, field(raw, 'precipitation', k)])) as Grid['precip'],
     };
+  }
+
+  /** Adds wind to a grid: speed + "blowing from" direction → east/north components. */
+  async function loadWind(g: Grid): Promise<boolean> {
+    const raw = await fetchPoints(g.box, ['wind_speed_10m', 'wind_direction_10m'], 'wind');
+    if (!raw) return false;
+    const comp = (k: ModelKey, c: 'u' | 'v') => {
+      const sp = field(raw, 'wind_speed_10m', k);
+      const dir = field(raw, 'wind_direction_10m', k);
+      return sp.map((f, t) =>
+        f.map((speed, i) => {
+          const rad = (dir[t][i] * Math.PI) / 180;
+          return c === 'u' ? -speed * Math.sin(rad) : -speed * Math.cos(rad);
+        }),
+      );
+    };
+    g.u = Object.fromEntries(KEYS.map((k) => [k, comp(k, 'u')])) as Grid['u'];
+    g.v = Object.fromEntries(KEYS.map((k) => [k, comp(k, 'v')])) as Grid['v'];
+    return true;
   }
 
   class ForecastMap extends HTMLElement {
@@ -424,6 +456,7 @@ import 'leaflet/dist/leaflet.css';
           this.querySelectorAll('[data-layer]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
           (this.querySelector('[data-model-group]') as HTMLElement).hidden = this.layer === 'diff';
           this.wind?.setActive(this.layer === 'wind');
+          if (this.layer === 'wind') this.ensureWind();
           this.computeRange();
           this.draw();
         }),
@@ -534,13 +567,12 @@ import 'leaflet/dist/leaflet.css';
       this.loading = true;
       if (fresh) this.status(`Loading the forecast map around ${this.city.name}…`);
       else this.badge('Loading this area…');
-      const box = this.querySelector<HTMLElement>('[data-map]')!;
-      const grid = await loadGrid(area ?? this.viewBox(), box.clientWidth / Math.max(1, box.clientHeight));
+      const grid = await loadGrid(area ?? this.viewBox());
       this.loading = false;
       if (token !== this.token) return;
       this.badge('');
       if (!grid) {
-        if (fresh) return this.status('Could not load the map data right now. Try again in a bit.');
+        if (fresh) return this.status('Couldn’t load the map data. The free weather service may be busy.', () => this.load());
         this.badge('Could not load this area — try moving the map again');
         setTimeout(() => this.badge(''), 3000);
         return;
@@ -556,6 +588,7 @@ import 'leaflet/dist/leaflet.css';
       if (keepRange && this.layer !== 'precip') this.tempRange = [Math.min(prev[0], this.tempRange[0]), Math.max(prev[1], this.tempRange[1])];
       this.status('');
       this.draw();
+      if (this.layer === 'wind') this.ensureWind();
       // the map may have moved while we were fetching
       if (this.pending) {
         this.pending = false;
@@ -596,10 +629,32 @@ import 'leaflet/dist/leaflet.css';
       await this.fetchView(true, area);
     }
 
-    status(text: string) {
+    status(text: string, retry?: () => void) {
       const s = this.querySelector<HTMLElement>('[data-map-status]')!;
       s.textContent = text;
+      if (retry) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'Try again';
+        b.addEventListener('click', retry);
+        s.append(b);
+      }
       s.hidden = !text;
+    }
+
+    /** the Wind layer needs its own data; fetch it the first time it's shown */
+    async ensureWind() {
+      const g = this.grid;
+      if (!g || g.u) return;
+      const token = this.token;
+      this.status('Loading wind…');
+      const ok = await loadWind(g);
+      if (token !== this.token || g !== this.grid) return;
+      if (!ok) return this.status('Couldn’t load the wind data. The free weather service may be busy.', () => this.ensureWind());
+      this.status('');
+      this.computeRange();
+      this.draw();
+      this.wind?.reset();
     }
 
     get metric() {
@@ -633,6 +688,7 @@ import 'leaflet/dist/leaflet.css';
       } else if (this.layer === 'wind') {
         const all: number[] = [];
         g.time.forEach((_, t) => {
+          if (!g.u || !g.v) return;
           const u = g.u[this.model][t];
           const v = g.v[this.model][t];
           for (let i = 0; i < u.length; i++) if (!isNaN(u[i])) all.push(this.windConv(Math.hypot(u[i], v[i])));
@@ -659,7 +715,7 @@ import 'leaflet/dist/leaflet.css';
     /** wind components (km/h) at a point, for the particles */
     windAt(lat: number, lon: number): [number, number] | null {
       const pos = this.gridPos(lat, lon);
-      if (!pos || !this.grid) return null;
+      if (!pos || !this.grid?.u || !this.grid.v) return null;
       const u = this.sample(this.grid.u[this.model][this.t], pos[0], pos[1]);
       const v = this.sample(this.grid.v[this.model][this.t], pos[0], pos[1]);
       return isNaN(u) || isNaN(v) ? null : [u, v];
@@ -669,8 +725,8 @@ import 'leaflet/dist/leaflet.css';
       const { cols: COLS, rows: ROWS } = this.grid!;
       const c0 = Math.max(0, Math.min(COLS - 2, Math.floor(gx)));
       const r0 = Math.max(0, Math.min(ROWS - 2, Math.floor(gy)));
-      const fx = gx - c0;
-      const fy = gy - r0;
+      const fx = smooth(gx - c0);
+      const fy = smooth(gy - r0);
       const at = (r: number, c: number) => f[r * COLS + c];
       return (at(r0, c0) * (1 - fx) + at(r0, c0 + 1) * fx) * (1 - fy) + (at(r0 + 1, c0) * (1 - fx) + at(r0 + 1, c0 + 1) * fx) * fy;
     }
@@ -682,8 +738,9 @@ import 'leaflet/dist/leaflet.css';
       const sample = (f: Float32Array) => {
         const c0 = Math.max(0, Math.min(COLS - 2, Math.floor(gx)));
         const r0 = Math.max(0, Math.min(ROWS - 2, Math.floor(gy)));
-        const fx = gx - c0;
-        const fy = gy - r0;
+        // smoothstep weights: rounder contours than plain bilinear on a coarse grid
+        const fx = smooth(gx - c0);
+        const fy = smooth(gy - r0);
         const at = (r: number, c: number) => f[r * COLS + c];
         return (
           (at(r0, c0) * (1 - fx) + at(r0, c0 + 1) * fx) * (1 - fy) + (at(r0 + 1, c0) * (1 - fx) + at(r0 + 1, c0 + 1) * fx) * fy
@@ -691,7 +748,7 @@ import 'leaflet/dist/leaflet.css';
       };
       if (this.layer === 'temp') return this.conv(sample(g.temp[this.model][t]));
       if (this.layer === 'precip') return sample(g.precip[this.model][t]);
-      if (this.layer === 'wind') return this.windConv(Math.hypot(sample(g.u[this.model][t]), sample(g.v[this.model][t])));
+      if (this.layer === 'wind') return g.u && g.v ? this.windConv(Math.hypot(sample(g.u[this.model][t]), sample(g.v[this.model][t]))) : NaN;
       const d = sample(g.temp.aifs[t]) - sample(g.temp.ifs[t]);
       return this.metric ? d : d * 1.8;
     }
@@ -702,10 +759,22 @@ import 'leaflet/dist/leaflet.css';
       if (isNaN(v)) return [0, 0, 0, 0];
       const [lo, hi] = this.tempRange;
       if (this.layer === 'precip') {
-        if (v < 0.1) return [0, 0, 0, 0];
-        const f = Math.log(1 + v * 3) / Math.log(1 + 15 * 3); // ~0.1–15 mm per 3 h
+        // stepped bands (like a radar map) read as rain areas better than a smooth fade; each step is softened over a
+        // narrow range so edges don't look cut out
+        const STEPS = [0.1, 0.5, 1, 2.5, 5, 10, 15];
+        const lv = Math.log(v + 1e-6);
+        const SOFT = 0.12; // in log(mm)
+        let f = 0;
+        let a = 0;
+        STEPS.forEach((x, i) => {
+          const w = Math.max(0, Math.min(1, (lv - Math.log(x)) / SOFT + 0.5));
+          if (i === 0) a = w;
+          else f += w / (STEPS.length - 1);
+        });
+        if (a <= 0) return [0, 0, 0, 0];
         const [r, g, b] = lerpRamp(BLUE, f);
-        return [r, g, b, Math.round(120 + 110 * Math.min(1, f + 0.2))];
+        // light rain stays see-through; heavier rain is more solid
+        return [r, g, b, Math.round(a * (95 + 140 * f))];
       }
       if (this.layer === 'wind') {
         const [r, g, b] = lerpRamp(TEAL, v / hi);
@@ -723,8 +792,9 @@ import 'leaflet/dist/leaflet.css';
       const L = this.L;
       const COLS = g.cols;
       const ROWS = g.rows;
-      const W = COLS >= ROWS ? 240 : 190;
-      const H = COLS >= ROWS ? 190 : 240;
+      // fine enough that the precipitation band edges don't show stair steps when the overlay is stretched
+      const W = COLS >= ROWS ? 720 : 576;
+      const H = COLS >= ROWS ? 576 : 720;
       const cv = this.canvas;
       cv.width = W;
       cv.height = H;

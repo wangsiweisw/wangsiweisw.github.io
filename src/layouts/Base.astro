@@ -62,7 +62,25 @@ const ogImage = new URL(`/og/${existsSync(`public/og/${og}.jpg`) ? og : 'default
           units = localStorage.getItem('units');
         } catch (e) {}
         if (theme === 'light' || theme === 'dark') root.dataset.theme = theme;
-        var dark = theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        // No saved choice: dark if the OS asks for it, or once the sun is down where the visitor is
+        // (position guessed from the time zone; no location request). Same math as sunIsDown() in scripts/prefs.ts.
+        var sunDown = function () {
+          var now = new Date();
+          var y = now.getFullYear();
+          var std = Math.max(new Date(y, 0, 1).getTimezoneOffset(), new Date(y, 6, 1).getTimezoneOffset());
+          var lon = -std / 4;
+          var lat = 40;
+          var r = Math.PI / 180;
+          var d = now.getTime() / 864e5 - 10957.5;
+          var g = (357.529 + 0.98560028 * d) * r;
+          var L = (280.459 + 0.98564736 * d) * r + (1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * r;
+          var e = (23.439 - 3.6e-7 * d) * r;
+          var ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L));
+          var dec = Math.asin(Math.sin(e) * Math.sin(L));
+          var ha = (18.697374558 + 24.06570982441908 * d) * 15 * r + lon * r - ra;
+          return Math.sin(lat * r) * Math.sin(dec) + Math.cos(lat * r) * Math.cos(dec) * Math.cos(ha) < Math.sin(-3 * r);
+        };
+        var dark = theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches || sunDown();
         root.dataset.effectiveTheme = dark ? 'dark' : 'light';
         root.dataset.units = units === 'metric' ? 'metric' : 'imperial';
       })();

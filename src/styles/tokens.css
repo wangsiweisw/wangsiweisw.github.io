@@ -40,7 +40,9 @@
   }
 }
 
-:root[data-theme='dark'] {
+/* picked by the visitor, or chosen automatically after sunset (see the theme script in Base.astro) */
+:root[data-theme='dark'],
+:root:not([data-theme='light'])[data-effective-theme='dark'] {
   --bg: #1a1714;
   --surface: #211d19;
   --fg: #efe8dd;
