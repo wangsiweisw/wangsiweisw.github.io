@@ -334,15 +334,40 @@ import 'leaflet/dist/leaflet.css';
   });
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+  /** Save to localStorage; if it's full, drop other map entries (they're ~1 MB each) and try once more. */
+  function store(key: string, value: string) {
+    const prune = (keepCurrent: boolean) => {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k?.startsWith('fxmap') && (!keepCurrent || k !== key)) localStorage.removeItem(k);
+      }
+    };
+    try {
+      // expired entries first
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (!k?.startsWith('fxmap')) continue;
+        const t = JSON.parse(localStorage.getItem(k) ?? '{}').t ?? 0;
+        if (Date.now() - t > 60 * 60 * 1000) localStorage.removeItem(k);
+      }
+      localStorage.setItem(key, value);
+    } catch {
+      try {
+        prune(true);
+        localStorage.setItem(key, value);
+      } catch {}
+    }
+  }
+
   type Raw = { offset: number; time: number[]; v: Record<string, (number | null)[]>[] };
 
-  /** `vars` from all three models at every grid point, in one request. Cached for an hour; retried once, since
-   *  Open-Meteo's limits are per visitor per minute. */
+  /** `vars` from all three models at every grid point, in one request. Cached for an hour in localStorage (shared by
+   *  this browser's tabs, so revisits don't count against Open-Meteo's per-visitor limits); retried once. */
   async function fetchPoints(box: Box, vars: string[], tag: string): Promise<Raw | null> {
     const r = (x: number) => Math.round(x);
     const key = `fxmap5-${tag}-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
     try {
-      const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+      const cached = JSON.parse(localStorage.getItem(key) ?? 'null');
       if (cached && Date.now() - cached.t < 60 * 60 * 1000) return cached.raw;
     } catch {}
     const { lats, lons } = axes(box);
@@ -366,9 +391,7 @@ import 'leaflet/dist/leaflet.css';
             Object.fromEntries(KEYS.flatMap((k) => vars.map((name) => [`${name}_${k}`, d.hourly[`${name}_${MODELS[k].id}`]]))),
           ),
         };
-        try {
-          sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), raw }));
-        } catch {}
+        store(key, JSON.stringify({ t: Date.now(), raw }));
         return raw;
       } catch {}
     }
