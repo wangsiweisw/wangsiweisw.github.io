@@ -1,5 +1,5 @@
 ---
-// Forecast map: animated 10-day field (temperature, precipitation, or the ML-minus-physics difference) around the
+// Forecast map: animated 10-day field (temperature, precipitation, wind, or the ML-minus-physics difference) around the
 // selected city, from AIFS, IFS and GFS via Open-Meteo, drawn on a Leaflet basemap. Loads only when scrolled to.
 import 'leaflet/dist/leaflet.css';
 ---
@@ -9,6 +9,7 @@ import 'leaflet/dist/leaflet.css';
     <div class="chips" role="group" aria-label="Map layer">
       <button type="button" class="chip" data-layer="temp" aria-pressed="true">Temperature</button>
       <button type="button" class="chip" data-layer="precip" aria-pressed="false">Precipitation</button>
+      <button type="button" class="chip" data-layer="wind" aria-pressed="false">Wind</button>
       <button type="button" class="chip" data-layer="diff" aria-pressed="false">AIFS − IFS</button>
     </div>
     <div class="chips" role="group" aria-label="Model" data-model-group>
@@ -202,6 +203,12 @@ import 'leaflet/dist/leaflet.css';
     color: var(--fg);
     border-color: var(--rule);
   }
+  .map :global(.wind-canvas) {
+    position: absolute;
+    inset: 0;
+    z-index: 450;
+    pointer-events: none;
+  }
   .map :global(.osm-muted) {
     filter: grayscale(1) contrast(0.85) brightness(1.05);
     opacity: 0.75;
@@ -246,10 +253,11 @@ import 'leaflet/dist/leaflet.css';
 
 <script>
   import type * as Leaflet from 'leaflet';
+  import { WindParticles } from '../scripts/wind-particles';
 
   type City = { id: string; name: string; lat: number; lon: number };
   type ModelKey = 'aifs' | 'ifs' | 'gfs';
-  type Layer = 'temp' | 'precip' | 'diff';
+  type Layer = 'temp' | 'precip' | 'wind' | 'diff';
 
   const MODELS: Record<ModelKey, { id: string; name: string }> = {
     aifs: { id: 'ecmwf_aifs025_single', name: 'AIFS (ECMWF, machine learning)' },
@@ -265,6 +273,8 @@ import 'leaflet/dist/leaflet.css';
     time: number[]; // ms, shifted so UTC getters read local time
     temp: Record<ModelKey, Float32Array[]>; // [t] → rows*cols
     precip: Record<ModelKey, Float32Array[]>;
+    u: Record<ModelKey, Float32Array[]>; // wind toward the east, km/h
+    v: Record<ModelKey, Float32Array[]>; // wind toward the north, km/h
   };
 
   // --- color ramps (validated diverging blue ↔ terracotta, sequential blue) ---
@@ -273,6 +283,8 @@ import 'leaflet/dist/leaflet.css';
   const COLD = ['#0d366b', '#256abf', '#6da7ec', '#b7d3f6'].map(hex);
   const WARM = ['#f3c9b4', '#e07a4f', '#b4532a', '#7a3418'].map(hex);
   const BLUE = ['#cde2fb', '#86b6ef', '#3987e5', '#1c5cab', '#0d366b'].map(hex);
+  const TEAL = ['#dcefeb', '#9fd1c6', '#5aa898', '#2c7a6b', '#134d43'].map(hex);
+  const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const lerpRamp = (stops: RGB[], f: number): RGB => {
     const x = Math.max(0, Math.min(1, f)) * (stops.length - 1);
     const i = Math.min(stops.length - 2, Math.floor(x));
@@ -299,7 +311,7 @@ import 'leaflet/dist/leaflet.css';
     const COLS = 14;
     // round to whole degrees so nearby views share the cache
     const r = (x: number) => Math.round(x);
-    const key = `fxmap3-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
+    const key = `fxmap4-${r(box.s)},${r(box.n)},${r(box.w)},${r(box.e)}-${ROWS}x${COLS}`;
     const lats = Array.from({ length: ROWS }, (_, i) => +(box.n - (i * (box.n - box.s)) / (ROWS - 1)).toFixed(2));
     const lons = Array.from({ length: COLS }, (_, i) => +(box.w + (i * (box.e - box.w)) / (COLS - 1)).toFixed(2));
     let raw: any;
@@ -313,7 +325,7 @@ import 'leaflet/dist/leaflet.css';
       for (const la of lats) for (const lo of lons) (qLat.push(la), qLon.push(+wrapLon(lo).toFixed(2)));
       const models = Object.values(MODELS).map((m) => m.id).join(',');
       const url =
-        `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=temperature_2m,precipitation` +
+        `https://api.open-meteo.com/v1/forecast?latitude=${qLat}&longitude=${qLon}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m` +
         `&models=${models}&forecast_days=10&temporal_resolution=hourly_3&timezone=auto&timeformat=unixtime`;
       try {
         const res = await fetch(url);
@@ -328,6 +340,8 @@ import 'leaflet/dist/leaflet.css';
               Object.entries(MODELS).flatMap(([k, m]) => [
                 [`t_${k}`, d.hourly[`temperature_2m_${m.id}`]],
                 [`p_${k}`, d.hourly[`precipitation_${m.id}`]],
+                [`s_${k}`, d.hourly[`wind_speed_10m_${m.id}`]],
+                [`d_${k}`, d.hourly[`wind_direction_10m_${m.id}`]],
               ]),
             ),
           ),
@@ -343,6 +357,17 @@ import 'leaflet/dist/leaflet.css';
     const field = (prefix: string, k: ModelKey) =>
       Array.from({ length: T }, (_, t) => Float32Array.from(raw.v, (loc: any) => loc[`${prefix}_${k}`]?.[t] ?? NaN));
     const keys = Object.keys(MODELS) as ModelKey[];
+    // speed + "blowing from" direction → components of the flow
+    const wind = (k: ModelKey, comp: 'u' | 'v') => {
+      const sp = field('s', k);
+      const dir = field('d', k);
+      return sp.map((f, t) =>
+        f.map((speed, i) => {
+          const rad = (dir[t][i] * Math.PI) / 180;
+          return comp === 'u' ? -speed * Math.sin(rad) : -speed * Math.cos(rad);
+        }),
+      );
+    };
     return {
       rows: ROWS,
       cols: COLS,
@@ -351,6 +376,8 @@ import 'leaflet/dist/leaflet.css';
       time: raw.time.map((s: number) => (s + raw.offset) * 1000),
       temp: Object.fromEntries(keys.map((k) => [k, field('t', k)])) as Grid['temp'],
       precip: Object.fromEntries(keys.map((k) => [k, field('p', k)])) as Grid['precip'],
+      u: Object.fromEntries(keys.map((k) => [k, wind(k, 'u')])) as Grid['u'],
+      v: Object.fromEntries(keys.map((k) => [k, wind(k, 'v')])) as Grid['v'],
     };
   }
 
@@ -373,6 +400,7 @@ import 'leaflet/dist/leaflet.css';
     picked = false;
     loading = false;
     pending = false;
+    wind?: WindParticles;
 
     connectedCallback() {
       const first = document.querySelector<HTMLElement>('forecast-lab');
@@ -395,6 +423,7 @@ import 'leaflet/dist/leaflet.css';
           this.layer = b.dataset.layer as Layer;
           this.querySelectorAll('[data-layer]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
           (this.querySelector('[data-model-group]') as HTMLElement).hidden = this.layer === 'diff';
+          this.wind?.setActive(this.layer === 'wind');
           this.computeRange();
           this.draw();
         }),
@@ -453,6 +482,14 @@ import 'leaflet/dist/leaflet.css';
       });
 
       this.map.on('mouseout', () => ((this.querySelector('[data-readout]') as HTMLElement).hidden = true));
+      this.wind = new WindParticles(
+        this.map,
+        (lat, lon) => this.windAt(lat, lon),
+        () => (document.documentElement.dataset.effectiveTheme === 'dark' ? 'rgba(244,238,228,0.85)' : 'rgba(30,28,24,0.7)'),
+      );
+      // no animation work while the map is scrolled out of view
+      new IntersectionObserver(([e]) => this.wind?.setVisible(e.isIntersecting)).observe(this);
+      this.wind.setActive(this.layer === 'wind');
       this.load();
     }
 
@@ -593,7 +630,49 @@ import 'leaflet/dist/leaflet.css';
         const m = diffs[Math.floor(diffs.length * 0.98)] ?? 0;
         const k = this.metric ? 1 : 1.8;
         this.tempRange = [-Math.max(2, Math.ceil(m * k)), Math.max(2, Math.ceil(m * k))];
+      } else if (this.layer === 'wind') {
+        const all: number[] = [];
+        g.time.forEach((_, t) => {
+          const u = g.u[this.model][t];
+          const v = g.v[this.model][t];
+          for (let i = 0; i < u.length; i++) if (!isNaN(u[i])) all.push(this.windConv(Math.hypot(u[i], v[i])));
+        });
+        all.sort((a, b) => a - b);
+        this.tempRange = [0, Math.max(10, Math.ceil(all[Math.floor(all.length * 0.98)] / 5) * 5)];
       } else this.tempRange = [0, 10];
+    }
+
+    /** km/h → mph or km/h for display */
+    windConv(kmh: number) {
+      return this.metric ? kmh : kmh / 1.609344;
+    }
+
+    /** grid position of a point, or null outside the data */
+    gridPos(lat: number, lon: number): [number, number] | null {
+      const g = this.grid;
+      if (!g) return null;
+      const gx = ((lon - g.lons[0]) / (g.lons.at(-1)! - g.lons[0])) * (g.cols - 1);
+      const gy = ((g.lats[0] - lat) / (g.lats[0] - g.lats.at(-1)!)) * (g.rows - 1);
+      return gx < 0 || gx > g.cols - 1 || gy < 0 || gy > g.rows - 1 ? null : [gx, gy];
+    }
+
+    /** wind components (km/h) at a point, for the particles */
+    windAt(lat: number, lon: number): [number, number] | null {
+      const pos = this.gridPos(lat, lon);
+      if (!pos || !this.grid) return null;
+      const u = this.sample(this.grid.u[this.model][this.t], pos[0], pos[1]);
+      const v = this.sample(this.grid.v[this.model][this.t], pos[0], pos[1]);
+      return isNaN(u) || isNaN(v) ? null : [u, v];
+    }
+
+    sample(f: Float32Array, gx: number, gy: number) {
+      const { cols: COLS, rows: ROWS } = this.grid!;
+      const c0 = Math.max(0, Math.min(COLS - 2, Math.floor(gx)));
+      const r0 = Math.max(0, Math.min(ROWS - 2, Math.floor(gy)));
+      const fx = gx - c0;
+      const fy = gy - r0;
+      const at = (r: number, c: number) => f[r * COLS + c];
+      return (at(r0, c0) * (1 - fx) + at(r0, c0 + 1) * fx) * (1 - fy) + (at(r0 + 1, c0) * (1 - fx) + at(r0 + 1, c0 + 1) * fx) * fy;
     }
 
     value(t: number, gx: number, gy: number): number {
@@ -612,6 +691,7 @@ import 'leaflet/dist/leaflet.css';
       };
       if (this.layer === 'temp') return this.conv(sample(g.temp[this.model][t]));
       if (this.layer === 'precip') return sample(g.precip[this.model][t]);
+      if (this.layer === 'wind') return this.windConv(Math.hypot(sample(g.u[this.model][t]), sample(g.v[this.model][t])));
       const d = sample(g.temp.aifs[t]) - sample(g.temp.ifs[t]);
       return this.metric ? d : d * 1.8;
     }
@@ -626,6 +706,10 @@ import 'leaflet/dist/leaflet.css';
         const f = Math.log(1 + v * 3) / Math.log(1 + 15 * 3); // ~0.1–15 mm per 3 h
         const [r, g, b] = lerpRamp(BLUE, f);
         return [r, g, b, Math.round(120 + 110 * Math.min(1, f + 0.2))];
+      }
+      if (this.layer === 'wind') {
+        const [r, g, b] = lerpRamp(TEAL, v / hi);
+        return [r, g, b, 130];
       }
       const center = this.layer === 'diff' ? 0 : (lo + hi) / 2;
       const half = this.layer === 'diff' ? hi : (hi - lo) / 2;
@@ -680,6 +764,7 @@ import 'leaflet/dist/leaflet.css';
       });
       (this.querySelector('[data-time]') as HTMLInputElement).value = String(this.t);
       this.legend();
+      if (this.layer === 'wind') this.wind?.refresh();
     }
 
     legend() {
@@ -693,6 +778,10 @@ import 'leaflet/dist/leaflet.css';
         title = `Precipitation, mm per 3 hours · ${MODELS[this.model].name}`;
         stops = BLUE.map((c) => `rgb(${c})`);
         ticks = ['0.1', '1', '5', '15+'];
+      } else if (this.layer === 'wind') {
+        title = `Wind speed (${this.metric ? 'km/h' : 'mph'}) · ${MODELS[this.model].name}`;
+        stops = TEAL.map((c) => `rgb(${c})`);
+        ticks = ['0', `${Math.round(hi / 2)}`, `${hi}+`];
       } else {
         const dark = document.documentElement.dataset.effectiveTheme === 'dark';
         const mid = dark ? 'rgb(56,56,53)' : 'rgb(240,239,236)';
@@ -722,8 +811,13 @@ import 'leaflet/dist/leaflet.css';
       if (gx < 0 || gx > COLS - 1 || gy < 0 || gy > ROWS - 1) return void (box.hidden = true);
       const v = this.value(this.t, gx, gy);
       const unit = this.metric ? '°C' : '°F';
+      const uv = this.layer === 'wind' ? this.windAt(lat, lon) : null;
+      // direction the wind blows from
+      const from = uv ? COMPASS[Math.round(((Math.atan2(-uv[0], -uv[1]) * 180) / Math.PI + 360) / 45) % 8] : '';
       box.textContent =
-        this.layer === 'precip'
+        this.layer === 'wind'
+          ? `${Math.round(v)} ${this.metric ? 'km/h' : 'mph'} from the ${from}`
+          : this.layer === 'precip'
           ? `${v.toFixed(1)} mm in 3 h`
           : this.layer === 'diff'
             ? `AIFS ${v >= 0 ? 'warmer' : 'colder'} by ${Math.abs(v).toFixed(1)}${unit}`
