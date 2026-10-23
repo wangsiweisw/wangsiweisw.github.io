@@ -1,6 +1,7 @@
 // running:stats — summarise a Strava bulk export into src/data/running.json (aggregates only).
 //
-//   pnpm running:stats            reads strava-export/*/activities.csv (gitignored)
+//   pnpm running:stats            reads strava-export/*/activities.csv (gitignored), plus runs since that export in
+//                                 strava-export/recent.json (pulled through the Strava connector), if present
 //
 // Only totals leave the export: no activity names, dates, routes, GPS, heart rate or times of day.
 import { existsSync } from 'node:fs';
@@ -27,6 +28,21 @@ const runs = rows
   .filter((r) => /run/i.test(r[iType] ?? ''))
   .map((r) => ({ date: new Date(`${r[iDate]} UTC`), meters: parseFloat(r[iMeters]) || 0, moving: parseFloat(r[iMoving]) || 0 }))
   .filter((r) => r.meters > 0 && !isNaN(+r.date));
+
+// Newer runs from the Strava connector ({start_local, sport_type, distance, moving_time}). A run already in the
+// export (same distance within 1%, start within a day: local vs UTC clocks) is skipped.
+const RECENT = join(EXPORT_DIR, 'recent.json');
+if (existsSync(RECENT)) {
+  const recent: { start_local: string; sport_type: string; distance: number; moving_time: number }[] = JSON.parse(await readFile(RECENT, 'utf8'));
+  let added = 0;
+  for (const a of recent) {
+    if (!/run/i.test(a.sport_type) || !(a.distance > 0)) continue;
+    const date = new Date(`${a.start_local}Z`);
+    const dup = runs.some((r) => Math.abs(+r.date - +date) < 864e5 && Math.abs(r.meters - a.distance) <= a.distance * 0.01);
+    if (!dup) (runs.push({ date, meters: a.distance, moving: a.moving_time }), added++);
+  }
+  console.log(`${RECENT}: ${added} newer runs added`);
+}
 
 const byYear = new Map<number, { runs: number; meters: number }>();
 for (const r of runs) {
