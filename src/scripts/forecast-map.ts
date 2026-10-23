@@ -4,9 +4,10 @@
 import type * as Leaflet from 'leaflet';
 import { WindParticles } from './wind-particles';
 import { contours, extrema, upsample } from './contours';
+import { darkness, moonPhase } from './astro';
 import { regionFor, sourceFor, type City, type FieldName, type FxSource, type ModelKey } from './fx-data';
 
-type Layer = 'temp' | 'precip' | 'wind' | 'sun' | 'cloud' | 'z500' | 'total' | 'diff';
+type Layer = 'temp' | 'precip' | 'wind' | 'sun' | 'cloud' | 'stars' | 'z500' | 'total' | 'diff';
 
 const MODEL_NAMES: Record<ModelKey, string> = {
   aifs: 'AIFS (ECMWF, machine learning)',
@@ -14,7 +15,7 @@ const MODEL_NAMES: Record<ModelKey, string> = {
   gfs: 'GFS (NOAA, physics)',
 };
 // layers that only the precomputed data has
-const PRE_ONLY: Layer[] = ['sun', 'cloud', 'z500', 'total'];
+const PRE_ONLY: Layer[] = ['sun', 'cloud', 'stars', 'z500', 'total'];
 
 // --- color ramps (validated diverging blue ↔ terracotta, sequential blue and teal) ---
 type RGB = [number, number, number];
@@ -23,6 +24,8 @@ const COLD = ['#0d366b', '#256abf', '#6da7ec', '#b7d3f6'].map(hex);
 const WARM = ['#f3c9b4', '#e07a4f', '#b4532a', '#7a3418'].map(hex);
 const BLUE = ['#cde2fb', '#86b6ef', '#3987e5', '#1c5cab', '#0d366b'].map(hex);
 const TEAL = ['#dcefeb', '#9fd1c6', '#5aa898', '#2c7a6b', '#134d43'].map(hex);
+// stargazing: overcast grey → clear night-sky navy
+const SKY = ['#a3a8b0', '#6d7891', '#3a4a78', '#1b2756', '#0c1438'].map(hex);
 const AMBER = ['#fff1cf', '#fbd47e', '#f2ae3d', '#d6831a', '#9a5a0c'].map(hex);
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 const RAIN_STEPS = [0.1, 0.5, 1, 2.5, 5, 10, 15]; // mm per step
@@ -74,6 +77,7 @@ class ForecastMap extends HTMLElement {
   layer: Layer = 'temp';
   model: ModelKey = 'aifs';
   isobars = false;
+  night?: Float32Array; // stargazing: how dark it is at each grid point for the current frame
   t = 0;
   playing = 0;
   canvas = document.createElement('canvas');
@@ -131,6 +135,11 @@ class ForecastMap extends HTMLElement {
     if (still) this.stop();
     this.querySelector<HTMLInputElement>('[data-time]')!.disabled = still;
     this.querySelector<HTMLButtonElement>('[data-play]')!.disabled = still;
+    // stargazing in daylight shows nothing: jump to the next frame when it's dark at the city
+    if (layer === 'stars' && this.src && darkness(this.city.lat, this.city.lon, this.src.time[this.t]) < 0.5) {
+      const next = this.src.time.findIndex((t, i) => i > this.t && darkness(this.city.lat, this.city.lon, t) >= 0.5);
+      if (next !== -1) this.t = next;
+    }
     this.update();
   }
 
@@ -235,6 +244,7 @@ class ForecastMap extends HTMLElement {
       ],
       sun: [['sw', m]],
       cloud: [['tcc', m]],
+      stars: (['tcc', 'lcc', 'mcc', 'hcc', 'tcw', 'jet', 'd2m', 't2m'] as FieldName[]).map((f) => [f, m]),
       z500: [['z500', m]],
       total: [['tptot', m]],
       diff: [
@@ -385,6 +395,7 @@ class ForecastMap extends HTMLElement {
       case 'sun':
         return s('sw');
       case 'cloud':
+      case 'stars':
         return s('tcc');
       case 'z500':
         return s('z500');
@@ -419,6 +430,7 @@ class ForecastMap extends HTMLElement {
     const s = this.src;
     if (!s || !this.map || this.needs().some(([f, m]) => !this.data.has(`${f}/${m}`))) return;
     const L = this.L;
+    if (this.layer === 'stars') this.nightGrid();
     // fine enough that band edges don't show stair steps when the overlay is stretched
     const W = s.cols >= s.rows ? 720 : 576;
     const H = s.cols >= s.rows ? 576 : 720;
@@ -435,7 +447,8 @@ class ForecastMap extends HTMLElement {
       const lat = invMercY(yN + ((py + 0.5) / H) * (yS - yN));
       const gy = ((latN - lat) / (latN - latS)) * (s.rows - 1);
       for (let px = 0; px < W; px++) {
-        const c = this.color(this.value(((px + 0.5) / W) * (s.cols - 1), gy));
+        const gx = ((px + 0.5) / W) * (s.cols - 1);
+        const c = this.layer === 'stars' ? this.starColor(gx, gy) : this.color(this.value(gx, gy));
         const o = (py * W + px) * 4;
         img.data[o] = c[0];
         img.data[o + 1] = c[1];
@@ -458,6 +471,37 @@ class ForecastMap extends HTMLElement {
     (this.querySelector('[data-time]') as HTMLInputElement).value = String(this.t);
     this.legend();
     if (this.layer === 'wind') this.wind?.refresh();
+  }
+
+  /** darkness at every grid point for the current frame (sampled per pixel like the data) */
+  nightGrid() {
+    const s = this.src!;
+    const g = new Float32Array(s.rows * s.cols);
+    const t = s.time[this.t];
+    for (let r = 0; r < s.rows; r++) for (let c = 0; c < s.cols; c++) g[r * s.cols + c] = darkness(s.lats[r], s.lons[c], t);
+    this.night = g;
+  }
+
+  /** clear night sky → deep navy, cloud → grey; fades out where it isn't dark yet */
+  starColor(gx: number, gy: number): [number, number, number, number] {
+    const dark = this.sample(this.night, gx, gy);
+    const cloud = this.value(gx, gy);
+    if (!(dark > 0) || isNaN(cloud)) return [0, 0, 0, 0];
+    const clear = 1 - cloud / 100;
+    return [...lerpRamp(SKY, clear), Math.round(dark * (90 + 120 * clear))];
+  }
+
+  /** a word for each stargazing factor (rules of thumb, not a forecast of their own) */
+  starNotes(gx: number, gy: number): string {
+    const m = this.model;
+    const s = (f: FieldName) => this.sample(this.frame(f, m), gx, gy);
+    const tcw = s('tcw');
+    const jet = s('jet') / 3.6; // m/s
+    const spread = s('t2m') - s('d2m');
+    const transparency = tcw < 10 ? 'excellent' : tcw < 20 ? 'good' : tcw < 30 ? 'fair' : 'poor';
+    const seeing = jet < 20 ? 'steady' : jet < 40 ? 'fair' : 'twinkly';
+    const layers = `low ${Math.round(s('lcc'))}% · mid ${Math.round(s('mcc'))}% · high ${Math.round(s('hcc'))}%`;
+    return `${layers} · transparency ${transparency} · seeing ${seeing}${spread < 2 ? ' · dew likely' : ''}`;
   }
 
   /** isobars every 4 hPa with H/L centres, and 500 hPa height contours every 60 m */
@@ -528,6 +572,13 @@ class ForecastMap extends HTMLElement {
         stops = AMBER.map((c) => `rgb(${c})`);
         ticks = ['0', '200', '400', '600', '800'];
         break;
+      case 'stars': {
+        const moon = moonPhase(this.src?.time[this.t] ?? Date.now());
+        title = `Stargazing: darker = clearer night sky (blank where it isn't dark yet) · Moon ${Math.round(moon.lit * 100)}% lit, ${moon.waxing ? 'waxing' : 'waning'} · ${name}`;
+        stops = SKY.map((c) => `rgb(${c})`);
+        ticks = ['overcast', 'clear'];
+        break;
+      }
       case 'cloud':
         title = `Cloud cover (%) · ${name}`;
         stops = this.dark ? ['rgba(225,225,222,0)', 'rgba(225,225,222,0.75)'] : ['rgba(96,100,108,0)', 'rgba(96,100,108,0.67)'];
@@ -579,6 +630,12 @@ class ForecastMap extends HTMLElement {
         break;
       case 'cloud':
         text = `${Math.round(v)}% cloud cover`;
+        break;
+      case 'stars':
+        text =
+          this.sample(this.night, pos[0], pos[1]) > 0
+            ? `${Math.round(100 - v)}% clear sky · ${this.starNotes(pos[0], pos[1])}`
+            : 'Not dark yet here';
         break;
       case 'z500':
         text = `500 hPa at ${Math.round(v).toLocaleString('en-US')} m`;

@@ -5,7 +5,10 @@
 // Both expose fields as one Float32Array (rows × cols, north-west first) per frame of a shared timeline.
 
 export type ModelKey = 'aifs' | 'ifs' | 'gfs';
-export type FieldName = 't2m' | 'tp6' | 'u10' | 'v10' | 'msl' | 'z500' | 'tptot' | 'sw' | 'tcc';
+export type FieldName =
+  | 't2m' | 'tp6' | 'u10' | 'v10' | 'msl' | 'z500' | 'tptot' | 'sw' | 'tcc'
+  // stargazing: cloud by layer, water vapour column (mm), dew point (°C), 250 hPa jet speed (km/h)
+  | 'lcc' | 'mcc' | 'hcc' | 'tcw' | 'd2m' | 'jet';
 export type City = { id: string; name: string; lat: number; lon: number; tz?: string };
 export type Box = { s: number; n: number; w: number; e: number };
 

@@ -48,6 +48,14 @@ FIELDS = {
     # sunlight reaching the ground: ECMWF accumulates energy since the run started, GFS gives the last 6-hour mean
     "ssrd": {"ecmwf": ("ssrd", None), "gfs": "DSWRF:surface"},
     "tcc": {"ecmwf": ("tcc", None), "gfs": "TCDC:entire atmosphere"},
+    # for stargazing: cloud by layer, water vapour (transparency), dew point, and the jet stream (seeing)
+    "lcc": {"ecmwf": ("lcc", None), "gfs": "LCDC:low cloud layer"},
+    "mcc": {"ecmwf": ("mcc", None), "gfs": "MCDC:middle cloud layer"},
+    "hcc": {"ecmwf": ("hcc", None), "gfs": "HCDC:high cloud layer"},
+    "tcw": {"ecmwf": ("tcw", None), "gfs": "PWAT:entire atmosphere"},
+    "d2m": {"ecmwf": ("2d", None), "gfs": "DPT:2 m above ground"},
+    "u250": {"ecmwf": ("u", "250"), "gfs": "UGRD:250 mb"},
+    "v250": {"ecmwf": ("v", "250"), "gfs": "VGRD:250 mb"},
 }
 MODELS = {"aifs": "aifs-single", "ifs": "ifs", "gfs": None}
 
@@ -175,16 +183,16 @@ def region(city: dict) -> dict:
 
 
 def to_units(name: str, units: str, a: np.ndarray) -> np.ndarray:
-    if name == "t2m":
+    if name in ("t2m", "d2m"):
         return a - 273.15  # °C
     if name == "tp":
         # mm: IFS stores metres of water, AIFS and GFS kg/m² (= mm)
         return a * 1000 if units == "m" else a
-    if name in ("u10", "v10"):
+    if name in ("u10", "v10", "u250", "v250"):
         return a * 3.6  # km/h, like the rest of the site
     if name == "msl":
         return a / 100  # hPa
-    if name == "tcc":
+    if name in ("tcc", "lcc", "mcc", "hcc"):
         return a if units == "%" else a * 100  # percent (ECMWF stores a 0–1 fraction)
     return a  # z500: geopotential height in m
 
@@ -273,7 +281,9 @@ def main() -> None:
             if model != "gfs":
                 sw = [np.zeros_like(sw[0])] + [np.clip(b - a, 0, None) / (STEP * 3600) for a, b in zip(sw, sw[1:])]
             fields = {
-                **{n: frames[n][cid] for n in ("t2m", "u10", "v10", "msl", "z500", "tcc")},
+                **{n: frames[n][cid] for n in ("t2m", "u10", "v10", "msl", "z500", "tcc", "lcc", "mcc", "hcc", "tcw", "d2m")},
+                # jet-stream speed at 250 hPa, km/h
+                "jet": [np.hypot(u, v) for u, v in zip(frames["u250"][cid], frames["v250"][cid])],
                 "tp6": per_step,
                 "tptot": [total[-1]],
                 "sw": sw,
