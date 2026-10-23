@@ -45,6 +45,9 @@ FIELDS = {
     "v10": {"ecmwf": ("10v", None), "gfs": "VGRD:10 m above ground"},
     "msl": {"ecmwf": ("msl", None), "gfs": "PRMSL:mean sea level"},
     "z500": {"ecmwf": ("gh", "500"), "gfs": "HGT:500 mb"},
+    # sunlight reaching the ground: ECMWF accumulates energy since the run started, GFS gives the last 6-hour mean
+    "ssrd": {"ecmwf": ("ssrd", None), "gfs": "DSWRF:surface"},
+    "tcc": {"ecmwf": ("tcc", None), "gfs": "TCDC:entire atmosphere"},
 }
 MODELS = {"aifs": "aifs-single", "ifs": "ifs", "gfs": None}
 
@@ -112,7 +115,7 @@ def ranges(model: str, run: dt.datetime, step: int) -> dict[str, tuple[str, tupl
         lines = get(gfs_url(run, step, ".idx")).decode().splitlines()
         starts = [int(line.split(":")[1]) for line in lines]
         for name, spec in FIELDS.items():
-            if name == "tp" and step == 0:
+            if name in ("tp", "ssrd") and step == 0:
                 continue
             for i, line in enumerate(lines):
                 if spec["gfs"] in line and (name != "tp" or "acc fcst" in line):
@@ -181,6 +184,8 @@ def to_units(name: str, units: str, a: np.ndarray) -> np.ndarray:
         return a * 3.6  # km/h, like the rest of the site
     if name == "msl":
         return a / 100  # hPa
+    if name == "tcc":
+        return a if units == "%" else a * 100  # percent (ECMWF stores a 0–1 fraction)
     return a  # z500: geopotential height in m
 
 
@@ -263,7 +268,16 @@ def main() -> None:
             # precipitation per 6 h from the running total; the last frame of the total is the 10-day sum
             total = frames["tp"][cid]
             per_step = [np.zeros_like(total[0])] + [np.clip(b - a, 0, None) for a, b in zip(total, total[1:])]
-            fields = {**{n: frames[n][cid] for n in ("t2m", "u10", "v10", "msl", "z500")}, "tp6": per_step, "tptot": [total[-1]]}
+            # sunlight as the mean over each 6 h, W/m² (from ECMWF's running total of J/m²)
+            sw = frames["ssrd"][cid]
+            if model != "gfs":
+                sw = [np.zeros_like(sw[0])] + [np.clip(b - a, 0, None) / (STEP * 3600) for a, b in zip(sw, sw[1:])]
+            fields = {
+                **{n: frames[n][cid] for n in ("t2m", "u10", "v10", "msl", "z500", "tcc")},
+                "tp6": per_step,
+                "tptot": [total[-1]],
+                "sw": sw,
+            }
             for name, fr in fields.items():
                 img, lo, hi = pack(fr, sqrt=name in ("tp6", "tptot"))
                 path = f"{cid}/{model}-{name}.png"

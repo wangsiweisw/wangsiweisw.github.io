@@ -10,12 +10,11 @@ import 'leaflet/dist/leaflet.css';
       <button type="button" class="chip" data-layer="temp" aria-pressed="true">Temperature</button>
       <button type="button" class="chip" data-layer="precip" aria-pressed="false">Precipitation</button>
       <button type="button" class="chip" data-layer="wind" aria-pressed="false">Wind</button>
+      <button type="button" class="chip" data-layer="sun" aria-pressed="false" data-pre-only hidden>Sunshine</button>
+      <button type="button" class="chip" data-layer="cloud" aria-pressed="false" data-pre-only hidden>Clouds</button>
       <button type="button" class="chip" data-layer="z500" aria-pressed="false" data-pre-only hidden>500 hPa</button>
       <button type="button" class="chip" data-layer="total" aria-pressed="false" data-pre-only hidden>10-day rain</button>
       <button type="button" class="chip" data-layer="diff" aria-pressed="false">Temp: AIFS − IFS</button>
-      <button type="button" class="chip overlay" data-isobars aria-pressed="false" data-pre-only hidden title="Sea-level pressure lines, with highs and lows">
-        Isobars
-      </button>
     </div>
     <div class="chips" role="group" aria-label="Model" data-model-group>
       <button type="button" class="chip" data-model="aifs" aria-pressed="true">AIFS</button>
@@ -42,7 +41,13 @@ import 'leaflet/dist/leaflet.css';
     <input type="range" min="0" max="0" value="0" step="1" data-time aria-label="Forecast time" />
     <output data-time-label>—</output>
   </div>
-  <p class="run-note" data-run></p>
+  <div class="map-options">
+    <label class="toggle" data-pre-only hidden>
+      <input type="checkbox" data-isobars />
+      <span>Show isobars <span class="hint">(sea-level pressure every 4 hPa, with highs H and lows L)</span></span>
+    </label>
+    <p class="run-note" data-run></p>
+  </div>
 </forecast-map>
 
 <style>
@@ -74,10 +79,6 @@ import 'leaflet/dist/leaflet.css';
   }
   .chip[hidden] {
     display: none;
-  }
-  /* an overlay toggle, not a layer: set apart with a dashed outline */
-  .chip.overlay {
-    border-style: dashed;
   }
   .chip[aria-pressed='true'] {
     background: var(--fg);
@@ -218,8 +219,32 @@ import 'leaflet/dist/leaflet.css';
     opacity: 0.35;
     cursor: default;
   }
+  .map-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.4rem 1.5rem;
+    margin-top: 0.6rem;
+  }
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .toggle[hidden] {
+    display: none;
+  }
+  .toggle input {
+    accent-color: var(--accent);
+  }
+  .toggle .hint {
+    color: var(--muted);
+  }
   .run-note {
-    margin: 0.5rem 0 0;
+    margin: 0;
     color: var(--muted);
     font-size: 0.75rem;
   }

@@ -6,7 +6,7 @@ import { WindParticles } from './wind-particles';
 import { contours, extrema, upsample } from './contours';
 import { regionFor, sourceFor, type City, type FieldName, type FxSource, type ModelKey } from './fx-data';
 
-type Layer = 'temp' | 'precip' | 'wind' | 'z500' | 'total' | 'diff';
+type Layer = 'temp' | 'precip' | 'wind' | 'sun' | 'cloud' | 'z500' | 'total' | 'diff';
 
 const MODEL_NAMES: Record<ModelKey, string> = {
   aifs: 'AIFS (ECMWF, machine learning)',
@@ -14,7 +14,7 @@ const MODEL_NAMES: Record<ModelKey, string> = {
   gfs: 'GFS (NOAA, physics)',
 };
 // layers that only the precomputed data has
-const PRE_ONLY: Layer[] = ['z500', 'total'];
+const PRE_ONLY: Layer[] = ['sun', 'cloud', 'z500', 'total'];
 
 // --- color ramps (validated diverging blue ↔ terracotta, sequential blue and teal) ---
 type RGB = [number, number, number];
@@ -23,6 +23,7 @@ const COLD = ['#0d366b', '#256abf', '#6da7ec', '#b7d3f6'].map(hex);
 const WARM = ['#f3c9b4', '#e07a4f', '#b4532a', '#7a3418'].map(hex);
 const BLUE = ['#cde2fb', '#86b6ef', '#3987e5', '#1c5cab', '#0d366b'].map(hex);
 const TEAL = ['#dcefeb', '#9fd1c6', '#5aa898', '#2c7a6b', '#134d43'].map(hex);
+const AMBER = ['#fff1cf', '#fbd47e', '#f2ae3d', '#d6831a', '#9a5a0c'].map(hex);
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 const RAIN_STEPS = [0.1, 0.5, 1, 2.5, 5, 10, 15]; // mm per step
 const TOTAL_STEPS = [1, 5, 10, 25, 50, 100, 200]; // mm in 10 days
@@ -105,9 +106,8 @@ class ForecastMap extends HTMLElement {
         this.update();
       }),
     );
-    this.querySelector<HTMLButtonElement>('[data-isobars]')!.addEventListener('click', (e) => {
-      this.isobars = !this.isobars;
-      (e.currentTarget as HTMLElement).setAttribute('aria-pressed', String(this.isobars));
+    this.querySelector<HTMLInputElement>('[data-isobars]')!.addEventListener('change', (e) => {
+      this.isobars = (e.currentTarget as HTMLInputElement).checked;
       this.update();
     });
     const slider = this.querySelector<HTMLInputElement>('[data-time]')!;
@@ -210,7 +210,7 @@ class ForecastMap extends HTMLElement {
     for (const b of this.querySelectorAll<HTMLElement>('[data-pre-only]')) b.hidden = src.kind !== 'pre';
     if (src.kind !== 'pre' && (PRE_ONLY.includes(this.layer) || this.isobars)) {
       this.isobars = false;
-      this.querySelector('[data-isobars]')!.setAttribute('aria-pressed', 'false');
+      this.querySelector<HTMLInputElement>('[data-isobars]')!.checked = false;
       if (PRE_ONLY.includes(this.layer)) this.layer = 'temp';
       this.setLayer(this.layer);
     }
@@ -233,6 +233,8 @@ class ForecastMap extends HTMLElement {
         ['u10', m],
         ['v10', m],
       ],
+      sun: [['sw', m]],
+      cloud: [['tcc', m]],
       z500: [['z500', m]],
       total: [['tptot', m]],
       diff: [
@@ -380,6 +382,10 @@ class ForecastMap extends HTMLElement {
         return s('tp6');
       case 'wind':
         return this.windConv(Math.hypot(s('u10'), s('v10')));
+      case 'sun':
+        return s('sw');
+      case 'cloud':
+        return s('tcc');
       case 'z500':
         return s('z500');
       case 'total':
@@ -399,6 +405,10 @@ class ForecastMap extends HTMLElement {
       return b ? [...b[0], Math.round(b[1])] : [0, 0, 0, 0];
     }
     if (this.layer === 'wind') return [...lerpRamp(TEAL, v / hi), 130];
+    // sunlight: transparent at night, warmer and more solid as it gets stronger (fixed 0–800 W/m² scale)
+    if (this.layer === 'sun') return v < 5 ? [0, 0, 0, 0] : [...lerpRamp(AMBER, v / 800), Math.round(60 + 120 * Math.min(1, v / 400))];
+    // clouds: clear is see-through, overcast is a solid grey veil
+    if (this.layer === 'cloud') return this.dark ? [225, 225, 222, Math.round((v / 100) * 190)] : [96, 100, 108, Math.round((v / 100) * 170)];
     const mid: RGB = this.dark ? [56, 56, 53] : [240, 239, 236];
     const center = this.layer === 'diff' ? 0 : (lo + hi) / 2;
     const half = this.layer === 'diff' ? hi : (hi - lo) / 2;
@@ -513,6 +523,16 @@ class ForecastMap extends HTMLElement {
         stops = TEAL.map((c) => `rgb(${c})`);
         ticks = ['0', `${Math.round(hi / 2)}`, `${hi}+`];
         break;
+      case 'sun':
+        title = `Sunlight at the ground, W/m² (6-hour average) · ${name}`;
+        stops = AMBER.map((c) => `rgb(${c})`);
+        ticks = ['0', '200', '400', '600', '800'];
+        break;
+      case 'cloud':
+        title = `Cloud cover (%) · ${name}`;
+        stops = this.dark ? ['rgba(225,225,222,0)', 'rgba(225,225,222,0.75)'] : ['rgba(96,100,108,0)', 'rgba(96,100,108,0.67)'];
+        ticks = ['0', '50', '100'];
+        break;
       case 'z500':
         title = `500 hPa height (m): troughs blue, ridges red · lines every 60 m · ${name}`;
         ticks = [lo, (lo + hi) / 2, hi].map((v) => Math.round(v).toLocaleString('en-US'));
@@ -553,6 +573,12 @@ class ForecastMap extends HTMLElement {
         break;
       case 'total':
         text = `${Math.round(v)} mm in 10 days`;
+        break;
+      case 'sun':
+        text = `${Math.round(v)} W/m² of sunlight`;
+        break;
+      case 'cloud':
+        text = `${Math.round(v)}% cloud cover`;
         break;
       case 'z500':
         text = `500 hPa at ${Math.round(v).toLocaleString('en-US')} m`;
