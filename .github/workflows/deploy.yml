@@ -29,6 +29,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm astro check
+      - run: pnpm test
       # Forecast map data (public/fx/). If it fails the site still deploys, and the map falls back to live Open-Meteo.
       - uses: actions/setup-python@v6
         if: github.event_name != 'pull_request'

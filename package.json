@@ -12,6 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "vitest run",
     "astro": "astro",
     "resume:pdf": "node scripts/resume-pdf.ts",
     "photos:sync": "node scripts/photos-sync.ts",
@@ -36,6 +37,7 @@
     "exifr": "^7.1.3",
     "playwright": "^1.63.0",
     "sharp": "^0.35.4",
-    "typescript": "^6.0.0"
+    "typescript": "^6.0.0",
+    "vitest": "^5.1.0"
   }
 }

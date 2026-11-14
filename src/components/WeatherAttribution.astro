@@ -1,0 +1,25 @@
+---
+// Source and licence line for any page that shows Open-Meteo weather data.
+interface Props {
+  /** what the data is, e.g. "Forecast and historical weather" */
+  what?: string;
+}
+const { what = 'Weather data' } = Astro.props;
+---
+
+<p class="attribution">
+  {what} by <a href="https://open-meteo.com/">Open-Meteo.com</a>, licensed
+  <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Historical values are ERA5 reanalysis (Copernicus Climate
+  Change Service).
+</p>
+
+<style>
+  .attribution {
+    margin: 1.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .attribution a {
+    color: inherit;
+  }
+</style>
