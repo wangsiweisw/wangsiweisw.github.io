@@ -5,6 +5,7 @@ import PhotoGrid from '../components/PhotoGrid.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { running, runningPhotos, METERS_PER_MILE, duration } from '../lib/running';
 import weather from '../data/running-weather.json';
+import RunWeather from '../components/RunWeather.astro';
 
 const miles = (m: number) => Math.round(m / METERS_PER_MILE).toLocaleString('en-US');
 const since = new Date(`${running.since}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -51,6 +52,31 @@ const wSlot = WW / Math.max(1, dew.length);
 const dots = dew.map((b) => ({ ...b, x: 0, y: wBase - ((b.heartRate! - hrLo) / (hrHi - hrLo)) * (wBase - wTop) }));
 dots.forEach((d, i) => (d.x = wSlot * i + wSlot / 2));
 const [dry, muggy] = [dew[0], dew.at(-1)];
+
+// "Weather I've run in": one stripe per outdoor run, coldest to warmest, from the temperature bins (no dates).
+const temps = weather.temperature.filter((b) => b.runs > 0);
+const typicalPace = Math.round(temps.reduce((a, b) => a + b.paceSecPerKm * b.runs, 0) / temps.reduce((a, b) => a + b.runs, 0));
+const SW = 640;
+const SH = 84;
+const GAP = 4;
+const stripeW = (SW - GAP * (temps.length - 1)) / weather.runs;
+let cursor = 0;
+const groups = temps.map((b, i) => {
+  const x = cursor;
+  const w = b.runs * stripeW;
+  cursor += w + GAP;
+  // open-ended bins get a 15°F span so today's marker has somewhere to sit
+  const lo = b.loF ?? b.hiF! - 15;
+  const hi = b.hiF ?? b.loF! + 15;
+  return { ...b, i, x, w, lo, hi };
+});
+const tempLabel = (b: (typeof temps)[number], c = false) => {
+  const t = (f: number) => (c ? fToC(f) : f);
+  const u = c ? '°C' : '°F';
+  return b.loF == null ? `below ${t(b.hiF!)}${u}` : b.hiF == null ? `${t(b.loF)}${u}+` : `${t(b.loF)}–${t(b.hiF)}${u}`;
+};
+const paces = temps.map((b) => b.paceSecPerKm);
+const coldest = temps[0];
 const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
 ---
 
@@ -64,7 +90,9 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
     </p>
   </header>
 
-  <dl class="stats">
+  <RunWeather paceSecPerKm={typicalPace} />
+
+  <dl class="stats" data-reveal>
     <div><dt>Running since</dt><dd>{since}</dd></div>
     <div><dt>Distance</dt><dd data-meters={running.meters}>{miles(running.meters)} mi</dd></div>
     <div><dt>Runs</dt><dd>{running.runs.toLocaleString('en-US')}</dd></div>
@@ -72,7 +100,7 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
   </dl>
 
   <h2 class="kicker pb-title">Best times</h2>
-  <dl class="stats pbs">
+  <dl class="stats pbs" data-reveal>
     {(running.bestEfforts.fiveK ?? duration(running.fastest5kSeconds)) && (
       <div><dt>5K</dt><dd>{running.bestEfforts.fiveK ?? duration(running.fastest5kSeconds)}</dd></div>
     )}
@@ -84,7 +112,7 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
 
   {
     running.milestones.length > 0 && (
-      <section class="milestones" aria-labelledby="milestones-title">
+      <section class="milestones" aria-labelledby="milestones-title" data-reveal>
         <h2 id="milestones-title" class="kicker">Milestones</h2>
         <ol>
           {running.milestones.map((m) => (
@@ -101,7 +129,7 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
     )
   }
 
-  <section class="chart" aria-labelledby="chart-title">
+  <section class="chart years" aria-labelledby="chart-title" data-reveal>
     <h2 id="chart-title" class="kicker">Distance per year</h2>
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="chart-title chart-desc">
       <desc id="chart-desc">{bars.map((b) => `${b.year}${b.note ? ` (${b.note})` : ''}: ${miles(b.meters)} miles, ${b.runs} runs`).join('; ')}</desc>
@@ -130,8 +158,59 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
   </section>
 
   {
+    groups.length >= 3 && (
+      <section class="chart stripes" aria-labelledby="stripes-title" data-reveal>
+        <h2 id="stripes-title" class="kicker">The weather I've run in</h2>
+        <p class="finding">
+          {weather.runs} outdoor runs, coldest to warmest. Most were cold ones, {coldest.runs} of them{' '}
+          <span data-dew-f={tempLabel(coldest)} data-dew-c={tempLabel(coldest, true)}>{tempLabel(coldest)}</span>, and my pace
+          hardly moves with the temperature: <span data-pace={Math.min(...paces)}>{pace(Math.min(...paces))}</span> to{' '}
+          <span data-pace={Math.max(...paces)}>{pace(Math.max(...paces))}</span>.
+        </p>
+        <div class="stripe-box" data-stripes={JSON.stringify(groups.map((g) => [g.x, g.w, g.lo, g.hi]))} data-width={SW}>
+          <svg viewBox={`0 0 ${SW} ${SH}`} role="img" aria-labelledby="stripes-title stripes-desc">
+            <desc id="stripes-desc">{groups.map((g) => `${tempLabel(g)}: ${g.runs} runs`).join('; ')}</desc>
+            {
+              groups.map((g) => (
+                <g class={`band t${g.i}`} tabindex="0" aria-label={`${tempLabel(g)}: ${g.runs} runs, median pace ${pace(g.paceSecPerKm)}, heart rate ${g.heartRate} bpm`}>
+                  <title>{`${tempLabel(g)} · ${g.runs} runs · ${pace(g.paceSecPerKm)} · ${g.heartRate} bpm`}</title>
+                  {Array.from({ length: g.runs }, (_, k) => (
+                    <rect x={g.x + k * stripeW} y="0" width={stripeW + 0.4} height={SH} style={`--k:${k}`} />
+                  ))}
+                </g>
+              ))
+            }
+          </svg>
+          <div class="today" data-today hidden>
+            <span>Today</span>
+          </div>
+        </div>
+        <table class="bands">
+          <thead>
+            <tr><th>Temperature</th><th>Runs</th><th>Pace</th><th>Heart rate</th></tr>
+          </thead>
+          <tbody>
+            {groups.map((g) => (
+              <tr>
+                <td><i class={`sw t${g.i}`} aria-hidden="true" /><span data-dew-f={tempLabel(g)} data-dew-c={tempLabel(g, true)}>{tempLabel(g)}</span></td>
+                <td>{g.runs}</td>
+                <td data-pace={g.paceSecPerKm}>{pace(g.paceSecPerKm)}</td>
+                <td>{g.heartRate} bpm</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="method">
+          Air temperature at the time of each run, from <a href="https://open-meteo.com/">Open-Meteo</a>’s historical
+          weather; medians per band. "Today" is the live reading above. Pace adjustment on hot days follows Mark Hadley's{' '}
+          <a href="https://maximumperformancerunning.blogspot.com/2013/07/temperature-dew-point.html">temperature + dew point table</a>.
+        </p>
+      </section>
+    )
+  }
+  {
     dots.length >= 3 && hrGap > 0 && (
-      <section class="chart weather" aria-labelledby="weather-title">
+      <section class="chart weather" aria-labelledby="weather-title" data-reveal>
         <h2 id="weather-title" class="kicker">Heart rate vs. humidity (dew point)</h2>
         <p class="finding">
           On muggy days my heart works about <strong>{hrGap} bpm</strong> harder than on dry ones, while my pace barely
@@ -141,7 +220,16 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
           <desc id="weather-desc">
             {dots.map((d) => `Dew point ${dewLabel(d)}: median heart rate ${d.heartRate} bpm, pace ${pace(d.paceSecPerKm!)}, ${d.runs} runs`).join('; ')}
           </desc>
-          <polyline points={dots.map((d) => `${d.x},${d.y}`).join(' ')} class="line" />
+          <defs>
+            <linearGradient id="muggy" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" class="dry" />
+              <stop offset="1" class="wet" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y={wTop - 30} width={WW} height={wBase - wTop + 50} rx="6" fill="url(#muggy)" />
+          <text x="10" y={wTop - 14} class="edge">drier air</text>
+          <text x={WW - 10} y={wTop - 14} class="edge end">muggier air</text>
+          <polyline points={dots.map((d) => `${d.x},${d.y}`).join(' ')} class="line" pathLength="1" />
           {
             dots.map((d) => (
               <g class="pt" tabindex="0" aria-label={`Dew point ${dewLabel(d)}: ${d.heartRate} bpm over ${d.runs} runs`}>
@@ -177,6 +265,51 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
 </Base>
 
 <style>
+  /* --- scroll-in (only once the script has marked the page; without JS everything is simply shown) --- */
+  :global(.reveal-on) [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  :global(.reveal-on) [data-reveal].in {
+    opacity: 1;
+    transform: none;
+  }
+  :global(.reveal-on) .milestones li {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    transition-delay: calc(var(--n) * 90ms + 150ms);
+  }
+  :global(.reveal-on) .milestones.in li {
+    opacity: 1;
+    transform: none;
+  }
+  :global(.reveal-on) .years .fill {
+    transform: scaleY(0);
+    transform-box: fill-box;
+    transform-origin: bottom;
+    transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s;
+  }
+  :global(.reveal-on) .years.in .fill {
+    transform: none;
+  }
+  :global(.reveal-on) .weather .line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 1.2s ease 0.2s;
+  }
+  :global(.reveal-on) .weather.in .line {
+    stroke-dashoffset: 0;
+  }
+  :global(.reveal-on) .stripes rect {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    transition-delay: calc(var(--k) * 6ms + 100ms);
+  }
+  :global(.reveal-on) .stripes.in rect {
+    opacity: 1;
+  }
   .page-head {
     padding: 3rem 0 2.5rem;
   }
@@ -375,6 +508,108 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
   .method a {
     color: inherit;
   }
+  /* --- weather I've run in: cold blue to warm terracotta, neutral in the middle --- */
+  .stripes {
+    --t0: #3f6fa8;
+    --t1: #8aa9c9;
+    --t2: #c3bcb0;
+    --t3: #d98d64;
+    --t4: #b4532a;
+  }
+  :global([data-effective-theme='dark']) .stripes {
+    --t0: #5b88c2;
+    --t1: #8fa9c4;
+    --t2: #8a8378;
+    --t3: #d98d64;
+    --t4: #d4683f;
+  }
+  .t0 { fill: var(--t0); background: var(--t0); }
+  .t1 { fill: var(--t1); background: var(--t1); }
+  .t2 { fill: var(--t2); background: var(--t2); }
+  .t3 { fill: var(--t3); background: var(--t3); }
+  .t4 { fill: var(--t4); background: var(--t4); }
+  .stripe-box {
+    position: relative;
+    margin-top: 2rem;
+  }
+  .stripe-box svg {
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .band {
+    outline: none;
+    transition: opacity var(--ease);
+  }
+  .stripe-box svg:has(.band:hover, .band:focus-visible) .band:not(:hover, :focus-visible) {
+    opacity: 0.35;
+  }
+  .today {
+    position: absolute;
+    top: -1.6rem;
+    bottom: -0.35rem;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--fg);
+    transition: left 0.8s ease;
+  }
+  .today[hidden] {
+    display: none;
+  }
+  .today span {
+    position: absolute;
+    top: 0;
+    left: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .today.flip span {
+    left: auto;
+    right: 6px;
+  }
+  .bands {
+    width: 100%;
+    margin-top: 1.1rem;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .bands th {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.78rem;
+    text-align: left;
+    padding: 0 0 0.35rem;
+  }
+  .bands td {
+    padding: 0.35rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .bands th:not(:first-child),
+  .bands td:not(:first-child) {
+    text-align: right;
+  }
+  .bands .sw {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 0.5rem;
+    border-radius: 2px;
+  }
+  /* dew point chart: drier to muggier backdrop */
+  .weather .dry {
+    stop-color: var(--surface);
+  }
+  .weather .wet {
+    stop-color: color-mix(in oklab, var(--bar) 22%, var(--surface));
+  }
+  .edge {
+    fill: var(--muted);
+    font: 400 12px var(--body);
+  }
+  .edge.end {
+    text-anchor: end;
+  }
   .photos {
     max-width: 44rem;
     margin-top: 3.5rem;
@@ -401,4 +636,52 @@ const hrGap = dry && muggy ? muggy.heartRate! - dry.heartRate! : 0;
   }
   render();
   document.addEventListener('unitschange', render);
+
+  // Today's temperature on the stripes, once the live card has it.
+  document.addEventListener('runweather', (e) => {
+    const box = document.querySelector<HTMLElement>('[data-stripes]');
+    const mark = box?.querySelector<HTMLElement>('[data-today]');
+    if (!box || !mark) return;
+    const tempF = (e as CustomEvent<{ tempF: number }>).detail.tempF;
+    const groups: [number, number, number, number][] = JSON.parse(box.dataset.stripes!);
+    const width = Number(box.dataset.width);
+    const g = groups.find(([, , , hi], i) => tempF < hi || i === groups.length - 1)!;
+    const f = Math.min(1, Math.max(0, (tempF - g[2]) / (g[3] - g[2])));
+    const x = (g[0] + g[1] * f) / width;
+    mark.style.left = `${x * 100}%`;
+    mark.classList.toggle('flip', x > 0.8);
+    const metric = document.documentElement.dataset.units === 'metric';
+    mark.querySelector('span')!.textContent = `Today ${metric ? Math.round(((tempF - 32) * 5) / 9) + '°C' : Math.round(tempF) + '°F'}`;
+    mark.hidden = false;
+  });
+
+  // Sections ease in as they scroll into view; numbers count up once. Skipped when motion is reduced.
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('reveal-on');
+    document.querySelectorAll<HTMLElement>('.milestones li').forEach((li, i) => li.style.setProperty('--n', String(i)));
+    const countUp = (el: HTMLElement) => {
+      const m = el.textContent!.match(/^([\d,]+)(.*)$/);
+      if (!m) return;
+      const end = Number(m[1].replace(/,/g, ''));
+      const t0 = performance.now();
+      const step = (t: number) => {
+        const p = Math.min(1, (t - t0) / 900);
+        el.textContent = `${Math.round(end * (1 - (1 - p) ** 3)).toLocaleString('en-US')}${m[2]}`;
+        if (p < 1) requestAnimationFrame(step);
+        else render();
+      };
+      requestAnimationFrame(step);
+    };
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('in');
+          e.target.querySelectorAll<HTMLElement>('.stats:not(.pbs) dd').forEach(countUp);
+          io.unobserve(e.target);
+        }),
+      { rootMargin: '0px 0px -12% 0px' },
+    );
+    document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  }
 </script>

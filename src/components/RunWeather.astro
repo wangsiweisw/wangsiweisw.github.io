@@ -1,0 +1,575 @@
+---
+// Running weather, live: the sky over New York right now (rain, snow, wind and stars drawn on a canvas), what
+// temperature + dew point mean for pace by Mark Hadley's table, and the next 24 hours as a strip with the best hour
+// to run marked. One request to Open-Meteo from the visitor's browser; nothing is stored. Hides itself if the
+// request fails.
+import { site } from '../lib/site';
+import { HEAT_BANDS } from '../lib/running/heatAdjustment';
+
+interface Props {
+  /** my typical pace, seconds per km, to show what the adjustment means */
+  paceSecPerKm: number;
+}
+const { paceSecPerKm } = Astro.props;
+const { city, lat, lon } = site.weather;
+---
+
+<run-weather data-lat={lat} data-lon={lon} data-my-pace={paceSecPerKm} data-bands={JSON.stringify(HEAT_BANDS.map((b) => [b.max === Infinity ? 9999 : b.max, b.pct, b.label]))} hidden>
+  <section class="rw" aria-labelledby="rw-title">
+    <div class="sky" data-sky>
+      <canvas aria-hidden="true"></canvas>
+      <span class="orb" aria-hidden="true"></span>
+      <div class="now">
+        <h2 id="rw-title" class="label">Running weather · {city} · <span data-clock></span></h2>
+        <p class="temp"><span data-temp></span><span class="cond" data-cond></span></p>
+        <p class="meta" data-meta></p>
+        <p class="verdict">
+          <span class="chip" data-chip></span>
+          <span data-score></span>
+        </p>
+        <p class="pace" data-pace-line></p>
+      </div>
+    </div>
+
+    <div class="next">
+      <p class="next-head"><span class="label">Next 24 hours</span><span class="best" data-best></span></p>
+      <div class="strip" data-strip role="list" aria-label="Running conditions hour by hour"></div>
+      <div class="key">
+        <span><i class="sw heat"></i>temp + dew point (stronger color, harder running)</span>
+        <span><i class="sw rain"></i>chance of rain</span>
+      </div>
+      <p class="tip" data-tip aria-live="polite"></p>
+    </div>
+  </section>
+</run-weather>
+
+<script>
+  import { getUnits } from '../scripts/prefs';
+
+  type Band = [max: number, pct: [number, number] | null, label: string];
+  type Hour = { time: string; t: number; td: number; pop: number; wind: number; code: number; day: boolean };
+
+  const KM_PER_MILE = 1.609344;
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const WMO: [number, string][] = [[0, 'Clear'], [2, 'Partly cloudy'], [3, 'Overcast'], [48, 'Fog'], [57, 'Drizzle'], [67, 'Rain'], [77, 'Snow'], [82, 'Showers'], [86, 'Snow showers'], [99, 'Thunderstorms']];
+  const words = (code: number) => WMO.find(([max]) => code <= max)?.[1] ?? '';
+  const kind = (code: number) => (code <= 1 ? 'clear' : code <= 3 ? 'cloud' : code <= 48 ? 'fog' : code <= 67 || (code >= 80 && code <= 82) ? 'rain' : code <= 86 ? 'snow' : 'storm');
+
+  class RunWeather extends HTMLElement {
+    bands: Band[] = [];
+    hours: Hour[] = [];
+    now!: Hour;
+    pace = 0;
+    raf = 0;
+
+    async connectedCallback() {
+      this.bands = JSON.parse(this.dataset.bands!);
+      this.pace = Number(this.dataset.myPace);
+      const q = new URLSearchParams({
+        latitude: this.dataset.lat!,
+        longitude: this.dataset.lon!,
+        current: 'temperature_2m,dew_point_2m,wind_speed_10m,weather_code,is_day',
+        hourly: 'temperature_2m,dew_point_2m,precipitation_probability,wind_speed_10m,weather_code,is_day',
+        forecast_hours: '24',
+        temperature_unit: 'fahrenheit',
+        wind_speed_unit: 'mph',
+        timezone: 'auto',
+      });
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?${q}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        const c = d.current;
+        this.now = { time: c.time, t: c.temperature_2m, td: c.dew_point_2m, pop: d.hourly.precipitation_probability[0] ?? 0, wind: c.wind_speed_10m, code: c.weather_code, day: !!c.is_day };
+        const h = d.hourly;
+        this.hours = h.time.map((time: string, i: number) => ({ time, t: h.temperature_2m[i], td: h.dew_point_2m[i], pop: h.precipitation_probability[i] ?? 0, wind: h.wind_speed_10m[i], code: h.weather_code[i], day: !!h.is_day[i] }));
+      } catch {
+        return;
+      }
+      if (this.now.t == null || this.now.td == null || !this.hours.length) return;
+      this.hidden = false;
+      this.paint();
+      this.strip();
+      this.sky();
+      document.addEventListener('unitschange', () => (this.paint(), this.strip()));
+      // let the "weather I've run in" stripes mark today
+      document.dispatchEvent(new CustomEvent('runweather', { detail: { tempF: this.now.t } }));
+    }
+
+    metric() {
+      return getUnits() === 'metric';
+    }
+    deg(f: number) {
+      return this.metric() ? `${Math.round(((f - 32) * 5) / 9)}°C` : `${Math.round(f)}°F`;
+    }
+    speed(mph: number) {
+      return this.metric() ? `${Math.round(mph * KM_PER_MILE)} km/h` : `${Math.round(mph)} mph`;
+    }
+    paceText(secPerKm: number) {
+      const s = Math.round(secPerKm * (this.metric() ? 1 : KM_PER_MILE));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}/${this.metric() ? 'km' : 'mi'}`;
+    }
+    band(score: number) {
+      const i = this.bands.findIndex(([max]) => score <= max);
+      return { i, pct: this.bands[i][1], label: this.bands[i][2] };
+    }
+    clock(iso: string) {
+      const h = Number(iso.slice(11, 13));
+      return `${h % 12 || 12}:${iso.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`;
+    }
+    hourText(iso: string) {
+      const h = Number(iso.slice(11, 13));
+      return h === 0 ? '12 am' : h === 12 ? 'noon' : h < 12 ? `${h} am` : `${h - 12} pm`;
+    }
+
+    paint() {
+      const n = this.now;
+      const score = Math.round(n.t + n.td);
+      const b = this.band(score);
+      const $ = (k: string) => this.querySelector<HTMLElement>(`[data-${k}]`)!;
+      $('clock').textContent = this.clock(n.time);
+      $('temp').textContent = this.deg(n.t);
+      $('cond').textContent = words(n.code);
+      $('meta').textContent = `Dew point ${this.deg(n.td)} · wind ${this.speed(n.wind)}`;
+      $('chip').textContent = b.label;
+      $('chip').dataset.band = String(b.i);
+      $('score').textContent = `temp + dew point (°F): ${score}`;
+      $('pace-line').textContent = !b.pct
+        ? 'Too hot and humid for hard running; an easy jog at most.'
+        : b.pct[1] === 0
+          ? `My usual ${this.paceText(this.pace)} needs no adjustment today.`
+          : `My usual ${this.paceText(this.pace)} becomes ${this.paceText(this.pace * (1 + b.pct[0] / 100)).split('/')[0]}–${this.paceText(this.pace * (1 + b.pct[1] / 100))} at the same effort (+${b.pct[0]}\u2060–\u2060${b.pct[1]}%).`;
+    }
+
+    /** a simple "how good is this hour" cost: heat above the table's free zone, cold, rain and strong wind */
+    cost(h: Hour) {
+      return Math.max(0, h.t + h.td - 100) + Math.max(0, 32 - h.t) * 0.8 + h.pop * 0.3 + Math.max(0, h.wind - 15) * 0.6;
+    }
+
+    strip() {
+      const strip = this.querySelector<HTMLElement>('[data-strip]')!;
+      const tip = this.querySelector<HTMLElement>('[data-tip]')!;
+      // best hour: among waking hours (5 am to 9 pm), the one with the lowest cost
+      const awake = this.hours.filter((h) => {
+        const hr = Number(h.time.slice(11, 13));
+        return hr >= 5 && hr <= 21;
+      });
+      const best = awake.reduce<Hour | null>((a, h) => (!a || this.cost(h) < this.cost(a) ? h : a), null);
+      const describe = (h: Hour) => {
+        const s = Math.round(h.t + h.td);
+        return `${this.hourText(h.time)}: ${this.deg(h.t)}, dew point ${this.deg(h.td)}, ${h.pop}% chance of rain, wind ${this.speed(h.wind)} · ${this.band(s).label.toLowerCase()}`;
+      };
+      strip.replaceChildren(
+        ...this.hours.map((h, i) => {
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = 'hour';
+          cell.setAttribute('role', 'listitem');
+          cell.dataset.band = String(this.band(Math.round(h.t + h.td)).i);
+          if (h === best) cell.classList.add('best');
+          cell.style.setProperty('--pop', String(h.pop / 100));
+          cell.style.setProperty('--i', String(i));
+          cell.setAttribute('aria-label', describe(h));
+          const hr = Number(h.time.slice(11, 13));
+          cell.innerHTML = `<span class="heat"></span><span class="rain"></span>${hr % 3 === 0 ? `<span class="tick">${this.hourText(h.time).replace(' ', '')}</span>` : ''}`;
+          const show = () => (tip.textContent = describe(h));
+          cell.addEventListener('pointerenter', show);
+          cell.addEventListener('focus', show);
+          return cell;
+        }),
+      );
+      strip.addEventListener('pointerleave', () => (tip.textContent = ''));
+      this.querySelector<HTMLElement>('[data-best]')!.textContent = best ? `Best hour to run: ${this.hourText(best.time)} · ${this.deg(best.t)}, ${best.pop}% rain` : '';
+    }
+
+    // --- the sky: gradient by day/night and weather, plus particles for rain, snow, wind and stars ---
+    sky() {
+      const box = this.querySelector<HTMLElement>('[data-sky]')!;
+      const k = kind(this.now.code);
+      box.dataset.wx = k;
+      box.dataset.day = String(this.now.day);
+      const canvas = box.querySelector('canvas')!;
+      const ctx = canvas.getContext('2d')!;
+      const wind = this.now.wind;
+      type P = { x: number; y: number; v: number; s: number; a: number };
+      let ps: P[] = [];
+      let W = 0;
+      let H = 0;
+      const seed = () => {
+        const dpr = Math.min(2, devicePixelRatio || 1);
+        W = box.clientWidth;
+        H = box.clientHeight;
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = k === 'rain' || k === 'storm' ? 140 : k === 'snow' ? 90 : !this.now.day && k === 'clear' ? 70 : Math.round(12 + wind * 1.6);
+        ps = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * H, v: 0.5 + Math.random(), s: Math.random(), a: Math.random() * Math.PI * 2 }));
+      };
+      const drift = Math.min(1.4, wind / 18); // how far rain and snow lean with the wind
+      const draw = (t: number) => {
+        ctx.clearRect(0, 0, W, H);
+        for (const p of ps) {
+          if (k === 'rain' || k === 'storm') {
+            p.y += 9 * p.v;
+            p.x += 9 * p.v * drift * 0.35;
+            ctx.strokeStyle = `rgba(220, 232, 255, ${0.25 + p.s * 0.35})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - 3 * drift, p.y - 12 * p.v);
+            ctx.stroke();
+          } else if (k === 'snow') {
+            p.y += 0.9 * p.v;
+            p.x += Math.sin(t / 900 + p.a) * 0.4 + drift * 0.6;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + p.s * 0.4})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1 + p.s * 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (!this.now.day && k === 'clear') {
+            const tw = 0.35 + 0.35 * Math.sin(t / 700 + p.a);
+            ctx.fillStyle = `rgba(255, 248, 230, ${tw * (0.4 + p.s * 0.6)})`;
+            ctx.fillRect(p.x, p.y * 0.75, 1.2 + p.s, 1.2 + p.s);
+            continue;
+          } else {
+            // wind: faint streaks drifting across, faster and longer with more wind
+            p.x += (0.6 + wind / 6) * p.v;
+            const len = 18 + wind * 2.2 * p.s;
+            ctx.strokeStyle = this.now.day ? `rgba(255, 255, 255, ${0.18 + p.s * 0.3})` : `rgba(230, 230, 255, ${0.08 + p.s * 0.18})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.quadraticCurveTo(p.x - len / 2, p.y + Math.sin(t / 800 + p.a) * 3, p.x - len, p.y);
+            ctx.stroke();
+          }
+          if (p.y > H + 14) (p.y = -14), (p.x = Math.random() * W);
+          if (p.x > W + 60) (p.x = -60), (p.y = Math.random() * H);
+          if (p.x < -60) p.x = W + 60;
+        }
+      };
+      seed();
+      new ResizeObserver(seed).observe(box);
+      if (reduced()) {
+        draw(0);
+        return;
+      }
+      // only animate while the card is on screen
+      let visible = false;
+      const loop = (t: number) => {
+        draw(t);
+        this.raf = visible ? requestAnimationFrame(loop) : 0;
+      };
+      new IntersectionObserver(([e]) => {
+        visible = e.isIntersecting;
+        if (visible && !this.raf) this.raf = requestAnimationFrame(loop);
+      }).observe(box);
+    }
+  }
+  customElements.define('run-weather', RunWeather);
+</script>
+
+<style>
+  run-weather {
+    display: block;
+    margin-bottom: 2.5rem;
+    --heat0: color-mix(in oklab, var(--accent) 10%, var(--surface));
+    --rain: #3987e5;
+  }
+  run-weather[hidden] {
+    display: none;
+  }
+  :global([data-effective-theme='dark']) run-weather {
+    --rain: #5a8fd6;
+  }
+  .rw {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+    animation: rise 0.5s ease both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  .label {
+    margin: 0;
+    font: 500 0.75rem var(--body);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* --- sky --- */
+  .sky {
+    position: relative;
+    min-height: 15rem;
+    padding: 1.5rem 1.6rem 1.4rem;
+    color: #fff;
+    background: linear-gradient(170deg, #5d8fc4, #a9c6dd 70%, #e8d9bf);
+    isolation: isolate;
+  }
+  .sky[data-day='false'] {
+    background: linear-gradient(170deg, #0f1730, #24304f 65%, #4a3f4d);
+  }
+  .sky[data-wx='cloud'] {
+    background: linear-gradient(170deg, #7d8b99, #aab4bd 70%, #d6d0c4);
+  }
+  .sky[data-wx='cloud'][data-day='false'] {
+    background: linear-gradient(170deg, #1d2330, #353c4b 70%, #4b4a50);
+  }
+  .sky[data-wx='rain'],
+  .sky[data-wx='storm'],
+  .sky[data-wx='fog'] {
+    background: linear-gradient(170deg, #4b5866, #6f7c88 70%, #959a9c);
+  }
+  .sky[data-wx='snow'] {
+    background: linear-gradient(170deg, #8696a8, #b7c2cd 70%, #dfe2e4);
+  }
+  :is(.sky[data-wx='rain'], .sky[data-wx='storm'], .sky[data-wx='fog'], .sky[data-wx='snow'])[data-day='false'] {
+    background: linear-gradient(170deg, #161b26, #2b3240 70%, #3c4049);
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+  .orb {
+    position: absolute;
+    top: 1.4rem;
+    right: 1.8rem;
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 50%;
+    z-index: -1;
+    background: radial-gradient(circle at 40% 40%, #fff6dc, #ffd88a 55%, #f4b45f);
+    box-shadow: 0 0 60px 18px rgb(255 214 140 / 0.45);
+    animation: glow 6s ease-in-out infinite alternate;
+  }
+  .sky[data-day='false'] .orb {
+    width: 3.2rem;
+    height: 3.2rem;
+    background: radial-gradient(circle at 60% 40%, #fbf6ea, #d9d3c4);
+    box-shadow: 0 0 40px 8px rgb(240 235 220 / 0.18);
+  }
+  .sky:is([data-wx='rain'], [data-wx='storm'], [data-wx='fog'], [data-wx='snow']) .orb {
+    opacity: 0;
+  }
+  .sky[data-wx='cloud'] .orb {
+    opacity: 0.45;
+    filter: blur(2px);
+  }
+  @keyframes glow {
+    to {
+      box-shadow: 0 0 80px 26px rgb(255 214 140 / 0.55);
+    }
+  }
+  .sky[data-day='false'] .orb {
+    animation: none;
+  }
+  .now {
+    max-width: 36rem;
+    text-wrap: pretty;
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.18);
+  }
+  .now .label {
+    opacity: 0.9;
+  }
+  .temp {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin: 0.9rem 0 0;
+    font: 400 clamp(3rem, 9vw, 4.2rem) / 1 var(--display);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cond {
+    font: 500 1.05rem var(--body);
+    letter-spacing: 0;
+  }
+  .meta {
+    margin: 0.5rem 0 0;
+    font-size: 0.95rem;
+    opacity: 0.92;
+  }
+  .verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    margin: 1.1rem 0 0;
+    font-size: 0.85rem;
+  }
+  .chip {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    background: rgb(255 255 255 / 0.92);
+    color: #22201c;
+    font-weight: 600;
+    text-shadow: none;
+  }
+  .chip:is([data-band='5'], [data-band='6'], [data-band='7'], [data-band='8'], [data-band='9']) {
+    background: #8e3a18;
+    color: #fff;
+  }
+  .pace {
+    margin: 0.6rem 0 0;
+    font: 400 1.1rem / 1.45 var(--display);
+  }
+  /* --- next 24 hours --- */
+  .next {
+    padding: 1.2rem 1.6rem 1.25rem;
+  }
+  .next-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin: 0 0 0.8rem;
+    color: var(--muted);
+  }
+  .best {
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .strip {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+  }
+  .strip :global(.hour) {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 0 1.2rem;
+    border: 0;
+    background: none;
+    cursor: default;
+    animation: grow 0.5s ease both;
+    animation-delay: calc(var(--i) * 18ms);
+  }
+  @keyframes grow {
+    from {
+      opacity: 0;
+      transform: scaleY(0.4);
+    }
+  }
+  .strip :global(.heat) {
+    height: 2.4rem;
+    border-radius: 4px 4px 0 0;
+    background: var(--heat0);
+    transition: transform var(--ease);
+  }
+  .strip :global([data-band='1'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 20%, var(--surface));
+  }
+  .strip :global([data-band='2'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 30%, var(--surface));
+  }
+  .strip :global([data-band='3'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 42%, var(--surface));
+  }
+  .strip :global([data-band='4'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 55%, var(--surface));
+  }
+  .strip :global([data-band='5'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 68%, var(--surface));
+  }
+  .strip :global([data-band='6'] .heat) {
+    background-color: color-mix(in oklab, var(--accent) 80%, var(--surface));
+  }
+  .strip :global([data-band='7'] .heat) {
+    background-color: var(--accent);
+  }
+  .strip :global(:is([data-band='8'], [data-band='9']) .heat) {
+    background-color: color-mix(in oklab, var(--accent) 75%, #5a1400);
+  }
+  .strip :global(.rain) {
+    height: 1.1rem;
+    border-radius: 0 0 4px 4px;
+    background: color-mix(in oklab, var(--rain) calc(var(--pop) * 100%), var(--surface));
+    border: 1px solid var(--rule);
+    border-top: 0;
+  }
+  .strip :global(.tick) {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    color: var(--muted);
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+  .strip :global(.best .heat) {
+    box-shadow: inset 0 0 0 2px var(--fg);
+  }
+  .strip :global(.best)::after {
+    content: '';
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    margin-left: -3.5px;
+    border-radius: 50%;
+    background: var(--fg);
+  }
+  .strip :global(.hour:hover .heat),
+  .strip :global(.hour:focus-visible .heat) {
+    transform: translateY(-3px);
+  }
+  .strip :global(.hour:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.1rem;
+    margin-top: 0.6rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+  .sw {
+    display: inline-block;
+    width: 18px;
+    height: 9px;
+    margin-right: 0.35rem;
+    border-radius: 2px;
+    vertical-align: middle;
+  }
+  .sw.heat {
+    background: linear-gradient(90deg, var(--heat0), var(--accent));
+  }
+  .sw.rain {
+    background: linear-gradient(90deg, var(--surface), var(--rain));
+    border: 1px solid var(--rule);
+  }
+  .tip {
+    min-height: 1.3em;
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 560px) {
+    .sky {
+      padding: 1.2rem 1.1rem;
+    }
+    .next {
+      padding: 1rem 1.1rem;
+    }
+    .strip :global(.tick) {
+      font-size: 0.6rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rw,
+    .orb,
+    .strip :global(.hour) {
+      animation: none;
+    }
+  }
+</style>
