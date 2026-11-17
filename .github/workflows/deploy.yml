@@ -45,8 +45,9 @@ jobs:
           pip install -r scripts/forecast-data/requirements.txt
           python scripts/forecast-data/build.py
       - run: pnpm build
+      # skipped on the 6-hourly schedule: only the forecast data changes there, and this step installs a browser
       - name: Print resume PDF
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.event_name != 'schedule'
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm resume:pdf

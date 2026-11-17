@@ -401,7 +401,6 @@ const originData = [...pins.values()].map((p) => ({
       if (!o || !sky) return;
       this.setView(origin, 'typical');
       const cursor = origin.querySelector<SVGRectElement>('.cursor')!;
-      const x0 = Number(cursor.getAttribute('x'));
       const slot = Number(cursor.getAttribute('width'));
       this.playYear(
         sky,
@@ -416,7 +415,6 @@ const originData = [...pins.values()].map((p) => ({
           this.paintNow(sky, id);
         },
       );
-      void x0;
     }
 
     playRegion(id: string) {
