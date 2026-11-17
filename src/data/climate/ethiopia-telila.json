@@ -1,0 +1,161 @@
+{
+  "place": "Kecho Anderacha, Jimma, Ethiopia",
+  "latitude": 7.77,
+  "longitude": 36.37,
+  "elevation": 1895,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-17",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 11.5,
+      "tmax": 24.4,
+      "precip": 40.3
+    },
+    {
+      "month": 2,
+      "tmin": 12.4,
+      "tmax": 25.6,
+      "precip": 48.5
+    },
+    {
+      "month": 3,
+      "tmin": 13.1,
+      "tmax": 25.7,
+      "precip": 117.7
+    },
+    {
+      "month": 4,
+      "tmin": 13.5,
+      "tmax": 24.8,
+      "precip": 211.6
+    },
+    {
+      "month": 5,
+      "tmin": 13.4,
+      "tmax": 23.3,
+      "precip": 254.3
+    },
+    {
+      "month": 6,
+      "tmin": 12.7,
+      "tmax": 22.2,
+      "precip": 201.9
+    },
+    {
+      "month": 7,
+      "tmin": 12.4,
+      "tmax": 21.3,
+      "precip": 241.3
+    },
+    {
+      "month": 8,
+      "tmin": 12.6,
+      "tmax": 21.6,
+      "precip": 225.1
+    },
+    {
+      "month": 9,
+      "tmin": 12.4,
+      "tmax": 22.2,
+      "precip": 187.9
+    },
+    {
+      "month": 10,
+      "tmin": 11.9,
+      "tmax": 22.5,
+      "precip": 138.2
+    },
+    {
+      "month": 11,
+      "tmin": 11.1,
+      "tmax": 23,
+      "precip": 68.1
+    },
+    {
+      "month": 12,
+      "tmin": 10.9,
+      "tmax": 23.6,
+      "precip": 35.3
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 10.1,
+        "tmax": 23.7,
+        "precip": 14.7
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 10.4,
+        "tmax": 24,
+        "precip": 42.7
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 10.6,
+        "tmax": 25,
+        "precip": 15.7
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 12.2,
+        "tmax": 24.9,
+        "precip": 50.9
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 12.9,
+        "tmax": 25.3,
+        "precip": 171.6
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 13.4,
+        "tmax": 25,
+        "precip": 118.5
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 13.4,
+        "tmax": 24.5,
+        "precip": 135.4
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 12.6,
+        "tmax": 24,
+        "precip": 125.6
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 12.8,
+        "tmax": 22.8,
+        "precip": 239.3
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 12.3,
+        "tmax": 23.2,
+        "precip": 207.8
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 12.8,
+        "tmax": 24,
+        "precip": 160.7
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 12.7,
+        "tmax": 24.5,
+        "precip": 69.5
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+# Climate in brief for each bean origin (keyed by origin id in beans.yaml): what drives the weather there, and how
+# that climate is usually linked to what's in the cup. General, well-known relationships only: climate and flavor,
+# nothing about harvest sizes or markets. `season` drives the card's little animation.
+
+brazil-sul-de-minas: &minas
+  climate: >-
+    A subtropical highland with two clear seasons. From November to March the South Atlantic Convergence Zone parks a
+    band of moisture over southeast Brazil and afternoon storms arrive almost daily. Then winter turns dry, sunny and
+    cool, with clear nights around 1,000 m.
+  cup: >-
+    That long dry winter lets coffee dry slowly in its own fruit, in the sun, which is why Brazilian naturals and pulped
+    naturals tend toward chocolate, nuts and a heavy, sweet body with little sharpness.
+brazil-carmo-de-minas: *minas
+
+ethiopia-telila:
+  climate: >-
+    Tropical highland forest country at about 2,000 m. The rains follow the sun: as the tropical rain belt moves north
+    it brings one long wet season from roughly May to September, then drier, bright months through the winter.
+    Days are mild all year and nights are cool.
+  cup: >-
+    Cool nights at this height slow the cherries down, and slow ripening is usually credited for the floral, citrus
+    character that southwest Ethiopian coffees are known for.
+
+guatemala-el-anonal:
+  climate: >-
+    High, rugged country near the Mexican border. A sharp wet season runs from May to October; winters are dry.
+    Warm, dry air rising from Mexico's Tehuantepec plain keeps frost away, which is why coffee can grow unusually
+    high here.
+  cup: >-
+    High, frost-free slopes with dry winters are associated with the bright, fruity, wine-like acidity Huehuetenango
+    is known for.
+
+costa-rica-tarrazu:
+  climate: >-
+    Steep Pacific-facing slopes south of San José, between about 1,200 and 1,900 m. Rain comes almost every afternoon
+    from May to November; then the trade winds take over and December to April is reliably dry and sunny.
+  cup: >-
+    Altitude gives slow-grown, dense beans with clean, bright acidity, and the dependable dry season suits
+    honey processing, where the fruit's sticky layer dries on the bean and adds sweetness.

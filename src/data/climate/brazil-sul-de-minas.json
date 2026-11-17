@@ -1,0 +1,161 @@
+{
+  "place": "Sul de Minas, Brazil",
+  "latitude": -21.55,
+  "longitude": -45.43,
+  "elevation": 916,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-17",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 18.5,
+      "tmax": 26.5,
+      "precip": 250.7
+    },
+    {
+      "month": 2,
+      "tmin": 18.4,
+      "tmax": 26.9,
+      "precip": 153.2
+    },
+    {
+      "month": 3,
+      "tmin": 17.8,
+      "tmax": 26,
+      "precip": 153.2
+    },
+    {
+      "month": 4,
+      "tmin": 16.1,
+      "tmax": 25,
+      "precip": 57.3
+    },
+    {
+      "month": 5,
+      "tmin": 13.2,
+      "tmax": 22.8,
+      "precip": 40.2
+    },
+    {
+      "month": 6,
+      "tmin": 11.6,
+      "tmax": 22.1,
+      "precip": 19.1
+    },
+    {
+      "month": 7,
+      "tmin": 11.2,
+      "tmax": 22.4,
+      "precip": 13.8
+    },
+    {
+      "month": 8,
+      "tmin": 12.3,
+      "tmax": 24.4,
+      "precip": 19.1
+    },
+    {
+      "month": 9,
+      "tmin": 14.7,
+      "tmax": 26.1,
+      "precip": 65.9
+    },
+    {
+      "month": 10,
+      "tmin": 16.5,
+      "tmax": 26.7,
+      "precip": 101.9
+    },
+    {
+      "month": 11,
+      "tmin": 17.2,
+      "tmax": 25.7,
+      "precip": 185.9
+    },
+    {
+      "month": 12,
+      "tmin": 18.1,
+      "tmax": 26.2,
+      "precip": 228
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 16.2,
+        "tmax": 27.7,
+        "precip": 144.1
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 18.7,
+        "tmax": 28.3,
+        "precip": 184.9
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 17.6,
+        "tmax": 26,
+        "precip": 282.7
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 18.4,
+        "tmax": 26.5,
+        "precip": 218.5
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 17.6,
+        "tmax": 27.7,
+        "precip": 131.7
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 16.2,
+        "tmax": 26.8,
+        "precip": 80
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 15.4,
+        "tmax": 24.8,
+        "precip": 27.5
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 12.2,
+        "tmax": 22.1,
+        "precip": 48
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 11.9,
+        "tmax": 23.8,
+        "precip": 17.5
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 15.7,
+        "tmax": 27.4,
+        "precip": 18.8
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 16.1,
+        "tmax": 25.8,
+        "precip": 222.9
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 16.8,
+        "tmax": 25.6,
+        "precip": 192.7
+      }
+    ]
+  }
+}

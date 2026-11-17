@@ -1,0 +1,138 @@
+# Beans I've been drinking, shown as cards and map pins on /coffee. Climate and flavor only (no market content).
+# Facts come from the bag or the roaster's own pages (`source`); `take` is a short impression.
+# A blend with no named farms can use `originsText` instead of `origins` (a card without a pin or climate card).
+# `precision` says how exact the pin is: farm | region | country (shown on the card so it isn't overstated).
+# After adding an origin, run `pnpm climate` to fetch its 1991–2020 climate normals into src/data/climate/.
+
+- id: rosslyn-roasted-for-milk
+  name: Roasted for Milk — Brazil
+  roaster: Rosslyn Coffee
+  roasterNote: roasted by Origin Coffee Roasters, Cornwall
+  roastedIn: { name: London, lat: 51.51, lon: -0.09 }
+  roastDate: 2026-11-05
+  flavors: [Milk chocolate, Plum, Caramel]
+  take: >-
+    Picked up at Rosslyn on a trip to London. It's made to be drunk with milk, and it shows: chocolate and caramel
+    come straight through a flat white, with a little plum sweetness and almost no sharpness. With a coffee this
+    forgiving, any wobbly latte art is on me.
+  origins:
+    - id: brazil-sul-de-minas
+      label: Brazil
+      place: Sul de Minas, Brazil
+      note: The bag names only the country; shown for Sul de Minas, Brazil's main arabica region.
+      lat: -21.55
+      lon: -45.43
+      precision: country
+      process: Pulped natural
+
+- id: monmouth-espresso
+  name: Monmouth Espresso
+  roaster: Monmouth Coffee Company
+  roastedIn: { name: London, lat: 51.50, lon: -0.08 }
+  flavors: [Chocolate, Roasted nuts, Soft fruit]
+  take: >-
+    A London classic, and the bag I'd hand to anyone starting out with espresso. A Brazilian base gives it body;
+    washed Guatemalan and Colombian coffees add sweetness and a bit of lift. Round, hard to get wrong, and happy
+    with or without milk.
+  source: https://www.monmouthcoffee.co.uk/our-coffees
+  origins:
+    - id: brazil-carmo-de-minas
+      label: Brazil (base of the blend)
+      place: Carmo de Minas, Minas Gerais, Brazil
+      note: A blend of Brazil, Guatemala and Colombia; the farms rotate through the year. Shown for the Brazilian base.
+      lat: -22.12
+      lon: -45.13
+      precision: region
+      process: Pulped natural
+
+- id: winter-espresso
+  name: Winter Espresso
+  roaster: Square Mile Coffee Roasters
+  source: https://shop.squaremilecoffee.com/collections/espresso-coffee
+  roastedIn: { name: London, lat: 51.52, lon: -0.10 }
+  roastDate: 2026-11-05
+  flavors: [Blood orange, Date, Pistachio]
+  take: >-
+    From Square Mile, a name that carries real weight in London coffee, in a bag with a robin family baking on the
+    label. Half honey-processed Ethiopian, half Guatemalan, so it's brighter than most espresso blends: citrus up
+    front, a sticky dried-fruit middle, a nutty finish. Tastes like December.
+  origins:
+    - id: ethiopia-telila
+      label: Telila, Ethiopia · 50%
+      place: Kecho Anderacha, Jimma, Ethiopia
+      lat: 7.77
+      lon: 36.37
+      precision: region
+      process: Honey
+    - id: guatemala-el-anonal
+      label: El Anonal, Guatemala · 50%
+      place: La Libertad, Huehuetenango, Guatemala
+      lat: 15.51
+      lon: -91.87
+      precision: region
+
+- id: red-brick
+  name: Red Brick
+  roaster: Square Mile Coffee Roasters
+  roastedIn: { name: London, lat: 51.52, lon: -0.10 }
+  roastDate: 2026-11-05
+  flavors: [Yellow plum, Butterscotch, Orange, Smooth]
+  take: >-
+    Square Mile's house espresso, and the sweet, easy-going sibling of the Winter blend: butterscotch and soft stone
+    fruit with a clean orange finish. Nothing shouts. The one I'd pull for guests.
+  source: https://shop.squaremilecoffee.com/products/red-brick
+  origins:
+    - id: ethiopia-telila
+      label: Telila, Ethiopia · 47%
+      place: Kecho Anderacha, Jimma, Ethiopia
+      lat: 7.77
+      lon: 36.37
+      precision: region
+      process: Washed
+    - id: costa-rica-tarrazu
+      label: Don Oscar, Costa Rica · 53%
+      place: Tarrazú, Costa Rica
+      lat: 9.66
+      lon: -84.02
+      precision: region
+      process: White honey
+
+- id: black-cat-classic
+  name: Black Cat Classic Espresso
+  roaster: Intelligentsia
+  roastedIn: { name: Chicago, lat: 41.88, lon: -87.65 }
+  flavors: [Dark chocolate, Caramel, Cherry]
+  take: >-
+    My reference point for what a classic espresso tastes like. Syrupy and sweet, chocolate and caramel first with
+    a little cherry behind them, and sturdy enough that milk doesn't bury it.
+  source: https://www.intelligentsia.com/products/black-cat-classic-espresso
+  origins:
+    - id: brazil-carmo-de-minas
+      label: Brazil
+      place: Carmo de Minas, Minas Gerais, Brazil
+      note: Intelligentsia notes the blend's components change through the year.
+      lat: -22.12
+      lon: -45.13
+      precision: region
+
+- id: forty-six
+  name: Forty-Six
+  roaster: Counter Culture Coffee
+  roastedIn: { name: Durham NC, lat: 35.99, lon: -78.90 }
+  flavors: [Dark chocolate, Smoky, Full-bodied]
+  take: >-
+    Counter Culture's darkest roast, and not a subtle one: smoke and dark chocolate with a heavy body. That's the
+    point. It's the bag I reach for when the drink is mostly milk and the coffee still has to be heard.
+  source: https://counterculturecoffee.com/products/12-oz-forty-six
+  originsText: The recipe rotates with the harvests, mostly Latin American coffees with some Ethiopian; the bag sticker lists the current one. No single place to pin.
+
+- id: hair-bender
+  name: Hair Bender
+  roaster: Stumptown Coffee Roasters
+  roastedIn: { name: Portland OR, lat: 45.52, lon: -122.68 }
+  flavors: [Citrus, Dark chocolate, Raisin]
+  take: >-
+    Stumptown's flagship, and busier than most espresso blends: a citrus edge on top of dark chocolate, with a raisin
+    sweetness that shows up as it cools. Good straight, better as a cortado.
+  source: https://www.stumptowncoffee.com/products/hair-bender
+  originsText: A blend of coffees from Central and South America, East Africa and Indonesia. No farms are named, so there's no single place to pin.

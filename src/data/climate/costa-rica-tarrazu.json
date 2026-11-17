@@ -1,0 +1,161 @@
+{
+  "place": "Tarrazú, Costa Rica",
+  "latitude": 9.66,
+  "longitude": -84.02,
+  "elevation": 1441,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-17",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 15.2,
+      "tmax": 22.6,
+      "precip": 30.4
+    },
+    {
+      "month": 2,
+      "tmin": 15.3,
+      "tmax": 23.4,
+      "precip": 27.7
+    },
+    {
+      "month": 3,
+      "tmin": 16,
+      "tmax": 23.8,
+      "precip": 39.7
+    },
+    {
+      "month": 4,
+      "tmin": 16.6,
+      "tmax": 23.4,
+      "precip": 121
+    },
+    {
+      "month": 5,
+      "tmin": 17.2,
+      "tmax": 22.4,
+      "precip": 457.5
+    },
+    {
+      "month": 6,
+      "tmin": 17.1,
+      "tmax": 22.1,
+      "precip": 475.5
+    },
+    {
+      "month": 7,
+      "tmin": 16.8,
+      "tmax": 21.9,
+      "precip": 358
+    },
+    {
+      "month": 8,
+      "tmin": 16.8,
+      "tmax": 21.8,
+      "precip": 460.1
+    },
+    {
+      "month": 9,
+      "tmin": 16.6,
+      "tmax": 21.7,
+      "precip": 554.5
+    },
+    {
+      "month": 10,
+      "tmin": 16.6,
+      "tmax": 21.4,
+      "precip": 573.7
+    },
+    {
+      "month": 11,
+      "tmin": 16.4,
+      "tmax": 21.3,
+      "precip": 322.4
+    },
+    {
+      "month": 12,
+      "tmin": 15.7,
+      "tmax": 21.9,
+      "precip": 93.7
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 15.5,
+        "tmax": 22.4,
+        "precip": 135.8
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 14.4,
+        "tmax": 22.7,
+        "precip": 56.8
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 14.7,
+        "tmax": 23.2,
+        "precip": 5.8
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 15.2,
+        "tmax": 23.4,
+        "precip": 10.4
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 15,
+        "tmax": 24.4,
+        "precip": 30
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 15.5,
+        "tmax": 23.8,
+        "precip": 74.8
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 16.7,
+        "tmax": 24.6,
+        "precip": 208.1
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 16.6,
+        "tmax": 23.8,
+        "precip": 299.8
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 16.9,
+        "tmax": 24.2,
+        "precip": 185.5
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 17.3,
+        "tmax": 24.4,
+        "precip": 158.1
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 16.4,
+        "tmax": 23.9,
+        "precip": 424.1
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 16.4,
+        "tmax": 23.7,
+        "precip": 403.2
+      }
+    ]
+  }
+}

@@ -10,13 +10,13 @@ export interface NavItem {
 }
 
 export const nav: NavItem[] = [
+  { href: '/forecast', label: 'Forecast', live: true },
   // Resume stays hidden in production until resume.yaml has real content (sample: false).
   { href: '/resume', label: 'Resume', live: !resume.sample },
   // Photos appear once at least one album in albums.yaml has photos.
   { href: '/photos', label: 'Photography', live: albums.length > 0 },
   { href: '/coffee', label: 'Latte art', live: pours.length > 0 },
   { href: '/running', label: 'Running', live: true },
-  { href: '/forecast', label: 'Forecast', live: true },
   // Flip to live once the first post is published (drafts are excluded from production).
   { href: '/blog', label: 'Blog', live: false },
 ];

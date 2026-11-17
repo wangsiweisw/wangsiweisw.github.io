@@ -1,13 +1,15 @@
 ---
 // Latte art: a short, modest intro and a grid of cups (no dates or camera details); tap one to open it.
+// Below it, the bean atlas: what I've been drinking and the climate it grew in.
 import Base from '../layouts/Base.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { pours } from '../lib/coffee';
+import BeanAtlas from '../components/BeanAtlas.astro';
 import { srcset } from '../lib/photos';
 
 ---
 
-<Base title="Latte art" description="Latte art Siwei Wang pours on weekend mornings." og="coffee">
+<Base title="Latte art" description="Latte art Siwei Wang pours on weekend mornings." og="coffee" showUnits="temperature">
   <header class="page-head">
     <h1>Latte art</h1>
     <p class="intro">
@@ -46,6 +48,8 @@ import { srcset } from '../lib/photos';
   </ul>
 
   <p class="gear">Pulled on a Lelit Bianca V3, ground on a DF83V.</p>
+
+  <BeanAtlas />
 
   <Lightbox photos={pours.map((x) => x.photo)} details={false} />
 </Base>

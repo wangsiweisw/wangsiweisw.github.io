@@ -1,0 +1,161 @@
+{
+  "place": "Carmo de Minas, Minas Gerais, Brazil",
+  "latitude": -22.12,
+  "longitude": -45.13,
+  "elevation": 900,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-17",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 18.2,
+      "tmax": 26.2,
+      "precip": 287.3
+    },
+    {
+      "month": 2,
+      "tmin": 18.1,
+      "tmax": 26.5,
+      "precip": 170.3
+    },
+    {
+      "month": 3,
+      "tmin": 17.5,
+      "tmax": 25.7,
+      "precip": 166.7
+    },
+    {
+      "month": 4,
+      "tmin": 15.9,
+      "tmax": 24.6,
+      "precip": 66.2
+    },
+    {
+      "month": 5,
+      "tmin": 13,
+      "tmax": 22.3,
+      "precip": 52
+    },
+    {
+      "month": 6,
+      "tmin": 11.4,
+      "tmax": 21.5,
+      "precip": 29.1
+    },
+    {
+      "month": 7,
+      "tmin": 11,
+      "tmax": 21.7,
+      "precip": 23
+    },
+    {
+      "month": 8,
+      "tmin": 11.9,
+      "tmax": 23.6,
+      "precip": 28.4
+    },
+    {
+      "month": 9,
+      "tmin": 14.4,
+      "tmax": 25.3,
+      "precip": 86.4
+    },
+    {
+      "month": 10,
+      "tmin": 16.1,
+      "tmax": 25.7,
+      "precip": 133.9
+    },
+    {
+      "month": 11,
+      "tmin": 16.8,
+      "tmax": 25.2,
+      "precip": 208.5
+    },
+    {
+      "month": 12,
+      "tmin": 17.9,
+      "tmax": 25.9,
+      "precip": 257.1
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 14.3,
+        "tmax": 25.4,
+        "precip": 144.1
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 16.9,
+        "tmax": 27.5,
+        "precip": 177.3
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 16.3,
+        "tmax": 25.3,
+        "precip": 267.2
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 17.1,
+        "tmax": 25.8,
+        "precip": 274.5
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 15.6,
+        "tmax": 25.9,
+        "precip": 144.4
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 14.1,
+        "tmax": 25.2,
+        "precip": 71.9
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 13.2,
+        "tmax": 23.6,
+        "precip": 23.9
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 10.7,
+        "tmax": 21,
+        "precip": 77.9
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 9.8,
+        "tmax": 22.6,
+        "precip": 10.5
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 13.3,
+        "tmax": 25.8,
+        "precip": 20.3
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 14.2,
+        "tmax": 24,
+        "precip": 201.6
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 15.2,
+        "tmax": 24.5,
+        "precip": 238.7
+      }
+    ]
+  }
+}

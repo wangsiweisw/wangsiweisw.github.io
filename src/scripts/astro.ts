@@ -16,6 +16,19 @@ export function sunElevation(lat: number, lon: number, ms: number): number {
   return Math.asin(Math.sin(lat * RAD) * Math.sin(dec) + Math.cos(lat * RAD) * Math.cos(dec) * Math.cos(ha)) / RAD;
 }
 
+/** Where the sun is directly overhead right now: [longitude, latitude] in degrees. */
+export function subsolarPoint(ms: number): [number, number] {
+  const d = days(ms);
+  const g = (357.529 + 0.98560028 * d) * RAD;
+  const L = (280.459 + 0.98564736 * d) * RAD + (1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * RAD;
+  const e = (23.439 - 3.6e-7 * d) * RAD;
+  const ra = Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L)) / RAD;
+  const dec = Math.asin(Math.sin(e) * Math.sin(L)) / RAD;
+  const gmst = (18.697374558 + 24.06570982441908 * d) * 15;
+  const lon = ((((ra - gmst) % 360) + 540) % 360) - 180;
+  return [lon, dec];
+}
+
 /** How dark it is, 0 (sun up or civil twilight) → 1 (sun 15° or more below the horizon). */
 export function darkness(lat: number, lon: number, ms: number): number {
   const t = Math.max(0, Math.min(1, (-6 - sunElevation(lat, lon, ms)) / 9));

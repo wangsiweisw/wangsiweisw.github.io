@@ -1,0 +1,1094 @@
+---
+// Bean atlas: a world map (Equal Earth, drawn at build time) with one pin per origin and an arc to where it was
+// roasted, then a card per bean with a short take and a climate card for each origin. Click a pin to fly to the
+// region and read its climate in brief; "Play a year" runs the seasons through the little sky. Climate and flavor only.
+import { geoEqualEarth, geoPath } from 'd3-geo';
+import { feature } from 'topojson-client';
+import land110 from 'world-atlas/land-110m.json';
+import { beans, climateFacts, type Origin } from '../lib/beans';
+import WeatherAttribution from './WeatherAttribution.astro';
+
+// --- map ---
+const W = 960;
+const H = 440;
+const projection = geoEqualEarth().fitExtent(
+  [
+    [8, 8],
+    [W - 8, H - 8],
+  ],
+  { type: 'Sphere' },
+);
+const path = geoPath(projection);
+const land = path(feature(land110 as any, (land110 as any).objects.land) as any);
+const sphere = path({ type: 'Sphere' });
+// the "bean belt": between the tropics, where coffee grows
+const TROPIC = 23.44;
+const lons = Array.from({ length: 73 }, (_, i) => -180 + i * 5);
+const edge = (lat: number, list: number[]) => list.map((lon) => projection([lon, lat])!.map((v) => v.toFixed(1)).join(','));
+const belt = `M${[...edge(TROPIC, lons), ...edge(-TROPIC, [...lons].reverse())].join('L')}Z`;
+
+const pins = new Map<string, { origin: Origin; x: number; y: number; beans: string[] }>();
+const arcs: { bean: string; d: string }[] = [];
+// nudge labels apart where roasting cities sit close together: [dx, dy, anchor]
+const LABEL: Record<string, [number, number, string]> = { 'Portland OR': [-8, 4, 'end'], Chicago: [8, -2, 'start'], 'Durham NC': [8, 12, 'start'] };
+const cities = new Map<string, { name: string; x: number; y: number }>();
+for (const b of beans) {
+  if (!b.origins.length) continue; // blends without a named origin have nothing to draw
+  const [cx, cy] = projection([b.roastedIn.lon, b.roastedIn.lat])!;
+  cities.set(b.roastedIn.name, { name: b.roastedIn.name, x: cx, y: cy });
+  for (const o of b.origins) {
+    const [x, y] = projection([o.lon, o.lat])!;
+    const pin = pins.get(o.id) ?? { origin: o, x, y, beans: [] };
+    pin.beans.push(b.id);
+    pins.set(o.id, pin);
+    arcs.push({ bean: b.id, d: path({ type: 'LineString', coordinates: [[o.lon, o.lat], [b.roastedIn.lon, b.roastedIn.lat]] })! });
+  }
+}
+
+// --- climograph (shared scales, so cards compare at a glance) ---
+const CW = 264;
+const CH = 96;
+const pad = { l: 4, r: 4, t: 6, b: 16 };
+const allMonths = beans.flatMap((b) => b.origins.flatMap((o) => o.climate?.months ?? []));
+const maxRain = Math.max(100, ...allMonths.map((m) => m.precip));
+const tLo = Math.floor(Math.min(0, ...allMonths.map((m) => m.tmin)) / 5) * 5;
+const tHi = Math.ceil(Math.max(30, ...allMonths.map((m) => m.tmax)) / 5) * 5;
+const slot = (CW - pad.l - pad.r) / 12;
+const xMid = (i: number) => pad.l + slot * (i + 0.5);
+const yRain = (mm: number) => CH - pad.b - (mm / maxRain) * (CH - pad.t - pad.b);
+const yTemp = (c: number) => CH - pad.b - ((c - tLo) / (tHi - tLo)) * (CH - pad.t - pad.b);
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const ymLabel = (ym: string) => new Date(`${ym}-15T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+const band = (months: { tmin: number; tmax: number }[]) =>
+  `M${months.map((m, i) => `${xMid(i).toFixed(1)},${yTemp(m.tmax).toFixed(1)}`).join('L')}L${[...months]
+    .reverse()
+    .map((m, i) => `${xMid(11 - i).toFixed(1)},${yTemp(m.tmin).toFixed(1)}`)
+    .join('L')}Z`;
+const INITIALS = 'JFMAMJJASOND'.split('');
+const cToF = (c: number) => Math.round((c * 9) / 5 + 32);
+const mmToIn = (mm: number) => Math.round(mm / 25.4);
+// everything the page script needs per origin: where it is on the map, its year, and what to say about it
+const originData = [...pins.values()].map((p) => ({
+  id: p.origin.id,
+  lat: p.origin.lat,
+  lon: p.origin.lon,
+  x: Math.round(p.x),
+  y: Math.round(p.y),
+  place: p.origin.place,
+  climate: p.origin.about?.climate ?? '',
+  cup: p.origin.about?.cup ?? '',
+  months: (p.origin.climate?.months ?? []).map((m) => ({ precip: m.precip, tmin: m.tmin, tmax: m.tmax })),
+  beans: p.beans.map((id) => ({ id, name: beans.find((b) => b.id === id)!.name })),
+}));
+---
+
+<section class="atlas" aria-labelledby="beans-title">
+  <h2 id="beans-title">Beans</h2>
+  <p class="intro">
+    The coffees I've been pulling lately, and the weather where they grew. Each line runs from the growing region to the city
+    where it was roasted. The warm band is the tropics, where almost all coffee grows; the darker half of the map is where
+    it's night right now. Tap a dot to fly there.
+  </p>
+
+  <bean-atlas data-origins={JSON.stringify(originData)} data-w={W} data-h={H} data-max-rain={maxRain}>
+    <svg class="map" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`World map with ${pins.size} coffee origins: ${[...pins.values()].map((p) => p.origin.place).join('; ')}`}>
+      <path d={sphere} class="sphere" />
+      <path d={belt} class="belt" />
+      <path d={land} class="land" />
+      <path class="night" data-night />
+      {arcs.map((a) => <path d={a.d} class="arc" data-for={a.bean} />)}
+      {
+        [...cities.values()].map((c) => (
+          <g class="city k">
+            <rect x={c.x - 3} y={c.y - 3} width="6" height="6" />
+            <text x={c.x + (LABEL[c.name]?.[0] ?? 8)} y={c.y + (LABEL[c.name]?.[1] ?? 4)} text-anchor={LABEL[c.name]?.[2] ?? 'start'}>
+              {c.name}
+            </text>
+          </g>
+        ))
+      }
+      {
+        [...pins.values()].map((p) => (
+          <a href={`#bean-${p.beans[0]}`} class="pin" data-for={p.beans.join(' ')} data-pin={p.origin.id} aria-label={`${p.origin.place}: ${p.beans.length} ${p.beans.length === 1 ? 'coffee' : 'coffees'}. Zoom the map here.`}>
+            <g class="k">
+              <circle cx={p.x} cy={p.y} r="14" class="hit" />
+              <circle cx={p.x} cy={p.y} r="5.5" class="pulse" />
+              <circle cx={p.x} cy={p.y} r="5.5" class="dot" />
+            </g>
+            <title>{p.origin.place}</title>
+          </a>
+        ))
+      }
+    </svg>
+
+    <div class="region" data-region hidden>
+      <div class="region-head">
+        <h3 data-region-name tabindex="-1"></h3>
+        <button type="button" class="ghost" data-reset>← Whole map</button>
+      </div>
+      <div class="region-body">
+        <div class="stage">
+          <div class="sky big" data-region-sky>
+            <span class="orb" aria-hidden="true"></span>
+            <span class="cloud c1" aria-hidden="true"></span>
+            <span class="cloud c2" aria-hidden="true"></span>
+            <span class="drops" aria-hidden="true"></span>
+            <span class="sky-text"></span>
+          </div>
+          <div class="months" data-region-months aria-hidden="true">
+            {INITIALS.map((m) => <span>{m}</span>)}
+          </div>
+          <button type="button" class="ghost" data-region-play>▶ Play a year</button>
+        </div>
+        <div class="region-text">
+          <p data-region-climate></p>
+          <p data-region-cup></p>
+          <p class="from">Coffees from here: <span data-region-beans></span></p>
+        </div>
+      </div>
+    </div>
+
+    <ul class="cards">
+      {
+        beans.map((b) => (
+          <li class="card" id={`bean-${b.id}`} data-bean={b.id} tabindex="-1">
+            <p class="kicker">
+              {b.roaster ?? 'Roaster to confirm'} · {b.roastedIn.name}
+            </p>
+            <h3>{b.name}</h3>
+            {b.roasterNote && <p class="rnote">{b.roasterNote}</p>}
+            <ul class="flavors" aria-label="Flavor notes">
+              {b.flavors.map((f) => <li>{f}</li>)}
+            </ul>
+            <p class="take">{b.take}</p>
+            {
+              b.origins.map((o) => {
+                const f = o.climate && climateFacts(o.climate);
+                return (
+                  <div class="origin" data-origin={o.id}>
+                    <p class="origin-head">
+                      <span class="marker" aria-hidden="true" />
+                      <strong>{o.label}</strong>
+                      {o.process && <span class="process">{o.process}</span>}
+                    </p>
+                    <p class="place">
+                      {o.place} · {o.precision === 'country' ? 'country-level pin' : `${o.precision}-level pin`}
+                    </p>
+                    {o.climate && f && (
+                      <>
+                        {o.climate.recent && (
+                          <div class="tabs" role="group" aria-label="Which year to show">
+                            <button type="button" data-view="typical" aria-pressed="true">Typical year</button>
+                            <button type="button" data-view="recent" aria-pressed="false">Last 12 months</button>
+                          </div>
+                        )}
+                        <svg
+                          class="climo"
+                          data-chart="typical"
+                          viewBox={`0 0 ${CW} ${CH}`}
+                          role="img"
+                          aria-label={`Climate at ${o.place}: about ${f.annualMm} mm of rain a year, wettest in ${f.wettest}, driest in ${f.driest}; temperatures from ${f.tmin}°C to ${f.tmax}°C.`}
+                        >
+                          <rect class="cursor" x={xMid(0) - slot / 2} y={pad.t - 4} width={slot} height={CH - pad.t - pad.b + 6} rx="3" visibility="hidden" />
+                          {o.climate.months.map((m, i) => (
+                            <g>
+                              <title>{`${MONTH_NAMES[i]}: ${Math.round(m.precip)} mm, ${m.tmin}–${m.tmax}°C`}</title>
+                              <rect x={xMid(i) - slot * 0.32} y={yRain(m.precip)} width={slot * 0.64} height={Math.max(0.5, CH - pad.b - yRain(m.precip))} rx="1.5" class="rain" />
+                              <text x={xMid(i)} y={CH - 4} class="mon">{INITIALS[i]}</text>
+                            </g>
+                          ))}
+                          <path d={band(o.climate.months)} class="temp" />
+                        </svg>
+                        {o.climate.recent && (
+                          <svg
+                            class="climo"
+                            data-chart="recent"
+                            {...{ hidden: '' }}
+                            viewBox={`0 0 ${CW} ${CH}`}
+                            role="img"
+                            aria-label={`Weather at ${o.place} from ${ymLabel(o.climate.recent.from)} to ${ymLabel(o.climate.recent.to)}, month by month.`}
+                          >
+                            {o.climate.recent.months.map((m, i) => (
+                              <g>
+                                <title>{`${ymLabel(m.ym)}: ${Math.round(m.precip)} mm, ${m.tmin}–${m.tmax}°C`}</title>
+                                <rect x={xMid(i) - slot * 0.32} y={yRain(Math.min(m.precip, maxRain))} width={slot * 0.64} height={Math.max(0.5, CH - pad.b - yRain(Math.min(m.precip, maxRain)))} rx="1.5" class="rain" />
+                                <text x={xMid(i)} y={CH - 4} class="mon">{INITIALS[Number(m.ym.slice(5)) - 1]}</text>
+                              </g>
+                            ))}
+                            <path d={band(o.climate.recent.months)} class="temp" />
+                          </svg>
+                        )}
+                        <p class="facts" data-facts="typical">
+                          <span data-mm={f.annualMm}>{mmToIn(f.annualMm)} in</span> of rain a year, wettest in {f.wettest}, driest in {f.driest} ·{' '}
+                          <span data-c-range={`${f.tmin},${f.tmax}`}>{cToF(f.tmin)}–{cToF(f.tmax)}°F</span> · grid height {Math.round(o.climate.elevation).toLocaleString('en-US')} m
+                        </p>
+                        {o.climate.recent && (
+                          <p class="facts" data-facts="recent" hidden>
+                            {ymLabel(o.climate.recent.from)} to {ymLabel(o.climate.recent.to)}, as it happened:{' '}
+                            <span data-mm={Math.round(o.climate.recent.months.reduce((a, m) => a + m.precip, 0))}>
+                              {mmToIn(o.climate.recent.months.reduce((a, m) => a + m.precip, 0))} in
+                            </span>{' '}
+                            of rain.
+                          </p>
+                        )}
+                      </>
+                    )}
+                    <div class="sky" data-now={o.id} hidden>
+                      <span class="orb" aria-hidden="true" />
+                      <span class="cloud c1" aria-hidden="true" />
+                      <span class="cloud c2" aria-hidden="true" />
+                      <span class="drops" aria-hidden="true" />
+                      <span class="sky-text" />
+                    </div>
+                    {o.climate && (
+                      <div class="actions">
+                        <button type="button" class="ghost" data-play={o.id}>▶ Play a year</button>
+                        <button type="button" class="ghost" data-zoom={o.id}>Show on map</button>
+                      </div>
+                    )}
+                    {o.about && (
+                      <details class="about">
+                        <summary>Climate in brief</summary>
+                        <p>{o.about.climate}</p>
+                        <p>{o.about.cup}</p>
+                      </details>
+                    )}
+                    {o.note && <p class="note">{o.note}</p>}
+                  </div>
+                );
+              })
+            }
+            {b.originsText && <p class="blend">{b.originsText}</p>}
+            {b.source && (
+              <p class="source">
+                <a href={b.source} rel="noopener">Roaster's page</a>
+              </p>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </bean-atlas>
+
+  <p class="key">
+    <span><i class="sw rain" />monthly rain</span>
+    <span><i class="sw temp" />daily low to high</span>
+    “Typical year” is the 1991–2020 average for the map point, not the farm's own records. “Last 12 months” is what the
+    weather was, shown as it happened.
+  </p>
+  <WeatherAttribution what="Climate normals and current conditions" />
+</section>
+
+<script>
+  // Card ↔ map highlighting, flying the map to a region, "play a year" in the little skies, unit switching, the live
+  // day/night shading, and "right now at origin" (one small request for all origins).
+  import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
+  import { subsolarPoint } from '../scripts/astro';
+
+  type M = { precip: number; tmin: number; tmax: number };
+  type O = { id: string; lat: number; lon: number; x: number; y: number; place: string; climate: string; cup: string; months: M[]; beans: { id: string; name: string }[] };
+  type Live = { c: number; sky: string; clock: string; day: boolean; wx: string };
+
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  /** weather code → the scene drawn in the sky strip */
+  const scene = (code: number) => (code <= 1 ? 'clear' : code <= 3 ? 'cloud' : code <= 48 ? 'fog' : code <= 67 || (code >= 80 && code <= 82) ? 'rain' : code <= 86 ? 'snow' : 'storm');
+  const WMO: [number, string][] = [[0, 'clear'], [2, 'partly cloudy'], [3, 'overcast'], [48, 'fog'], [57, 'drizzle'], [67, 'rain'], [77, 'snow'], [82, 'showers'], [86, 'snow showers'], [99, 'thunderstorms']];
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  class BeanAtlas extends HTMLElement {
+    origins: O[] = [];
+    live = new Map<string, Live>();
+    playing = new Map<HTMLElement, number>(); // sky element → timer
+    zoomed: string | null = null;
+    raf = 0;
+    W = 0;
+    H = 0;
+
+    connectedCallback() {
+      this.origins = JSON.parse(this.dataset.origins ?? '[]');
+      this.W = Number(this.dataset.w);
+      this.H = Number(this.dataset.h);
+
+      const mark = (id: string | null) =>
+        this.querySelectorAll<SVGElement>('[data-for]').forEach((el) => el.classList.toggle('on', !!id && el.dataset.for!.split(' ').includes(id)));
+      this.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+        card.addEventListener('pointerenter', () => mark(card.dataset.bean!));
+        card.addEventListener('pointerleave', () => mark(null));
+        card.addEventListener('focusin', () => mark(card.dataset.bean!));
+        card.addEventListener('focusout', () => mark(null));
+      });
+      this.querySelectorAll<SVGAElement>('.pin').forEach((pin) => {
+        const cards = () => pin.dataset.for!.split(' ').map((id) => this.querySelector(`[data-bean="${id}"]`));
+        pin.addEventListener('pointerenter', () => cards().forEach((c) => c?.classList.add('lit')));
+        pin.addEventListener('pointerleave', () => cards().forEach((c) => c?.classList.remove('lit')));
+        pin.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.zoomTo(pin.dataset.pin!);
+        });
+      });
+
+      this.addEventListener('click', (e) => {
+        const t = (e.target as HTMLElement).closest<HTMLElement>('button');
+        if (!t) return;
+        if (t.dataset.view) this.setView(t.closest<HTMLElement>('.origin')!, t.dataset.view);
+        else if (t.dataset.play) this.playCard(t.closest<HTMLElement>('.origin')!, t.dataset.play);
+        else if (t.dataset.zoom) {
+          this.zoomTo(t.dataset.zoom);
+          this.querySelector('.map')!.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
+        } else if ('reset' in t.dataset) this.zoomTo(null);
+        else if ('regionPlay' in t.dataset && this.zoomed) this.playRegion(this.zoomed);
+      });
+
+      this.units();
+      document.addEventListener('unitschange', () => this.units());
+      this.night();
+      setInterval(() => this.night(), 5 * 60_000);
+      this.now();
+    }
+
+    metric() {
+      return document.documentElement.dataset.units === 'metric';
+    }
+    temp(c: number) {
+      return this.metric() ? `${Math.round(c)}°C` : `${Math.round((c * 9) / 5 + 32)}°F`;
+    }
+    range(lo: number, hi: number) {
+      return this.metric() ? `${Math.round(lo)}–${Math.round(hi)}°C` : `${Math.round((lo * 9) / 5 + 32)}–${Math.round((hi * 9) / 5 + 32)}°F`;
+    }
+    rain(mm: number) {
+      return this.metric() ? `${Math.round(mm).toLocaleString('en-US')} mm` : `${(mm / 25.4).toFixed(mm < 127 ? 1 : 0)} in`;
+    }
+
+    // --- typical year / last 12 months ---
+    setView(origin: HTMLElement, view: string) {
+      origin.querySelectorAll<HTMLElement>('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+      origin.querySelectorAll<HTMLElement>('[data-chart]').forEach((c) => c.toggleAttribute('hidden', c.dataset.chart !== view));
+      origin.querySelectorAll<HTMLElement>('[data-facts]').forEach((c) => (c.hidden = c.dataset.facts !== view));
+    }
+
+    // --- play a year: step through the months, the sky shows how wet and warm each one is ---
+    playYear(sky: HTMLElement, months: M[], onStep: (i: number) => void, onEnd: () => void) {
+      clearInterval(this.playing.get(sky));
+      const maxRain = Number(this.dataset.maxRain) || 300;
+      let i = 0;
+      const step = () => {
+        if (i >= months.length) {
+          clearInterval(this.playing.get(sky));
+          this.playing.delete(sky);
+          sky.removeAttribute('data-year');
+          sky.style.removeProperty('--wet');
+          onEnd();
+          return;
+        }
+        const m = months[i];
+        const wet = Math.min(1, m.precip / maxRain);
+        sky.dataset.year = '1';
+        sky.dataset.day = '1';
+        sky.dataset.wx = wet > 0.4 ? 'rain' : wet > 0.14 ? 'cloud' : 'clear';
+        sky.style.setProperty('--wet', wet.toFixed(2));
+        sky.querySelector('.sky-text')!.textContent = `${MONTHS[i]} · ${this.rain(m.precip)} of rain · ${this.range(m.tmin, m.tmax)}`;
+        sky.hidden = false;
+        onStep(i);
+        i++;
+      };
+      step();
+      this.playing.set(sky, window.setInterval(step, 850));
+    }
+
+    playCard(origin: HTMLElement, id: string) {
+      const o = this.origins.find((x) => x.id === id);
+      const sky = origin.querySelector<HTMLElement>('.sky');
+      if (!o || !sky) return;
+      this.setView(origin, 'typical');
+      const cursor = origin.querySelector<SVGRectElement>('.cursor')!;
+      const x0 = Number(cursor.getAttribute('x'));
+      const slot = Number(cursor.getAttribute('width'));
+      this.playYear(
+        sky,
+        o.months,
+        (i) => {
+          cursor.setAttribute('visibility', 'visible');
+          cursor.style.transform = `translateX(${i * slot}px)`;
+        },
+        () => {
+          cursor.setAttribute('visibility', 'hidden');
+          cursor.style.transform = '';
+          this.paintNow(sky, id);
+        },
+      );
+      void x0;
+    }
+
+    playRegion(id: string) {
+      const o = this.origins.find((x) => x.id === id);
+      const sky = this.querySelector<HTMLElement>('[data-region-sky]')!;
+      const ticks = [...this.querySelectorAll<HTMLElement>('[data-region-months] span')];
+      if (!o?.months.length) return;
+      this.playYear(
+        sky,
+        o.months,
+        (i) => ticks.forEach((t, k) => t.classList.toggle('on', k === i)),
+        () => {
+          ticks.forEach((t) => t.classList.remove('on'));
+          this.paintNow(sky, id);
+        },
+      );
+    }
+
+    // --- fly the map to a region (or back out) ---
+    zoomTo(id: string | null) {
+      const svg = this.querySelector<SVGSVGElement>('.map')!;
+      const panel = this.querySelector<HTMLElement>('[data-region]')!;
+      const o = id ? this.origins.find((x) => x.id === id) : null;
+      this.zoomed = o ? o.id : null;
+      this.querySelectorAll<SVGElement>('.pin').forEach((p) => p.classList.toggle('here', p.dataset.pin === this.zoomed));
+
+      const k = o ? 3.2 : 1;
+      const w = this.W / k;
+      const h = this.H / k;
+      const target = o ? [Math.max(0, Math.min(this.W - w, o.x - w / 2)), Math.max(0, Math.min(this.H - h, o.y - h / 2)), w, h] : [0, 0, this.W, this.H];
+      const from = svg.getAttribute('viewBox')!.split(' ').map(Number);
+      const apply = (v: number[]) => {
+        svg.setAttribute('viewBox', v.map((x) => x.toFixed(1)).join(' '));
+        svg.style.setProperty('--k', (this.W / v[2]).toFixed(3));
+      };
+      cancelAnimationFrame(this.raf);
+      if (reduced()) apply(target);
+      else {
+        const t0 = performance.now();
+        const tick = (t: number) => {
+          const p = Math.min(1, (t - t0) / 700);
+          const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; // ease in-out
+          apply(from.map((v, i) => v + (target[i] - v) * e));
+          if (p < 1) this.raf = requestAnimationFrame(tick);
+        };
+        this.raf = requestAnimationFrame(tick);
+      }
+
+      panel.hidden = !o;
+      if (!o) return;
+      panel.querySelector('[data-region-name]')!.textContent = o.place;
+      panel.querySelector('[data-region-climate]')!.textContent = o.climate;
+      panel.querySelector('[data-region-cup]')!.textContent = o.cup;
+      panel.querySelector('[data-region-beans]')!.replaceChildren(
+        ...o.beans.flatMap((b, i) => {
+          const a = document.createElement('a');
+          a.href = `#bean-${b.id}`;
+          a.textContent = b.name;
+          return i ? [document.createTextNode(', '), a] : [a];
+        }),
+      );
+      // arrive with the seasons running
+      this.playRegion(o.id);
+    }
+
+    units() {
+      this.querySelectorAll<HTMLElement>('[data-mm]').forEach((el) => (el.textContent = this.rain(Number(el.dataset.mm))));
+      this.querySelectorAll<HTMLElement>('[data-c-range]').forEach((el) => {
+        const [lo, hi] = el.dataset.cRange!.split(',').map(Number);
+        el.textContent = this.range(lo, hi);
+      });
+      this.querySelectorAll<HTMLElement>('[data-now]').forEach((el) => this.paintNow(el, el.dataset.now!));
+    }
+
+    /** the sky strip's resting state: the weather there right now (hidden until it's known) */
+    paintNow(el: HTMLElement, id: string) {
+      if (this.playing.has(el)) return;
+      const v = this.live.get(id);
+      if (!v) {
+        if (!el.matches('[data-region-sky]')) el.hidden = true;
+        el.querySelector('.sky-text')!.textContent = '';
+        return;
+      }
+      el.dataset.day = v.day ? '1' : '0';
+      el.dataset.wx = v.wx;
+      el.querySelector('.sky-text')!.textContent = `${this.temp(v.c)}, ${v.sky} · ${v.clock} there now`;
+      el.hidden = false;
+    }
+
+    /** shade the half of the world where the sun is down (same projection as the build-time map) */
+    night() {
+      const projection = geoEqualEarth().fitExtent(
+        [
+          [8, 8],
+          [this.W - 8, this.H - 8],
+        ],
+        { type: 'Sphere' },
+      );
+      const [lon, lat] = subsolarPoint(Date.now());
+      const dark = geoCircle().center([lon + 180, -lat]).radius(90)();
+      this.querySelector('[data-night]')?.setAttribute('d', geoPath(projection)(dark) ?? '');
+    }
+
+    async now() {
+      if (!this.origins.length) return;
+      const key = 'bean-now-v2';
+      let data: any[] | undefined;
+      try {
+        const c = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+        if (c && Date.now() - c.t < 30 * 60_000 && c.n === this.origins.length) data = c.d;
+      } catch {}
+      if (!data) {
+        try {
+          const res = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${this.origins.map((o) => o.lat)}&longitude=${this.origins.map((o) => o.lon)}&current=temperature_2m,weather_code,is_day&timezone=auto`,
+          );
+          if (!res.ok) return;
+          const j = await res.json();
+          data = Array.isArray(j) ? j : [j];
+          try {
+            sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), n: this.origins.length, d: data }));
+          } catch {}
+        } catch {
+          return; // the cards work without it
+        }
+      }
+      this.origins.forEach((o, i) => {
+        const cur = data![i]?.current;
+        if (!cur) return;
+        this.live.set(o.id, {
+          c: cur.temperature_2m,
+          sky: WMO.find(([max]) => cur.weather_code <= max)?.[1] ?? '',
+          clock: new Date(`${cur.time}:00Z`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }),
+          day: !!cur.is_day,
+          wx: scene(cur.weather_code),
+        });
+      });
+      this.querySelectorAll<HTMLElement>('[data-now]').forEach((el) => this.paintNow(el, el.dataset.now!));
+    }
+  }
+  customElements.define('bean-atlas', BeanAtlas);
+</script>
+
+<style>
+  .atlas {
+    margin-top: 5rem;
+    --rain: #3987e5;
+    --temp: #b4532a;
+  }
+  :global([data-effective-theme='dark']) .atlas {
+    --rain: #5a8fd6;
+    --temp: #d4683f;
+  }
+  h2 {
+    margin: 0;
+    font: 400 clamp(1.8rem, 4vw, 2.4rem) / 1.1 var(--display);
+    letter-spacing: -0.02em;
+  }
+  .intro {
+    max-width: var(--measure);
+    margin: 0.75rem 0 1.5rem;
+    color: var(--muted);
+  }
+  .map {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .map {
+    --k: 1;
+    border-radius: var(--radius);
+  }
+  /* markers keep their size on screen while the map zooms */
+  .k {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(calc(1 / var(--k)));
+  }
+  .city.k {
+    transform-origin: 3px 3px;
+  }
+  .sphere,
+  .arc {
+    vector-effect: non-scaling-stroke;
+  }
+  .sphere {
+    fill: var(--surface);
+    stroke: var(--rule);
+  }
+  .pin {
+    cursor: zoom-in;
+  }
+  .pin.here .dot {
+    fill: var(--fg);
+  }
+  .ghost {
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--fg);
+    font: 500 0.78rem var(--body);
+    cursor: pointer;
+    transition: border-color var(--ease), color var(--ease);
+  }
+  .ghost:hover {
+    border-color: var(--temp);
+    color: var(--temp);
+  }
+  .region {
+    margin-top: 1rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 1px solid var(--temp);
+    border-radius: var(--radius);
+    background: var(--surface);
+    animation: rise 0.35s ease both;
+  }
+  .region[hidden] {
+    display: none;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  .region-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .region-head h3 {
+    margin: 0;
+  }
+  .region-body {
+    display: grid;
+    gap: 1rem 1.75rem;
+    margin-top: 0.9rem;
+  }
+  @media (min-width: 720px) {
+    .region-body {
+      grid-template-columns: minmax(0, 20rem) 1fr;
+    }
+  }
+  .stage .ghost {
+    margin-top: 0.6rem;
+  }
+  .months {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    margin-top: 0.35rem;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+  .months span.on {
+    color: var(--bg);
+    background: var(--temp);
+    border-radius: 3px;
+  }
+  .region-text p {
+    max-width: var(--measure);
+    margin: 0 0 0.6rem;
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+  .region-text .from {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .region-text :global(a) {
+    color: var(--fg);
+  }
+  .tabs {
+    display: inline-flex;
+    margin-top: 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .tabs button {
+    padding: 0.2rem 0.65rem;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 500 0.74rem var(--body);
+    cursor: pointer;
+  }
+  .tabs button[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .climo[hidden] {
+    display: none;
+  }
+  .climo .cursor {
+    fill: var(--temp);
+    opacity: 0.16;
+    transition: transform 0.35s ease;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .about {
+    margin-top: 0.7rem;
+  }
+  .about summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .about p {
+    margin: 0.5rem 0 0 !important;
+    line-height: 1.5;
+  }
+  .belt {
+    fill: var(--temp);
+    opacity: 0.07;
+  }
+  .land {
+    fill: color-mix(in srgb, var(--fg) 14%, var(--surface));
+  }
+  .arc {
+    fill: none;
+    stroke: var(--temp);
+    stroke-width: 1.2;
+    stroke-dasharray: 3 4;
+    opacity: 0.45;
+    transition: opacity var(--ease), stroke-width var(--ease);
+  }
+  .arc.on {
+    opacity: 1;
+    stroke-width: 2;
+    animation: flow 0.9s linear infinite;
+  }
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -14;
+    }
+  }
+  .night {
+    fill: #1a2140;
+    opacity: 0.16;
+    pointer-events: none;
+  }
+  .pulse {
+    fill: none;
+    stroke: var(--temp);
+    stroke-width: 1.5;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ring 2.6s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes ring {
+    from {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    to {
+      transform: scale(3.2);
+      opacity: 0;
+    }
+  }
+  .city rect {
+    fill: var(--bg);
+    stroke: var(--fg);
+    stroke-width: 1.5;
+  }
+  .city text {
+    fill: var(--muted);
+    font: 12px var(--body);
+  }
+  .pin .hit {
+    fill: transparent;
+  }
+  .pin .dot {
+    fill: var(--temp);
+    stroke: var(--bg);
+    stroke-width: 2;
+    transition: r var(--ease);
+  }
+  .pin:hover .dot,
+  .pin:focus-visible .dot,
+  .pin.on .dot {
+    r: 8;
+  }
+  .pin:focus-visible {
+    outline: none;
+  }
+  .pin:focus-visible .hit {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: 1.25rem;
+    margin: 1.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .card {
+    padding: 1.25rem 1.25rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    scroll-margin-top: 1.5rem;
+    transition: border-color var(--ease), transform var(--ease);
+  }
+  .card:hover,
+  .card.lit,
+  .card:target {
+    border-color: var(--temp);
+    transform: translateY(-2px);
+  }
+  .card .kicker {
+    margin: 0;
+  }
+  h3 {
+    margin: 0.4rem 0 0;
+    font: 400 1.45rem / 1.15 var(--display);
+    letter-spacing: -0.015em;
+  }
+  .flavors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .flavors li {
+    padding: 0.15rem 0.6rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    font-size: 0.8rem;
+  }
+  .take {
+    margin: 0.85rem 0 0;
+    font: 400 1.02rem / 1.5 var(--display);
+  }
+  .origin {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.85rem;
+  }
+  .origin p {
+    margin: 0;
+  }
+  .origin-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .marker {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--temp);
+  }
+  .process {
+    margin-left: auto;
+    color: var(--muted);
+  }
+  .place,
+  .facts,
+  .note,
+  .source {
+    color: var(--muted);
+  }
+  .place {
+    font-size: 0.8rem;
+  }
+  .climo {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0.6rem 0 0.35rem;
+  }
+  .climo .rain {
+    fill: var(--rain);
+    opacity: 0.75;
+  }
+  .climo .temp {
+    fill: var(--temp);
+    opacity: 0.3;
+    stroke: var(--temp);
+    stroke-width: 1;
+  }
+  .climo .mon {
+    fill: var(--muted);
+    font: 9px var(--body);
+    text-anchor: middle;
+  }
+  .facts {
+    line-height: 1.45;
+  }
+  .rnote {
+    margin: 0.2rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .blend {
+    margin: 1rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  /* the sky over the origin right now: day or night, with the weather drawn in */
+  .sky {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    height: 3.4rem;
+    margin-top: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    overflow: hidden;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #7db7ee, #cfe6fb);
+    color: #14243a;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .sky[hidden] {
+    display: none;
+  }
+  .sky[data-day='0'] {
+    background: linear-gradient(180deg, #0f1733, #2b3a66);
+    color: #e6ecfa;
+  }
+  .sky[data-wx='cloud'],
+  .sky[data-wx='fog'],
+  .sky[data-wx='rain'],
+  .sky[data-wx='snow'],
+  .sky[data-wx='storm'] {
+    background: linear-gradient(180deg, #8c9bb0, #cdd5df);
+  }
+  .sky[data-day='0'][data-wx]:not([data-wx='clear']) {
+    background: linear-gradient(180deg, #1b2236, #3d475c);
+  }
+  .sky-text {
+    position: relative;
+  }
+  .orb {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.9rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: #ffd35c;
+    box-shadow: 0 0 14px 4px rgb(255 211 92 / 0.55);
+  }
+  .sky[data-day='0'] .orb {
+    background: #e8ecf5;
+    box-shadow: inset -0.35rem -0.1rem 0 0 #9aa6c2, 0 0 10px 2px rgb(232 236 245 / 0.35);
+  }
+  .sky[data-wx='rain'] .orb,
+  .sky[data-wx='storm'] .orb,
+  .sky[data-wx='snow'] .orb,
+  .sky[data-wx='fog'] .orb {
+    opacity: 0.25;
+  }
+  .cloud {
+    position: absolute;
+    display: none;
+    height: 0.8rem;
+    border-radius: 99px;
+    background: rgb(255 255 255 / 0.85);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .sky[data-day='0'] .cloud {
+    background: rgb(200 208 226 / 0.5);
+  }
+  .sky:not([data-wx='clear']) .cloud {
+    display: block;
+  }
+  .c1 {
+    top: 0.45rem;
+    right: 2.2rem;
+    width: 3.4rem;
+  }
+  .c2 {
+    top: 1.1rem;
+    right: 0.4rem;
+    width: 2.4rem;
+    animation-duration: 19s;
+  }
+  @keyframes drift {
+    to {
+      transform: translateX(-1.2rem);
+    }
+  }
+  .drops {
+    position: absolute;
+    inset: 0;
+    display: none;
+    background-image: linear-gradient(105deg, transparent 46%, rgb(255 255 255 / 0.7) 47%, rgb(255 255 255 / 0.7) 53%, transparent 54%);
+    background-size: 0.7rem 0.9rem;
+    opacity: 0.5;
+    animation: fall 0.5s linear infinite;
+  }
+  .sky[data-wx='rain'] .drops,
+  .sky[data-wx='storm'] .drops {
+    display: block;
+  }
+  /* playing a year: the wetter the month, the heavier the rain and the greyer the sky */
+  .sky {
+    transition: background 0.5s ease;
+  }
+  .sky[data-year] .drops {
+    opacity: calc(0.2 + var(--wet, 0) * 0.8);
+    animation-duration: calc(0.75s - var(--wet, 0) * 0.4s);
+  }
+  .sky[data-year] .orb {
+    opacity: calc(1 - var(--wet, 0) * 1.6);
+  }
+  .sky.big {
+    height: 5.5rem;
+    margin-top: 0;
+    font-size: 0.85rem;
+  }
+  .sky[data-wx='snow'] .drops {
+    display: block;
+    background-image: radial-gradient(circle, rgb(255 255 255 / 0.9) 1px, transparent 1.6px);
+    animation-duration: 3s;
+  }
+  @keyframes fall {
+    to {
+      background-position: -0.25rem 0.9rem;
+    }
+  }
+  .note {
+    margin-top: 0.35rem !important;
+    font-size: 0.78rem;
+    font-style: italic;
+  }
+  .source {
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+  }
+  .source a {
+    color: inherit;
+  }
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.1rem;
+    margin: 1.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .sw {
+    display: inline-block;
+    width: 12px;
+    height: 9px;
+    margin-right: 0.35rem;
+    border-radius: 2px;
+  }
+  .sw.rain {
+    background: var(--rain);
+    opacity: 0.75;
+  }
+  .sw.temp {
+    background: var(--temp);
+    opacity: 0.4;
+  }
+</style>
