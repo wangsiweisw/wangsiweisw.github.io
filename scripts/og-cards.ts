@@ -7,7 +7,8 @@ import { extname, join, normalize } from 'node:path';
 import { parse } from 'yaml';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
-import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
+import { geoCircle } from 'd3-geo';
+import { beanMap } from '../src/lib/beanMap.ts';
 import { feature } from 'topojson-client';
 
 const DIST = 'dist';
@@ -67,20 +68,11 @@ const bleed = (title: string, sub: string, img: string) => `
 /** A bean: name, roaster and flavors beside a world map with arcs from where it grew to where it was roasted. */
 const MW = 600;
 const MH = 330;
-const world = geoEqualEarth().fitWidth(MW, { type: 'Sphere' });
-const [, top] = world([0, 72])!;
-const [, bottom] = world([0, -46])!;
-world.translate([world.translate()[0], world.translate()[1] - top + (MH - (bottom - top)) / 2]);
-const wpath = geoPath(world);
-const spherePath = wpath({ type: 'Sphere' })!;
-const landPath = wpath(feature(land110, land110.objects.land) as any)!;
-const tropics = (() => {
-  const lons = Array.from({ length: 73 }, (_, i) => -180 + i * 5);
-  const edge = (lat: number, list: number[]) => list.map((lon) => world([lon, lat])!.map((v) => v.toFixed(1)).join(','));
-  return `M${[...edge(23.44, lons), ...edge(-23.44, [...lons].reverse())].join('L')}Z`;
-})();
+const landShape = feature(land110, land110.objects.land) as any;
 const beanCard = (b: (typeof beans)[number]) => {
   const os = b.origins ?? [];
+  const { world, path: wpath, sphere: spherePath, tropics } = beanMap(MW, MH, os.map((o) => [[o.lon, o.lat], [b.roastedIn.lon, b.roastedIn.lat]]));
+  const landPath = wpath(landShape)!;
   const [cx, cy] = world([b.roastedIn.lon, b.roastedIn.lat])!;
   const arcs = os.map((o) => `<path class="arc" d="${wpath({ type: 'LineString', coordinates: [[o.lon, o.lat], [b.roastedIn.lon, b.roastedIn.lat]] })}"/>`);
   const marks = os.map((o) => {

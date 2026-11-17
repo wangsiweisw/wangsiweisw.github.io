@@ -3,12 +3,13 @@
 // description and link-preview card (public/og/bean-<id>.jpg, made by `pnpm og:cards bean-`), and stays put rather
 // than forwarding, because some apps (WeChat) build the preview from wherever the page ends up. Links back to the
 // bean's card on /coffee. Kept out of the sitemap and search results. Climate and flavor only.
-import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
+import { geoCircle } from 'd3-geo';
 import { feature } from 'topojson-client';
 import land110 from 'world-atlas/land-110m.json';
 import Base from '../../../layouts/Base.astro';
 import WeatherAttribution from '../../../components/WeatherAttribution.astro';
 import { beans, climateFacts, type Bean } from '../../../lib/beans';
+import { beanMap } from '../../../lib/beanMap';
 
 export function getStaticPaths() {
   return beans.map((bean) => ({ params: { id: bean.id }, props: { bean } }));
@@ -23,11 +24,7 @@ const description = `${bean.roaster ?? 'Coffee'}, roasted in ${bean.roastedIn.na
 // the same map as the link-preview card: arcs from where it grew to where it was roasted
 const W = 600;
 const H = 330;
-const world = geoEqualEarth().fitWidth(W, { type: 'Sphere' });
-const top = world([0, 72])![1];
-const bottom = world([0, -46])![1];
-world.translate([world.translate()[0], world.translate()[1] - top + (H - (bottom - top)) / 2]);
-const path = geoPath(world);
+const { world, path } = beanMap(W, H, bean.origins.map((o) => [[o.lon, o.lat], [bean.roastedIn.lon, bean.roastedIn.lat]]));
 const land = path(feature(land110 as any, (land110 as any).objects.land) as any);
 const city = world([bean.roastedIn.lon, bean.roastedIn.lat])!;
 const marks = bean.origins.map((o) => ({

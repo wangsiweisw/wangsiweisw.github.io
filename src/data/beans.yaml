@@ -196,3 +196,36 @@
       lon: 110
       spread: 12
       precision: area
+
+- id: nguyen-moxy
+  name: Moxy
+  roaster: Nguyen Coffee Supply
+  roastedIn: { name: Brooklyn, lat: 40.68, lon: -73.94 }
+  flavors: [Wild berries, Cherry, Honey, Chocolate]
+  take: >-
+    Grown in Vietnam, roasted in Brooklyn, and a reminder that Vietnam grows more than robusta. A medium roast with
+    berries and cherry on top and honey and chocolate underneath. Friendly in milk, and a nice change from the usual
+    Latin American base.
+  source: https://www.nguyencoffeesupply.com/pages/about-us
+  origins:
+    - id: vietnam-central-highlands
+      label: Central Highlands, Vietnam
+      place: Central Highlands, Vietnam
+      note: >-
+        The roaster works with a fourth-generation family farm in Vietnam's Central Highlands; the farm's exact place
+        isn't published, so the pin marks the region.
+      lat: 12.68
+      lon: 108.05
+      precision: region
+
+- id: illy-classico
+  name: Classico
+  roaster: illy
+  roastedIn: { name: Trieste, lat: 45.65, lon: 13.78 }
+  flavors: [Caramel, Orange blossom, Jasmine]
+  take: >-
+    The red-and-silver tin everyone knows. Nitrogen-sealed, so every can tastes the same: caramel and a little
+    chocolate, a soft floral lift, no sharp edges. Never the most exciting cup, never a wrong one, and very easy
+    under milk.
+  source: https://www.illy.com/en-us/shop/coffee/all-coffee/8842ST.html
+  originsText: A blend of 100% Arabica from several origins; illy doesn't publish the mix.
