@@ -6,18 +6,10 @@ import Lightbox from '../components/Lightbox.astro';
 import { pours } from '../lib/coffee';
 import BeanAtlas from '../components/BeanAtlas.astro';
 import { srcset } from '../lib/photos';
-import { beans } from '../lib/beans';
-import { site } from '../lib/site';
-
-// opened at a bean's card (its share link forwards here): title the page after the bean, as the share link was
-const beanTitles = Object.fromEntries(beans.map((b) => [`#bean-${b.id}`, `${b.name} · Coffee · ${site.name}`]));
 
 ---
 
 <Base title="Coffee" description="Latte art Siwei Wang pours on weekend mornings, and the beans behind them with the climate they grew in." og="coffee" showUnits="temperature">
-  <script slot="head" is:inline define:vars={{ beanTitles }}>
-    if (beanTitles[location.hash]) document.title = beanTitles[location.hash];
-  </script>
   <header class="page-head">
     <h1>Coffee</h1>
     <nav class="toc" aria-label="On this page">

@@ -1,36 +1,271 @@
 ---
-// Share link for one bean: its own title, description and link-preview card (public/og/bean-<id>.jpg, made by
-// `pnpm og:cards`), then straight on to the bean's card on /coffee. Kept out of the sitemap and search results.
+// One bean on its own page: the share link for a bean (the Share button on its card). It has its own title,
+// description and link-preview card (public/og/bean-<id>.jpg, made by `pnpm og:cards bean-`), and stays put rather
+// than forwarding, because some apps (WeChat) build the preview from wherever the page ends up. Links back to the
+// bean's card on /coffee. Kept out of the sitemap and search results. Climate and flavor only.
+import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
+import { feature } from 'topojson-client';
+import land110 from 'world-atlas/land-110m.json';
 import Base from '../../../layouts/Base.astro';
-import { beans, type Bean } from '../../../lib/beans';
+import WeatherAttribution from '../../../components/WeatherAttribution.astro';
+import { beans, climateFacts, type Bean } from '../../../lib/beans';
 
 export function getStaticPaths() {
   return beans.map((bean) => ({ params: { id: bean.id }, props: { bean } }));
 }
 
 const { bean } = Astro.props as { bean: Bean };
-const target = `/coffee/#bean-${bean.id}`;
+const onAtlas = `/coffee/#bean-${bean.id}`;
 const places = [...new Set(bean.origins.filter((o) => o.precision !== 'area').map((o) => o.place))];
 const grown = places.length ? ` Grown in ${places.join(' and ')}.` : '';
 const description = `${bean.roaster ?? 'Coffee'}, roasted in ${bean.roastedIn.name}. ${bean.flavors.join(', ')}.${grown}`;
+
+// the same map as the link-preview card: arcs from where it grew to where it was roasted
+const W = 600;
+const H = 330;
+const world = geoEqualEarth().fitWidth(W, { type: 'Sphere' });
+const top = world([0, 72])![1];
+const bottom = world([0, -46])![1];
+world.translate([world.translate()[0], world.translate()[1] - top + (H - (bottom - top)) / 2]);
+const path = geoPath(world);
+const land = path(feature(land110 as any, (land110 as any).objects.land) as any);
+const city = world([bean.roastedIn.lon, bean.roastedIn.lat])!;
+const marks = bean.origins.map((o) => ({
+  arc: path({ type: 'LineString', coordinates: [[o.lon, o.lat], [bean.roastedIn.lon, bean.roastedIn.lat]] }),
+  area: o.precision === 'area' ? path(geoCircle().center([o.lon, o.lat]).radius(o.spread ?? 10)()) : null,
+  at: world([o.lon, o.lat])!,
+}));
+
+const cToF = (c: number) => Math.round((c * 9) / 5 + 32);
+const mmToIn = (mm: number) => Math.round(mm / 25.4);
 ---
 
-<Base title={`${bean.name} · Coffee`} description={description} og={`bean-${bean.id}`}>
-  <Fragment slot="head">
-    <meta name="robots" content="noindex" />
-    <meta http-equiv="refresh" content={`0; url=${target}`} />
-  </Fragment>
-  <p class="forward">
-    <a href={target}>{bean.name} on the Coffee page →</a>
-  </p>
+<Base title={`${bean.name} · Coffee`} description={description} og={`bean-${bean.id}`} showUnits="temperature">
+  <meta slot="head" name="robots" content="noindex" />
+  <article class="bean">
+    <a class="back" href="/coffee/#beans">← All beans</a>
+    <p class="kicker">{bean.roaster ?? 'Roaster to confirm'} · {bean.roastedIn.name}</p>
+    <h1>{bean.name}</h1>
+    {bean.roasterNote && <p class="rnote">{bean.roasterNote}</p>}
+    <ul class="flavors" aria-label="Flavor notes">
+      {bean.flavors.map((f) => <li>{f}</li>)}
+    </ul>
+    <p class="take">{bean.take}</p>
+
+    {
+      bean.origins.length > 0 && (
+        <figure class="map">
+          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map: from ${bean.origins.map((o) => o.place).join(', ')} to ${bean.roastedIn.name}.`}>
+            <path class="land" d={land} />
+            {marks.map((m) => <path class="arc" d={m.arc} />)}
+            {marks.map((m) => (m.area ? <path class="area" d={m.area} /> : <circle class="pin" cx={m.at[0]} cy={m.at[1]} r="5" />))}
+            <circle class="city" cx={city[0]} cy={city[1]} r="5" />
+          </svg>
+        </figure>
+      )
+    }
+
+    {
+      bean.origins.map((o) => {
+        const f = o.climate && climateFacts(o.climate);
+        return (
+          <section class="origin">
+            <h2>
+              {o.label}
+              {o.process && <span class="process">{o.process}</span>}
+            </h2>
+            <p class="place">{o.precision === 'area' ? 'Broad sourcing area, no farms named' : `${o.place} · ${o.precision}-level pin`}</p>
+            {o.climate && f && (
+              <p class="facts">
+                Typical year: <span data-mm={f.annualMm}>{mmToIn(f.annualMm)} in</span> of rain, wettest in {f.wettest}, driest in{' '}
+                {f.driest} · <span data-c-range={`${f.tmin},${f.tmax}`}>{cToF(f.tmin)}–{cToF(f.tmax)}°F</span> · grid height{' '}
+                {Math.round(o.climate.elevation).toLocaleString('en-US')} m
+              </p>
+            )}
+            {o.about && (
+              <>
+                <p>{o.about.climate}</p>
+                <p>{o.about.cup}</p>
+              </>
+            )}
+            {o.note && <p class="note">{o.note}</p>}
+          </section>
+        );
+      })
+    }
+    {bean.originsText && <p class="blend">{bean.originsText}</p>}
+
+    <p class="links">
+      <a class="primary" href={onAtlas}>See it on the bean map →</a>
+      {bean.source && <a href={bean.source} rel="noopener">Roaster's page</a>}
+    </p>
+    {bean.origins.some((o) => o.climate) && <WeatherAttribution what="Climate normals" />}
+  </article>
 </Base>
 
+<script>
+  const metric = () => document.documentElement.dataset.units === 'metric';
+  const paint = () => {
+    document.querySelectorAll<HTMLElement>('[data-mm]').forEach((el) => {
+      const mm = Number(el.dataset.mm);
+      el.textContent = metric() ? `${Math.round(mm).toLocaleString('en-US')} mm` : `${(mm / 25.4).toFixed(mm < 127 ? 1 : 0)} in`;
+    });
+    document.querySelectorAll<HTMLElement>('[data-c-range]').forEach((el) => {
+      const [lo, hi] = el.dataset.cRange!.split(',').map(Number);
+      const f = (c: number) => Math.round((c * 9) / 5 + 32);
+      el.textContent = metric() ? `${Math.round(lo)}–${Math.round(hi)}°C` : `${f(lo)}–${f(hi)}°F`;
+    });
+  };
+  paint();
+  document.addEventListener('unitschange', paint);
+</script>
+
 <style>
-  .forward {
-    margin: 4rem 0;
-    font: 400 1.4rem / 1.3 var(--font-display);
+  .bean {
+    max-width: 40rem;
+    margin: 2rem auto 0;
+    --temp: #b4532a;
   }
-  .forward a {
-    color: var(--fg);
+  :global([data-effective-theme='dark']) .bean {
+    --temp: #d4683f;
+  }
+  .back {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+  .back:hover {
+    color: var(--temp);
+  }
+  .kicker {
+    margin: 1.5rem 0 0;
+  }
+  h1 {
+    margin: 0.4rem 0 0;
+    font: 400 clamp(2.1rem, 6vw, 2.9rem) / 1.08 var(--display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .rnote {
+    margin: 0.4rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .flavors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .flavors li {
+    padding: 0.2rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: var(--surface);
+    font-size: 0.85rem;
+  }
+  .take {
+    margin: 1.25rem 0 0;
+    font: 400 1.15rem / 1.6 var(--display);
+  }
+  .map {
+    margin: 1.75rem 0 0;
+    padding: 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .map svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .land {
+    fill: var(--rule);
+  }
+  .arc {
+    fill: none;
+    stroke: var(--temp);
+    stroke-width: 1.6;
+    stroke-dasharray: 1.5 4;
+    stroke-linecap: round;
+  }
+  .area {
+    fill: var(--temp);
+    fill-opacity: 0.12;
+    stroke: var(--temp);
+    stroke-width: 1.4;
+    stroke-dasharray: 4 4;
+  }
+  .pin {
+    fill: var(--temp);
+    stroke: var(--surface);
+    stroke-width: 1.5;
+  }
+  .city {
+    fill: var(--surface);
+    stroke: var(--fg);
+    stroke-width: 1.8;
+  }
+  .origin {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  .origin h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0;
+    font: 600 1rem var(--body);
+  }
+  .process {
+    margin-left: auto;
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.85rem;
+  }
+  .origin p {
+    margin: 0.5rem 0 0;
+    line-height: 1.55;
+  }
+  .origin .place,
+  .facts,
+  .note,
+  .blend {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .note {
+    font-style: italic;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    margin: 2rem 0 0;
+  }
+  .links a {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .links .primary {
+    padding: 0.5rem 1.1rem;
+    border-radius: 99px;
+    background: var(--fg);
+    color: var(--bg);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background var(--ease), transform var(--ease);
+  }
+  .links .primary:hover {
+    background: var(--temp);
+    transform: translateY(-2px);
+  }
+  .bean :global(.attribution) {
+    margin-top: 2rem;
   }
 </style>
