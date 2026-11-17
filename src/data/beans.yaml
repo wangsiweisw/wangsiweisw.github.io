@@ -5,6 +5,26 @@
 # for a broad sourcing area named without farms (`spread`: radius in degrees, drawn as a dashed circle, no climate card).
 # After adding an origin, run `pnpm climate` to fetch its 1991–2020 climate normals into src/data/climate/.
 
+- id: nomad-guatemala-primavera
+  name: Espresso Guatemala Primavera
+  roaster: Nomad Coffee
+  roastedIn: { name: Barcelona, lat: 41.40, lon: 2.19 }
+  roastDate: 2025-09-23
+  flavors: [Milk chocolate, Hazelnut, Honey]
+  take: >-
+    From Nomad in Barcelona, a washed single origin roasted for espresso. The bag promises milk chocolate and hazelnut
+    up front, a soft malic acidity, a juicy body, and a long, sweet finish of honey and raisins.
+  source: https://www.nomadcoffee.es/
+  origins:
+    - id: guatemala-huehuetenango
+      label: Huehuetenango, Guatemala
+      place: Huehuetenango, Guatemala
+      note: From local producers; Caturra, Catuai and Bourbon. Shown for the department, not a farm.
+      lat: 15.32
+      lon: -91.47
+      precision: region
+      process: Washed
+
 - id: rosslyn-roasted-for-milk
   name: Roasted for Milk — Brazil
   roaster: Rosslyn Coffee

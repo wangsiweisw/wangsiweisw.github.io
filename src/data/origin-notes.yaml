@@ -21,7 +21,7 @@ ethiopia-telila:
     Cool nights at this height slow the cherries down, and slow ripening is usually credited for the floral, citrus
     character that southwest Ethiopian coffees are known for.
 
-guatemala-el-anonal:
+guatemala-el-anonal: &huehuetenango
   climate: >-
     High, rugged country near the Mexican border. A sharp wet season runs from May to October; winters are dry.
     Warm, dry air rising from Mexico's Tehuantepec plain keeps frost away, which is why coffee can grow unusually
@@ -54,3 +54,4 @@ ethiopia-forty-six:
   cup: >-
     Altitude and cool nights are behind the fruit and floral notes Ethiopian lots bring; sun-dried naturals add berry
     sweetness, washed lots a cleaner, citrus brightness.
+guatemala-huehuetenango: *huehuetenango
