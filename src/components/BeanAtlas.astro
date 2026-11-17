@@ -267,11 +267,13 @@ const originData = [...pins.values()].map((p) => ({
               })
             }
             {b.originsText && <p class="blend">{b.originsText}</p>}
-            {b.source && (
-              <p class="source">
-                <a href={b.source} rel="noopener">Roaster's page</a>
-              </p>
-            )}
+            <p class="source">
+              {b.source && <a href={b.source} rel="noopener">Roaster's page</a>}
+              <button type="button" class="share" data-share={`/coffee/beans/${b.id}/`} data-title={b.name}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10V2.5M5 5.2 8 2.2l3 3M3.5 8.5v4.5h9V8.5" /></svg>
+                <span>Share</span>
+              </button>
+            </p>
           </li>
         ))
       }
@@ -343,7 +345,8 @@ const originData = [...pins.values()].map((p) => ({
         else if (t.dataset.zoom) {
           this.zoomTo(t.dataset.zoom);
           this.querySelector('.map')!.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
-        } else if ('reset' in t.dataset) this.zoomTo(null);
+        } else if (t.dataset.share) this.share(t);
+        else if ('reset' in t.dataset) this.zoomTo(null);
         else if ('regionPlay' in t.dataset && this.zoomed) this.playRegion(this.zoomed);
       });
 
@@ -352,6 +355,32 @@ const originData = [...pins.values()].map((p) => ({
       this.night();
       setInterval(() => this.night(), 5 * 60_000);
       this.now();
+    }
+
+    /** The system share sheet where there is one (phones), otherwise copy the link. */
+    async share(btn: HTMLElement) {
+      const url = new URL(btn.dataset.share!, location.origin).href;
+      const label = btn.querySelector('span')!;
+      if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+        try {
+          await navigator.share({ title: btn.dataset.title, url });
+        } catch {} // closing the sheet is not an error worth showing
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        label.textContent = 'Link copied';
+      } catch {
+        label.textContent = 'Copy failed';
+      }
+      btn.classList.add('done');
+      clearTimeout(Number(btn.dataset.timer));
+      btn.dataset.timer = String(
+        setTimeout(() => {
+          label.textContent = 'Share';
+          btn.classList.remove('done');
+        }, 1800),
+      );
     }
 
     metric() {
@@ -1095,8 +1124,44 @@ const originData = [...pins.values()].map((p) => ({
     margin: 0.75rem 0 0;
     font-size: 0.8rem;
   }
+  .source {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
   .source a {
     color: inherit;
+  }
+  .share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: auto;
+    padding: 0.15rem 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    cursor: pointer;
+    transition: color var(--ease);
+  }
+  .share svg {
+    width: 0.95em;
+    height: 0.95em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--ease);
+  }
+  .share:hover,
+  .share:focus-visible,
+  .share.done {
+    color: var(--temp);
+  }
+  .share:hover svg {
+    transform: translateY(-2px);
   }
   .key {
     display: flex;

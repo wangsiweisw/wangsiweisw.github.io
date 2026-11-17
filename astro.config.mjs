@@ -19,7 +19,9 @@ export default defineConfig({
     mdx(),
     sitemap({
       filter: (page) =>
-        !page.includes('/blog') && (resumeLive || !page.includes('/resume')) && (photosLive || !page.includes('/photos')),
+        !page.includes('/blog') &&
+        !page.includes('/coffee/beans/') && // share links that forward to a card on /coffee
+        (resumeLive || !page.includes('/resume')) && (photosLive || !page.includes('/photos')),
     }),
   ],
   markdown: {

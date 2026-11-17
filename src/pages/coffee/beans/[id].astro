@@ -1,0 +1,36 @@
+---
+// Share link for one bean: its own title, description and link-preview card (public/og/bean-<id>.jpg, made by
+// `pnpm og:cards`), then straight on to the bean's card on /coffee. Kept out of the sitemap and search results.
+import Base from '../../../layouts/Base.astro';
+import { beans, type Bean } from '../../../lib/beans';
+
+export function getStaticPaths() {
+  return beans.map((bean) => ({ params: { id: bean.id }, props: { bean } }));
+}
+
+const { bean } = Astro.props as { bean: Bean };
+const target = `/coffee/#bean-${bean.id}`;
+const places = [...new Set(bean.origins.filter((o) => o.precision !== 'area').map((o) => o.place))];
+const grown = places.length ? ` Grown in ${places.join(' and ')}.` : '';
+const description = `${bean.roaster ?? 'Coffee'}, roasted in ${bean.roastedIn.name}. ${bean.flavors.join(', ')}.${grown}`;
+---
+
+<Base title={`${bean.name} · Coffee`} description={description} og={`bean-${bean.id}`}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+  </Fragment>
+  <p class="forward">
+    <a href={target}>{bean.name} on the Coffee page →</a>
+  </p>
+</Base>
+
+<style>
+  .forward {
+    margin: 4rem 0;
+    font: 400 1.4rem / 1.3 var(--font-display);
+  }
+  .forward a {
+    color: var(--fg);
+  }
+</style>
