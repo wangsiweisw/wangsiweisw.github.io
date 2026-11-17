@@ -1,0 +1,161 @@
+{
+  "place": "Southern Ethiopia",
+  "latitude": 6.2,
+  "longitude": 38.5,
+  "elevation": 1900,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-17",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 13,
+      "tmax": 24.9,
+      "precip": 35.3
+    },
+    {
+      "month": 2,
+      "tmin": 13.7,
+      "tmax": 25.8,
+      "precip": 78.6
+    },
+    {
+      "month": 3,
+      "tmin": 14.4,
+      "tmax": 25.3,
+      "precip": 157.9
+    },
+    {
+      "month": 4,
+      "tmin": 14.9,
+      "tmax": 23.6,
+      "precip": 312.3
+    },
+    {
+      "month": 5,
+      "tmin": 15.2,
+      "tmax": 22.5,
+      "precip": 380.3
+    },
+    {
+      "month": 6,
+      "tmin": 14.4,
+      "tmax": 21.4,
+      "precip": 232.7
+    },
+    {
+      "month": 7,
+      "tmin": 14,
+      "tmax": 20.5,
+      "precip": 184.3
+    },
+    {
+      "month": 8,
+      "tmin": 13.8,
+      "tmax": 20.9,
+      "precip": 200.5
+    },
+    {
+      "month": 9,
+      "tmin": 13.8,
+      "tmax": 21.8,
+      "precip": 264
+    },
+    {
+      "month": 10,
+      "tmin": 14.1,
+      "tmax": 21.7,
+      "precip": 301
+    },
+    {
+      "month": 11,
+      "tmin": 13.2,
+      "tmax": 22.4,
+      "precip": 117.9
+    },
+    {
+      "month": 12,
+      "tmin": 12.4,
+      "tmax": 23.5,
+      "precip": 37.4
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 11.1,
+        "tmax": 21.9,
+        "precip": 20
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 11.6,
+        "tmax": 22.9,
+        "precip": 19.8
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 10.6,
+        "tmax": 24.9,
+        "precip": 3.7
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 12.5,
+        "tmax": 25.4,
+        "precip": 6.3
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 13.3,
+        "tmax": 23.5,
+        "precip": 140.4
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 13.3,
+        "tmax": 23.2,
+        "precip": 94.9
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 14.1,
+        "tmax": 22.7,
+        "precip": 134.7
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 13.6,
+        "tmax": 21.9,
+        "precip": 123.2
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 13.5,
+        "tmax": 21.6,
+        "precip": 84.3
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 12.7,
+        "tmax": 21.6,
+        "precip": 66
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 13.5,
+        "tmax": 22.1,
+        "precip": 100.7
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 13.5,
+        "tmax": 22.6,
+        "precip": 137.9
+      }
+    ]
+  }
+}

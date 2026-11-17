@@ -1,6 +1,6 @@
 ---
-// Latte art: a short, modest intro and a grid of cups (no dates or camera details); tap one to open it.
-// Below it, the bean atlas: what I've been drinking and the climate it grew in.
+// Coffee: latte art (a grid of cups, no dates or camera details; tap one to open it), then the bean atlas: what
+// I've been drinking and the climate it grew in. A small contents line at the top jumps between the two.
 import Base from '../layouts/Base.astro';
 import Lightbox from '../components/Lightbox.astro';
 import { pours } from '../lib/coffee';
@@ -9,14 +9,20 @@ import { srcset } from '../lib/photos';
 
 ---
 
-<Base title="Latte art" description="Latte art Siwei Wang pours on weekend mornings." og="coffee" showUnits="temperature">
+<Base title="Coffee" description="Latte art Siwei Wang pours on weekend mornings, and the beans behind them with the climate they grew in." og="coffee" showUnits="temperature">
   <header class="page-head">
-    <h1>Latte art</h1>
-    <p class="intro">
-      On slow weekend mornings, I like to make a latte and try a bit of latte art. It's a simple pleasure. Here are a
-      few cups I was happy with.
-    </p>
+    <h1>Coffee</h1>
+    <nav class="toc" aria-label="On this page">
+      <a href="#latte-art">Latte art</a>
+      <a href="#beans">Beans</a>
+    </nav>
   </header>
+
+  <h2 id="latte-art" class="section-title">Latte art</h2>
+  <p class="intro">
+    On slow weekend mornings, I like to make a latte and try a bit of latte art. It's a simple pleasure. Here are a few
+    cups I was happy with.
+  </p>
 
   <ul class="cups">
     {
@@ -56,7 +62,31 @@ import { srcset } from '../lib/photos';
 
 <style>
   .page-head {
-    padding: 3rem 0 2.5rem;
+    padding: 3rem 0 1.5rem;
+  }
+  .toc {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .toc a {
+    padding: 0.3rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    color: var(--fg);
+    font: 500 0.85rem var(--body);
+    text-decoration: none;
+    transition: border-color var(--ease), color var(--ease);
+  }
+  .toc a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .section-title {
+    margin: 1rem 0 0;
+    font: 400 clamp(1.8rem, 4vw, 2.4rem) / 1.1 var(--display);
+    letter-spacing: -0.02em;
+    scroll-margin-top: 1.5rem;
   }
   h1 {
     margin: 0;
@@ -65,7 +95,7 @@ import { srcset } from '../lib/photos';
   }
   .intro {
     max-width: var(--measure);
-    margin: 1rem 0 0;
+    margin: 0.75rem 0 1.75rem;
     font: 400 1.2rem / 1.5 var(--display);
   }
   .cups {

@@ -11,7 +11,8 @@ const origin = z.object({
   note: z.string().optional(),
   lat: z.number(),
   lon: z.number(),
-  precision: z.enum(['farm', 'region', 'country']),
+  precision: z.enum(['farm', 'region', 'country', 'area']),
+  spread: z.number().optional(),
   process: z.string().optional(),
   altitude: z.number().optional(),
 });

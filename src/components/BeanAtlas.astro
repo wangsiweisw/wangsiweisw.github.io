@@ -2,7 +2,7 @@
 // Bean atlas: a world map (Equal Earth, drawn at build time) with one pin per origin and an arc to where it was
 // roasted, then a card per bean with a short take and a climate card for each origin. Click a pin to fly to the
 // region and read its climate in brief; "Play a year" runs the seasons through the little sky. Climate and flavor only.
-import { geoEqualEarth, geoPath } from 'd3-geo';
+import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import land110 from 'world-atlas/land-110m.json';
 import { beans, climateFacts, type Origin } from '../lib/beans';
@@ -27,7 +27,7 @@ const lons = Array.from({ length: 73 }, (_, i) => -180 + i * 5);
 const edge = (lat: number, list: number[]) => list.map((lon) => projection([lon, lat])!.map((v) => v.toFixed(1)).join(','));
 const belt = `M${[...edge(TROPIC, lons), ...edge(-TROPIC, [...lons].reverse())].join('L')}Z`;
 
-const pins = new Map<string, { origin: Origin; x: number; y: number; beans: string[] }>();
+const pins = new Map<string, { origin: Origin; x: number; y: number; beans: string[]; area?: string }>();
 const arcs: { bean: string; d: string }[] = [];
 // nudge labels apart where roasting cities sit close together: [dx, dy, anchor]
 const LABEL: Record<string, [number, number, string]> = { 'Portland OR': [-8, 4, 'end'], Chicago: [8, -2, 'start'], 'Durham NC': [8, 12, 'start'] };
@@ -38,7 +38,9 @@ for (const b of beans) {
   cities.set(b.roastedIn.name, { name: b.roastedIn.name, x: cx, y: cy });
   for (const o of b.origins) {
     const [x, y] = projection([o.lon, o.lat])!;
-    const pin = pins.get(o.id) ?? { origin: o, x, y, beans: [] };
+    // a broad sourcing area (no named farms) is drawn as a dashed circle around its centre
+    const area = o.precision === 'area' ? (path(geoCircle().center([o.lon, o.lat]).radius(o.spread ?? 10)()) ?? undefined) : undefined;
+    const pin = pins.get(o.id) ?? { origin: o, x, y, beans: [], area };
     pin.beans.push(b.id);
     pins.set(o.id, pin);
     arcs.push({ bean: b.id, d: path({ type: 'LineString', coordinates: [[o.lon, o.lat], [b.roastedIn.lon, b.roastedIn.lat]] })! });
@@ -75,14 +77,21 @@ const originData = [...pins.values()].map((p) => ({
   x: Math.round(p.x),
   y: Math.round(p.y),
   place: p.origin.place,
-  climate: p.origin.about?.climate ?? '',
+  area: !!p.area,
+  // the height the climate data is for (the growing altitude when the bag gives one), so "right now" matches it
+  elev: Math.round(p.origin.climate?.elevation ?? 0) || null,
+  climate:
+    p.origin.about?.climate ??
+    (p.area
+      ? `A broad sourcing area: ${beans.find((b) => b.id === p.beans[0])!.roaster} names the region, not the farms, so there's no single climate to show here.`
+      : ''),
   cup: p.origin.about?.cup ?? '',
   months: (p.origin.climate?.months ?? []).map((m) => ({ precip: m.precip, tmin: m.tmin, tmax: m.tmax })),
   beans: p.beans.map((id) => ({ id, name: beans.find((b) => b.id === id)!.name })),
 }));
 ---
 
-<section class="atlas" aria-labelledby="beans-title">
+<section class="atlas" id="beans" aria-labelledby="beans-title">
   <h2 id="beans-title">Beans</h2>
   <p class="intro">
     The coffees I've been pulling lately, and the weather where they grew. Each line runs from the growing region to the city
@@ -96,6 +105,7 @@ const originData = [...pins.values()].map((p) => ({
       <path d={belt} class="belt" />
       <path d={land} class="land" />
       <path class="night" data-night />
+      {[...pins.values()].filter((p) => p.area).map((p) => <path d={p.area} class="area" data-for={p.beans.join(' ')} />)}
       {arcs.map((a) => <path d={a.d} class="arc" data-for={a.bean} />)}
       {
         [...cities.values()].map((c) => (
@@ -112,8 +122,8 @@ const originData = [...pins.values()].map((p) => ({
           <a href={`#bean-${p.beans[0]}`} class="pin" data-for={p.beans.join(' ')} data-pin={p.origin.id} aria-label={`${p.origin.place}: ${p.beans.length} ${p.beans.length === 1 ? 'coffee' : 'coffees'}. Zoom the map here.`}>
             <g class="k">
               <circle cx={p.x} cy={p.y} r="14" class="hit" />
-              <circle cx={p.x} cy={p.y} r="5.5" class="pulse" />
-              <circle cx={p.x} cy={p.y} r="5.5" class="dot" />
+              {!p.area && <circle cx={p.x} cy={p.y} r="5.5" class="pulse" />}
+              <circle cx={p.x} cy={p.y} r={p.area ? 4 : 5.5} class:list={['dot', { hollow: p.area }]} />
             </g>
             <title>{p.origin.place}</title>
           </a>
@@ -172,7 +182,7 @@ const originData = [...pins.values()].map((p) => ({
                       {o.process && <span class="process">{o.process}</span>}
                     </p>
                     <p class="place">
-                      {o.place} · {o.precision === 'country' ? 'country-level pin' : `${o.precision}-level pin`}
+                      {o.precision === 'area' ? 'Broad sourcing area, no farms named' : `${o.place} · ${o.precision}-level pin`}
                     </p>
                     {o.climate && f && (
                       <>
@@ -240,12 +250,10 @@ const originData = [...pins.values()].map((p) => ({
                       <span class="drops" aria-hidden="true" />
                       <span class="sky-text" />
                     </div>
-                    {o.climate && (
-                      <div class="actions">
-                        <button type="button" class="ghost" data-play={o.id}>▶ Play a year</button>
-                        <button type="button" class="ghost" data-zoom={o.id}>Show on map</button>
-                      </div>
-                    )}
+                    <div class="actions">
+                      {o.climate && <button type="button" class="ghost" data-play={o.id}>▶ Play a year</button>}
+                      <button type="button" class="ghost" data-zoom={o.id}>Show on map</button>
+                    </div>
                     {o.about && (
                       <details class="about">
                         <summary>Climate in brief</summary>
@@ -286,7 +294,7 @@ const originData = [...pins.values()].map((p) => ({
   import { subsolarPoint } from '../scripts/astro';
 
   type M = { precip: number; tmin: number; tmax: number };
-  type O = { id: string; lat: number; lon: number; x: number; y: number; place: string; climate: string; cup: string; months: M[]; beans: { id: string; name: string }[] };
+  type O = { id: string; area: boolean; elev: number | null; lat: number; lon: number; x: number; y: number; place: string; climate: string; cup: string; months: M[]; beans: { id: string; name: string }[] };
   type Live = { c: number; sky: string; clock: string; day: boolean; wx: string };
 
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -441,7 +449,7 @@ const originData = [...pins.values()].map((p) => ({
       this.zoomed = o ? o.id : null;
       this.querySelectorAll<SVGElement>('.pin').forEach((p) => p.classList.toggle('here', p.dataset.pin === this.zoomed));
 
-      const k = o ? 3.2 : 1;
+      const k = o ? (o.area ? 2 : 3.2) : 1;
       const w = this.W / k;
       const h = this.H / k;
       const target = o ? [Math.max(0, Math.min(this.W - w, o.x - w / 2)), Math.max(0, Math.min(this.H - h, o.y - h / 2)), w, h] : [0, 0, this.W, this.H];
@@ -476,8 +484,9 @@ const originData = [...pins.values()].map((p) => ({
           return i ? [document.createTextNode(', '), a] : [a];
         }),
       );
-      // arrive with the seasons running
-      this.playRegion(o.id);
+      // arrive with the seasons running (a broad area has no single climate to play)
+      panel.querySelector<HTMLElement>('.stage')!.hidden = !o.months.length;
+      if (o.months.length) this.playRegion(o.id);
     }
 
     units() {
@@ -519,29 +528,31 @@ const originData = [...pins.values()].map((p) => ({
     }
 
     async now() {
-      if (!this.origins.length) return;
-      const key = 'bean-now-v2';
+      const spots = this.origins.filter((o) => !o.area);
+      if (!spots.length) return;
+      const key = 'bean-now-v4';
       let data: any[] | undefined;
       try {
         const c = JSON.parse(sessionStorage.getItem(key) ?? 'null');
-        if (c && Date.now() - c.t < 30 * 60_000 && c.n === this.origins.length) data = c.d;
+        if (c && Date.now() - c.t < 30 * 60_000 && c.n === spots.length) data = c.d;
       } catch {}
       if (!data) {
         try {
           const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${this.origins.map((o) => o.lat)}&longitude=${this.origins.map((o) => o.lon)}&current=temperature_2m,weather_code,is_day&timezone=auto`,
+            `https://api.open-meteo.com/v1/forecast?latitude=${spots.map((o) => o.lat)}&longitude=${spots.map((o) => o.lon)}&current=temperature_2m,weather_code,is_day&timezone=auto` +
+              (spots.every((o) => o.elev != null) ? `&elevation=${spots.map((o) => o.elev)}` : ''),
           );
           if (!res.ok) return;
           const j = await res.json();
           data = Array.isArray(j) ? j : [j];
           try {
-            sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), n: this.origins.length, d: data }));
+            sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), n: spots.length, d: data }));
           } catch {}
         } catch {
           return; // the cards work without it
         }
       }
-      this.origins.forEach((o, i) => {
+      spots.forEach((o, i) => {
         const cur = data![i]?.current;
         if (!cur) return;
         this.live.set(o.id, {
@@ -561,6 +572,7 @@ const originData = [...pins.values()].map((p) => ({
 <style>
   .atlas {
     margin-top: 5rem;
+    scroll-margin-top: 1.5rem;
     --rain: #3987e5;
     --temp: #b4532a;
   }
@@ -791,6 +803,26 @@ const originData = [...pins.values()].map((p) => ({
   .city text {
     fill: var(--muted);
     font: 12px var(--body);
+  }
+  .area {
+    fill: var(--temp);
+    fill-opacity: 0.07;
+    stroke: var(--temp);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 4;
+    stroke-opacity: 0.6;
+    vector-effect: non-scaling-stroke;
+    transition: fill-opacity var(--ease);
+  }
+  .area.on {
+    fill-opacity: 0.18;
+  }
+  .pin .dot.hollow {
+    fill: var(--bg);
+    stroke: var(--temp);
+  }
+  .stage[hidden] {
+    display: none;
   }
   .pin .hit {
     fill: transparent;

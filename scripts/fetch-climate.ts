@@ -8,8 +8,8 @@ import { getArchive } from '../src/lib/weather/client.ts';
 
 const DIR = 'src/data/climate';
 await mkdir(DIR, { recursive: true });
-const beans: { origins?: { id: string; place: string; lat: number; lon: number; altitude?: number }[] }[] = parse(readFileSync('src/data/beans.yaml', 'utf8'));
-const origins = new Map(beans.flatMap((b) => b.origins ?? []).map((o) => [o.id, o]));
+const beans: { origins?: { id: string; place: string; lat: number; lon: number; altitude?: number; precision: string }[] }[] = parse(readFileSync('src/data/beans.yaml', 'utf8'));
+const origins = new Map(beans.flatMap((b) => b.origins ?? []).filter((o) => o.precision !== 'area').map((o) => [o.id, o]));
 // last 12 complete months that the archive already covers (it lags real time by about a week)
 const now = new Date();
 const endMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (now.getUTCDate() < 10 ? 2 : 1), 1));

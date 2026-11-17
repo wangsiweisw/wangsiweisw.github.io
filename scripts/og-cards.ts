@@ -53,7 +53,7 @@ const cards: [slug: string, html: string][] = [
     'photos',
     split('Photography', 'Travel photographs', `${albums.length} albums — national parks, night skies, and New York.`, src(coverOf(albums[0]))),
   ],
-  ['coffee', split('Latte art', 'Weekend pours', 'Hearts, tulips, and the occasional swan.', src(latest('coffee'), 960))],
+  ['coffee', split('Coffee', 'Weekend pours', 'Latte art, and the beans behind it with the weather they grew in.', src(latest('coffee'), 960))],
   ['running', split('Running', `${miles} miles`, `${running.runs} runs since ${running.since.slice(0, 4)}.`, src(byFile('running/IMG_7646.JPG'), 960))],
   [
     'forecast',

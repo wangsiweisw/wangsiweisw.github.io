@@ -1,7 +1,8 @@
 # Beans I've been drinking, shown as cards and map pins on /coffee. Climate and flavor only (no market content).
 # Facts come from the bag or the roaster's own pages (`source`); `take` is a short impression.
 # A blend with no named farms can use `originsText` instead of `origins` (a card without a pin or climate card).
-# `precision` says how exact the pin is: farm | region | country (shown on the card so it isn't overstated).
+# `precision` says how exact the pin is: farm | region | country (shown on the card so it isn't overstated), or `area`
+# for a broad sourcing area named without farms (`spread`: radius in degrees, drawn as a dashed circle, no climate card).
 # After adding an origin, run `pnpm climate` to fetch its 1991–2020 climate normals into src/data/climate/.
 
 - id: rosslyn-roasted-for-milk
@@ -124,7 +125,23 @@
     Counter Culture's darkest roast, and not a subtle one: smoke and dark chocolate with a heavy body. That's the
     point. It's the bag I reach for when the drink is mostly milk and the coffee still has to be heard.
   source: https://counterculturecoffee.com/products/12-oz-forty-six
-  originsText: The recipe rotates with the harvests, mostly Latin American coffees with some Ethiopian; the bag sticker lists the current one. No single place to pin.
+  origins:
+    - id: peru-incahuasi
+      label: Incahuasi, Peru · 70%
+      place: Incahuasi, Cusco, Peru
+      note: The recipe rotates with the harvests. This is a recent one published by Counter Culture; the bag sticker lists the current mix.
+      lat: -13.13
+      lon: -73.03
+      altitude: 1800
+      precision: region
+    - id: ethiopia-forty-six
+      label: Ethiopia · 30% (two lots)
+      place: Southern Ethiopia
+      note: A natural and a washed lot (Hafurza and Jabanto) in the same recent recipe.
+      lat: 6.2
+      lon: 38.5
+      altitude: 1900
+      precision: country
 
 - id: hair-bender
   name: Hair Bender
@@ -135,4 +152,26 @@
     Stumptown's flagship, and busier than most espresso blends: a citrus edge on top of dark chocolate, with a raisin
     sweetness that shows up as it cools. Good straight, better as a cortado.
   source: https://www.stumptowncoffee.com/products/hair-bender
-  originsText: A blend of coffees from Central and South America, East Africa and Indonesia. No farms are named, so there's no single place to pin.
+  # Stumptown names regions, not farms: drawn as broad areas, with no climate card (a continent has no one climate)
+  origins:
+    - id: area-latin-america
+      label: Central and South America
+      place: Central and South America
+      lat: 6
+      lon: -78
+      spread: 16
+      precision: area
+    - id: area-east-africa
+      label: East Africa
+      place: East Africa
+      lat: 2
+      lon: 37
+      spread: 9
+      precision: area
+    - id: area-indonesia
+      label: Indonesia
+      place: Indonesia
+      lat: -3
+      lon: 110
+      spread: 12
+      precision: area
