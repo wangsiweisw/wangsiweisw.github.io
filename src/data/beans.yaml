@@ -5,27 +5,6 @@
 # for a broad sourcing area named without farms (`spread`: radius in degrees, drawn as a dashed circle, no climate card).
 # After adding an origin, run `pnpm climate` to fetch its 1991–2020 climate normals into src/data/climate/.
 
-- id: nomad-guatemala-primavera
-  name: Espresso Guatemala Primavera
-  roaster: Nomad Coffee
-  roastedIn: { name: Barcelona, lat: 41.40, lon: 2.19 }
-  roastDate: 2025-09-23
-  flavors: [Milk chocolate, Hazelnut, Honey]
-  take: >-
-    A gift from a friend, carried home from a trip to Spain. Nomad roasts it lighter than most espresso, and it shows:
-    milk chocolate and hazelnut first, a gentle apple-like brightness, then honey and raisin that linger. Juicy on its
-    own, soft and sweet under milk. A taste of someone else's holiday.
-  source: https://www.nomadcoffee.es/
-  origins:
-    - id: guatemala-huehuetenango
-      label: Huehuetenango, Guatemala
-      place: Huehuetenango, Guatemala
-      note: From local producers; Caturra, Catuai and Bourbon. Shown for the department, not a farm.
-      lat: 15.32
-      lon: -91.47
-      precision: region
-      process: Washed
-
 - id: rosslyn-roasted-for-milk
   name: Roasted for Milk — Brazil
   roaster: Rosslyn Coffee
@@ -118,6 +97,27 @@
       lon: -84.02
       precision: region
       process: White honey
+
+- id: nomad-guatemala-primavera
+  name: Espresso Guatemala Primavera
+  roaster: Nomad Coffee
+  roastedIn: { name: Barcelona, lat: 41.40, lon: 2.19 }
+  roastDate: 2025-09-23
+  flavors: [Milk chocolate, Hazelnut, Honey]
+  take: >-
+    A gift from a friend, carried home from a trip to Spain. Nomad roasts it lighter than most espresso, and it shows:
+    milk chocolate and hazelnut first, a gentle apple-like brightness, then honey and raisin that linger. Juicy on its
+    own, soft and sweet under milk. A taste of someone else's holiday.
+  source: https://www.nomadcoffee.es/
+  origins:
+    - id: guatemala-huehuetenango
+      label: Huehuetenango, Guatemala
+      place: Huehuetenango, Guatemala
+      note: From local producers; Caturra, Catuai and Bourbon. Shown for the department, not a farm.
+      lat: 15.32
+      lon: -91.47
+      precision: region
+      process: Washed
 
 - id: black-cat-classic
   name: Black Cat Classic Espresso
