@@ -100,7 +100,7 @@ const originData = [...pins.values()].map((p) => ({
   <p class="intro">
     The coffees I've been pulling lately, and the weather where they grew. Each line runs from the growing region to the city
     where it was roasted. The warm band is the tropics, where almost all coffee grows; the darker half of the map is where
-    it's night right now. Tap a dot to fly there.
+    it's night right now. Tap a bean to fly there.
   </p>
 
   <bean-atlas data-origins={JSON.stringify(originData)} data-w={W} data-h={H} data-max-rain={maxRain}>
@@ -122,7 +122,8 @@ const originData = [...pins.values()].map((p) => ({
         ))
       }
       {
-        [...pins.values()].map((p) => (
+        // broad sourcing areas first, so an exact pin inside one (Mt. Elgon in East Africa) stays on top and tappable
+        [...pins.values()].sort((a, b) => Number(!a.area) - Number(!b.area)).map((p) => (
           <a href={`#bean-${p.beans[0]}`} class="pin" data-for={p.beans.join(' ')} data-pin={p.origin.id} aria-label={`${p.origin.place}: ${p.beans.length} ${p.beans.length === 1 ? 'coffee' : 'coffees'}. Zoom the map here.`}>
             <g class="k">
               <circle cx={p.x} cy={p.y} r="14" class="hit" />
