@@ -119,6 +119,18 @@
       precision: region
       process: Washed
 
+- id: common-man-cmcr-espresso
+  name: CMCR Espresso
+  roaster: Common Man Coffee Roasters
+  roastedIn: { name: Singapore, lat: 1.29, lon: 103.85 }
+  flavors: [Ripe cherry, Stone fruit, Milk chocolate]
+  take: >-
+    A friend brought this back from Singapore, from Common Man, one of the city's best-known specialty roasters. It's
+    better than a house blend has any right to be: ripe cherry and stone fruit first, milk chocolate rounding it out,
+    and a sweet, clean finish. Lively on its own, and it still comes through in a flat white.
+  source: https://commonmancoffeeroasters.com/
+  originsText: A house blend; the bag doesn't name its origins.
+
 - id: black-cat-classic
   name: Black Cat Classic Espresso
   roaster: Intelligentsia
@@ -230,26 +242,16 @@
   source: https://www.illy.com/en-us/shop/coffee/all-coffee/8842ST.html
   originsText: A blend of 100% Arabica from several origins; illy doesn't publish the mix.
 
-- id: common-man-cmcr-espresso
-  name: CMCR Espresso
-  roaster: Common Man Coffee Roasters
-  roastedIn: { name: Singapore, lat: 1.29, lon: 103.85 }
-  flavors: [Ripe cherry, Stone fruit, Milk chocolate]
-  take: >-
-    Common Man's signature espresso blend, from Singapore. Ripe cherry and stone fruit up front, sitting on a base of
-    milk chocolate that keeps it easy. Lively enough to be interesting straight, round enough for a flat white.
-  source: https://commonmancoffeeroasters.com/
-  originsText: A house blend; the bag doesn't name its origins.
-
 - id: starbucks-reserve-whiskey-barrel-guatemala
   name: Whiskey Barrel-Aged Guatemala
   roaster: Starbucks Reserve Roastery
   roastedIn: { name: Seattle, lat: 47.61, lon: -122.33 }
   flavors: [Chocolate, Stone fruit, Oak]
   take: >-
-    From the Seattle Roastery: Guatemalan green coffee rested in Knob Creek bourbon barrels before it was roasted.
-    Open the bag and the barrel is the first thing you smell, a rich oak note, with chocolate and soft stone fruit
-    underneath. A novelty, and a fun one; better on its own than lost under milk.
+    A friend carried this one home from the Seattle Roastery. The green coffee rested in Knob Creek bourbon barrels
+    before roasting, and the barrel is the first thing you smell when the bag opens: warm, sweet oak. The cup is
+    gentler than the smell promises, chocolate and soft stone fruit with the oak lingering behind. A fun novelty, best
+    on its own, where milk can't bury the barrel.
   source: https://www.starbucksreserve.com/coffee/starbucks-reserve-r-knobcreek-r-bourbon-whiskey-barrel-aged-guatemala
   origins:
     - id: guatemala-central-highlands
