@@ -81,3 +81,13 @@ colombia-huila: &southern-colombia
     Strong equatorial sun at height and cool nights ripen the cherries slowly, which is usually credited for the
     bright, fruit-forward acidity and caramel sweetness of washed coffees from southern Colombia.
 colombia-cauca: *southern-colombia
+colombia-narino: *southern-colombia
+
+ethiopia-yirgacheffe:
+  climate: >-
+    Steep, green highlands in southern Ethiopia, roughly 1,800 to 2,200 m up. Rain comes in two seasons, about March
+    to May and September to November, with a lull in midsummer; December to February is dry and sunny, with cool
+    nights.
+  cup: >-
+    Altitude, cool nights and many old local varieties are usually credited for the floral, citrus and tea-like
+    character washed Yirgacheffe coffees are known for.

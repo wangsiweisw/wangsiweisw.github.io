@@ -151,6 +151,44 @@
   source: https://commonmancoffeeroasters.com/
   originsText: A house blend; the bag doesn't name its origins.
 
+- id: taoca-kobe-blend
+  name: Kobe Blend
+  roaster: TAOCA COFFEE
+  roastedIn: { name: Nishinomiya, lat: 34.74, lon: 135.34 }
+  flavors: [Navel orange, Caramel, Walnut, Dark chocolate]
+  take: >-
+    A friend brought this back from Kobe this spring. It's TAOCA's Kobe-only dark roast: a natural Brazil as the
+    base, with washed Ethiopian and Colombian coffees for sweetness. Dark chocolate and caramel up front, walnut in
+    the middle, a soft navel-orange note behind. Rich enough to carry a latte, which is where it's been going.
+  source: https://taocacoffee.net/items/6aa7b0968c2560e466771595
+  origins:
+    - id: brazil-sul-de-minas
+      label: Acauã, Brazil (base)
+      place: Minas Gerais, Brazil
+      note: >-
+        TAOCA's published recipe names three components but not their shares. Its page doesn't say where in Brazil
+        Acauã is, so the pin sits in Sul de Minas, Brazil's main arabica region.
+      lat: -21.55
+      lon: -45.43
+      precision: country
+      process: Natural
+    - id: ethiopia-yirgacheffe
+      label: Yirgacheffe, Ethiopia
+      place: Yirgacheffe, Ethiopia
+      lat: 6.16
+      lon: 38.2
+      altitude: 1900
+      precision: region
+      process: Washed
+    - id: colombia-narino
+      label: Nariño, Colombia
+      place: Nariño, Colombia
+      lat: 1.2
+      lon: -77.3
+      altitude: 1900
+      precision: region
+      process: Washed
+
 - id: black-cat-classic
   name: Black Cat Classic Espresso
   roaster: Intelligentsia
