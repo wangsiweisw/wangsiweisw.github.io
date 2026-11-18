@@ -9,7 +9,7 @@ import land110 from 'world-atlas/land-110m.json';
 import Base from '../../../layouts/Base.astro';
 import WeatherAttribution from '../../../components/WeatherAttribution.astro';
 import { beans, climateFacts, type Bean } from '../../../lib/beans';
-import { beanMap } from '../../../lib/beanMap';
+import { beanMap, beanSvg, flameSvg } from '../../../lib/beanMap';
 
 export function getStaticPaths() {
   return beans.map((bean) => ({ params: { id: bean.id }, props: { bean } }));
@@ -55,8 +55,8 @@ const mmToIn = (mm: number) => Math.round(mm / 25.4);
           <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map: from ${bean.origins.map((o) => o.place).join(', ')} to ${bean.roastedIn.name}.`}>
             <path class="land" d={land} />
             {marks.map((m) => <path class="arc" d={m.arc} />)}
-            {marks.map((m) => (m.area ? <path class="area" d={m.area} /> : <circle class="pin" cx={m.at[0]} cy={m.at[1]} r="5" />))}
-            <circle class="city" cx={city[0]} cy={city[1]} r="5" />
+            {marks.map((m) => (m.area ? <path class="area" d={m.area} /> : <Fragment set:html={beanSvg(m.at[0], m.at[1], 5)} />))}
+            <Fragment set:html={flameSvg(city[0], city[1], 0.7)} />
           </svg>
         </figure>
       )
@@ -196,15 +196,28 @@ const mmToIn = (mm: number) => Math.round(mm / 25.4);
     stroke-width: 1.4;
     stroke-dasharray: 4 4;
   }
-  .pin {
+  .map :global(.bean ellipse) {
     fill: var(--temp);
     stroke: var(--surface);
     stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
   }
-  .city {
+  .map :global(.bean path) {
+    fill: none;
+    stroke: var(--surface);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .map :global(.flame .outer) {
     fill: var(--surface);
     stroke: var(--fg);
-    stroke-width: 1.8;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .map :global(.flame .inner) {
+    fill: var(--temp);
   }
   .origin {
     margin-top: 1.5rem;

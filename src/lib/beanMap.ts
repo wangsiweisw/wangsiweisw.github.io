@@ -21,3 +21,18 @@ export function beanMap(width: number, height: number, arcs: [number, number][][
     tropics: `M${[...edge(23.44, lons), ...edge(-23.44, [...lons].reverse())].join('L')}Z`,
   };
 }
+
+// Map icons, drawn around (0, 0): a coffee bean where it grew, a flame where it was roasted.
+/** bean: an ellipse rx 1 × ry 1.4 (scale to taste) with this crease down the middle */
+export const BEAN = { rx: 1, ry: 1.4, crease: 'M0,-1.13 C-0.48,-0.39 0.48,0.39 0,1.13' };
+/** flame: outline and inner drop, about 14 wide and 19 tall at scale 1 */
+export const FLAME = {
+  outer: 'M0,-9.75 C4,-4.75 7,-1.75 7,2.75 A7,7 0 0 1 -7,2.75 C-7,-1.25 -4,-2.75 -3,-6.75 C-1.5,-4.25 -0.5,-3.25 0,-9.75 Z',
+  inner: 'M0,-0.25 C2,1.75 3,2.75 3,4.25 A3,3 0 0 1 -3,4.25 C-3,2.75 -1.5,1.75 0,-0.25 Z',
+};
+/** SVG markup for a bean of half-width r at (x, y), tilted like a bean dropped on a table */
+export const beanSvg = (x: number, y: number, r: number, cls = 'bean') =>
+  `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(-20)"><g class="${cls}"><g transform="scale(${r})"><ellipse rx="${BEAN.rx}" ry="${BEAN.ry}"/><path d="${BEAN.crease}"/></g></g></g>`;
+/** SVG markup for a flame of scale s at (x, y) */
+export const flameSvg = (x: number, y: number, s: number, cls = 'flame') =>
+  `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="${cls}"><g transform="scale(${s})"><path class="outer" d="${FLAME.outer}"/><path class="inner" d="${FLAME.inner}"/></g></g></g>`;

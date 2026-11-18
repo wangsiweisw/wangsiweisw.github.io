@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
 import { geoCircle } from 'd3-geo';
-import { beanMap } from '../src/lib/beanMap.ts';
+import { beanMap, beanSvg, flameSvg } from '../src/lib/beanMap.ts';
 import { feature } from 'topojson-client';
 
 const DIST = 'dist';
@@ -78,7 +78,7 @@ const beanCard = (b: (typeof beans)[number]) => {
   const marks = os.map((o) => {
     if (o.precision === 'area') return `<path class="area" d="${wpath(geoCircle().center([o.lon, o.lat]).radius(o.spread ?? 10)())}"/>`;
     const [x, y] = world([o.lon, o.lat])!;
-    return `<circle class="halo" cx="${x}" cy="${y}" r="13"/><circle class="pin" cx="${x}" cy="${y}" r="6"/>`;
+    return `<circle class="halo" cx="${x}" cy="${y}" r="14"/>${beanSvg(x, y, 6.5)}`;
   });
   const from = os.length
     ? os.map((o) => esc(o.precision === 'area' ? o.label : o.place)).join(' · ')
@@ -97,7 +97,7 @@ const beanCard = (b: (typeof beans)[number]) => {
         <defs><clipPath id="globe"><path d="${spherePath}"/></clipPath></defs>
         <path class="belt" d="${tropics}" clip-path="url(#globe)"/><path class="land" d="${landPath}"/>
         ${arcs.join('')}${marks.join('')}
-        <circle class="city" cx="${cx}" cy="${cy}" r="6"/>
+        ${flameSvg(cx, cy, 0.95)}
       </svg>
       <div class="route"><span class="grown">${from}</span><span class="to">→ ${esc(b.roastedIn.name)}</span></div>
     </div>
@@ -157,8 +157,10 @@ const STYLE = `
   .side .arc { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 2 6; stroke-linecap: round; }
   .side .area { fill: var(--accent); fill-opacity: 0.12; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 5; }
   .side .halo { fill: var(--accent); opacity: 0.2; }
-  .side .pin { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
-  .side .city { fill: var(--surface); stroke: var(--fg); stroke-width: 2.5; }
+  .side .bean ellipse { fill: var(--accent); stroke: var(--surface); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .side .bean path { fill: none; stroke: var(--surface); stroke-width: 1.6; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .side .flame .outer { fill: var(--surface); stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .side .flame .inner { fill: var(--accent); }
   .route { padding: 22px 40px 0; font-size: 22px; line-height: 1.4; color: var(--muted); }
   .route .to { white-space: nowrap; margin-left: 8px; color: var(--fg); }
   .bleed img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

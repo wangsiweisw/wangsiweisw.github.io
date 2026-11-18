@@ -6,6 +6,7 @@ import { geoCircle, geoEqualEarth, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import land110 from 'world-atlas/land-110m.json';
 import { beans, climateFacts, type Origin } from '../lib/beans';
+import { beanSvg, flameSvg } from '../lib/beanMap';
 import WeatherAttribution from './WeatherAttribution.astro';
 
 // --- map ---
@@ -112,8 +113,8 @@ const originData = [...pins.values()].map((p) => ({
       {arcs.map((a) => <path d={a.d} class="arc" data-for={a.bean} />)}
       {
         [...cities.values()].map((c) => (
-          <g class="city k" data-for={c.beans.join(' ')}>
-            <rect x={c.x - 3} y={c.y - 3} width="6" height="6" />
+          <g class="city k" data-for={c.beans.join(' ')} style={`transform-origin: ${c.x}px ${c.y}px`}>
+            <Fragment set:html={flameSvg(c.x, c.y, 0.62)} />
             <text x={c.x + (LABEL[c.name]?.[0] ?? 8)} y={c.y + (LABEL[c.name]?.[1] ?? 4)} text-anchor={LABEL[c.name]?.[2] ?? 'start'}>
               {c.name}
             </text>
@@ -126,13 +127,18 @@ const originData = [...pins.values()].map((p) => ({
             <g class="k">
               <circle cx={p.x} cy={p.y} r="14" class="hit" />
               {!p.area && <circle cx={p.x} cy={p.y} r="5.5" class="pulse" />}
-              <circle cx={p.x} cy={p.y} r={p.area ? 4 : 5.5} class:list={['dot', { hollow: p.area }]} />
+              <Fragment set:html={beanSvg(p.x, p.y, p.area ? 4 : 4.6, p.area ? 'bean hollow' : 'bean')} />
             </g>
             <title>{p.origin.place}</title>
           </a>
         ))
       }
     </svg>
+    <p class="legend" aria-hidden="true">
+      <span><svg viewBox="-9 -10 18 20"><Fragment set:html={beanSvg(0, 0, 5.5)} /></svg>grown here</span>
+      <span><svg viewBox="-9 -11 18 20"><Fragment set:html={flameSvg(0, 0, 0.8)} /></svg>roasted here</span>
+      <span><svg viewBox="-9 -10 18 20"><Fragment set:html={beanSvg(0, 0, 4.6, 'bean hollow')} /></svg>broad sourcing area</span>
+    </p>
 
     <div class="region" data-region hidden>
       <div class="region-head">
@@ -290,8 +296,8 @@ const originData = [...pins.values()].map((p) => ({
         <path d={land} class="land" />
         {[...pins.values()].filter((p) => p.area).map((p) => <path d={p.area} class="area" data-for={p.beans.join(' ')} />)}
         {arcs.map((a) => <path d={a.d} class="arc" data-for={a.bean} />)}
-        {[...cities.values()].map((c) => <rect x={c.x - 8} y={c.y - 8} width="16" height="16" class="city mcity" data-for={c.beans.join(' ')} />)}
-        {[...pins.values()].filter((p) => !p.area).map((p) => <circle cx={p.x} cy={p.y} r="13" class="mpin" data-for={p.beans.join(' ')} />)}
+        {[...cities.values()].map((c) => <g class="city mcity" data-for={c.beans.join(' ')} set:html={flameSvg(c.x, c.y, 1.7)} />)}
+        {[...pins.values()].filter((p) => !p.area).map((p) => <g class="mpin" data-for={p.beans.join(' ')} set:html={beanSvg(p.x, p.y, 11)} />)}
       </svg>
       <span class="mini-name" data-mini-name></span>
     </button>
@@ -685,7 +691,7 @@ const originData = [...pins.values()].map((p) => ({
     transform: scale(calc(1 / var(--k)));
   }
   .city.k {
-    transform-origin: 3px 3px;
+    transform-box: view-box;
   }
   .sphere,
   .arc {
@@ -698,7 +704,7 @@ const originData = [...pins.values()].map((p) => ({
   .pin {
     cursor: zoom-in;
   }
-  .pin.here .dot {
+  .pin.here :global(.bean ellipse) {
     fill: var(--fg);
   }
   .ghost {
@@ -874,21 +880,68 @@ const originData = [...pins.values()].map((p) => ({
       opacity: 0;
     }
   }
-  .city rect {
+  /* icons: a bean where it grew, a flame where it was roasted */
+  :global(.bean ellipse) {
+    fill: var(--temp);
+    stroke: var(--bg);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  :global(.bean path) {
+    fill: none;
+    stroke: var(--bg);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  :global(.bean.hollow ellipse) {
+    fill: var(--bg);
+    stroke: var(--temp);
+  }
+  :global(.bean.hollow path) {
+    stroke: var(--temp);
+  }
+  :global(.bean),
+  :global(.flame) {
+    transition: transform var(--ease);
+  }
+  :global(.flame .outer) {
     fill: var(--bg);
     stroke: var(--fg);
-    stroke-width: 1.5;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  :global(.flame .inner) {
+    fill: var(--temp);
   }
   .city text {
     fill: var(--muted);
     font: 12px var(--body);
     transition: fill var(--ease);
   }
-  .city rect {
-    transition: fill var(--ease), stroke var(--ease);
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.2rem;
+    margin: 0.6rem 0 0;
+    color: var(--muted);
+    font-size: 0.8rem;
   }
-  .city.on rect {
-    fill: var(--temp);
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .legend svg {
+    width: 16px;
+    height: 18px;
+    overflow: visible;
+  }
+  .city.on :global(.flame) {
+    transform: scale(1.35);
+  }
+  .city.on :global(.flame .outer) {
     stroke: var(--temp);
   }
   .city.on text {
@@ -931,19 +984,9 @@ const originData = [...pins.values()].map((p) => ({
     width: 100%;
     height: auto;
   }
-  .mini .mpin {
-    fill: var(--temp);
+  .mini :global(.bean ellipse),
+  .mini :global(.bean path) {
     stroke: var(--surface);
-    stroke-width: 3;
-  }
-  .mini .mcity {
-    fill: var(--bg);
-    stroke: var(--fg);
-    stroke-width: 2.5;
-  }
-  .mini .mcity.on {
-    fill: var(--temp);
-    stroke: var(--temp);
   }
   .mini .arc.on {
     stroke-width: 3;
@@ -988,26 +1031,16 @@ const originData = [...pins.values()].map((p) => ({
   .area.on {
     fill-opacity: 0.18;
   }
-  .pin .dot.hollow {
-    fill: var(--bg);
-    stroke: var(--temp);
-  }
   .stage[hidden] {
     display: none;
   }
   .pin .hit {
     fill: transparent;
   }
-  .pin .dot {
-    fill: var(--temp);
-    stroke: var(--bg);
-    stroke-width: 2;
-    transition: r var(--ease);
-  }
-  .pin:hover .dot,
-  .pin:focus-visible .dot,
-  .pin.on .dot {
-    r: 8;
+  .pin:hover :global(.bean),
+  .pin:focus-visible :global(.bean),
+  .pin.on :global(.bean) {
+    transform: scale(1.4);
   }
   .pin:focus-visible {
     outline: none;
