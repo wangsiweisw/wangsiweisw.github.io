@@ -1,0 +1,161 @@
+{
+  "place": "Da Lat, Lâm Đồng, Vietnam",
+  "latitude": 11.94,
+  "longitude": 108.44,
+  "elevation": 1500,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-18",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 12.8,
+      "tmax": 22.4,
+      "precip": 30.8
+    },
+    {
+      "month": 2,
+      "tmin": 13.4,
+      "tmax": 24.4,
+      "precip": 24.7
+    },
+    {
+      "month": 3,
+      "tmin": 14.8,
+      "tmax": 25.7,
+      "precip": 67.6
+    },
+    {
+      "month": 4,
+      "tmin": 16,
+      "tmax": 25.4,
+      "precip": 154.1
+    },
+    {
+      "month": 5,
+      "tmin": 16.9,
+      "tmax": 24.4,
+      "precip": 268.7
+    },
+    {
+      "month": 6,
+      "tmin": 16.8,
+      "tmax": 23.2,
+      "precip": 216.7
+    },
+    {
+      "month": 7,
+      "tmin": 16.6,
+      "tmax": 22.6,
+      "precip": 215.7
+    },
+    {
+      "month": 8,
+      "tmin": 16.6,
+      "tmax": 22.6,
+      "precip": 236.9
+    },
+    {
+      "month": 9,
+      "tmin": 16.3,
+      "tmax": 22.5,
+      "precip": 293.5
+    },
+    {
+      "month": 10,
+      "tmin": 15.5,
+      "tmax": 22.3,
+      "precip": 286.1
+    },
+    {
+      "month": 11,
+      "tmin": 14.8,
+      "tmax": 21.9,
+      "precip": 161.2
+    },
+    {
+      "month": 12,
+      "tmin": 13.7,
+      "tmax": 21.2,
+      "precip": 101.7
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 14.9,
+        "tmax": 21.9,
+        "precip": 271.1
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 13.8,
+        "tmax": 22.3,
+        "precip": 41.9
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 10.7,
+        "tmax": 22.4,
+        "precip": 10.4
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 13.5,
+        "tmax": 24.4,
+        "precip": 48.5
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 13.3,
+        "tmax": 25.5,
+        "precip": 49.2
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 14.9,
+        "tmax": 27,
+        "precip": 99.1
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 15.9,
+        "tmax": 25,
+        "precip": 185.9
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 16.4,
+        "tmax": 24.2,
+        "precip": 208.4
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 16.4,
+        "tmax": 22.8,
+        "precip": 147.6
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 17,
+        "tmax": 22,
+        "precip": 217.3
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 16.5,
+        "tmax": 22.9,
+        "precip": 375.6
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 15,
+        "tmax": 24.5,
+        "precip": 182.4
+      }
+    ]
+  }
+}

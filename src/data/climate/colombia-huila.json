@@ -1,0 +1,161 @@
+{
+  "place": "Huila, Colombia",
+  "latitude": 1.86,
+  "longitude": -76.05,
+  "elevation": 1700,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-18",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 12.2,
+      "tmax": 21.1,
+      "precip": 196.4
+    },
+    {
+      "month": 2,
+      "tmin": 12.4,
+      "tmax": 21.3,
+      "precip": 219.4
+    },
+    {
+      "month": 3,
+      "tmin": 12.7,
+      "tmax": 21.2,
+      "precip": 302.1
+    },
+    {
+      "month": 4,
+      "tmin": 12.7,
+      "tmax": 20.6,
+      "precip": 304.8
+    },
+    {
+      "month": 5,
+      "tmin": 12.5,
+      "tmax": 19.9,
+      "precip": 289.1
+    },
+    {
+      "month": 6,
+      "tmin": 11.8,
+      "tmax": 19,
+      "precip": 293.5
+    },
+    {
+      "month": 7,
+      "tmin": 11.3,
+      "tmax": 18.6,
+      "precip": 292.6
+    },
+    {
+      "month": 8,
+      "tmin": 10.7,
+      "tmax": 19.6,
+      "precip": 212.7
+    },
+    {
+      "month": 9,
+      "tmin": 10.9,
+      "tmax": 20.8,
+      "precip": 183.2
+    },
+    {
+      "month": 10,
+      "tmin": 11.8,
+      "tmax": 21.2,
+      "precip": 214.3
+    },
+    {
+      "month": 11,
+      "tmin": 12.5,
+      "tmax": 21.2,
+      "precip": 204.2
+    },
+    {
+      "month": 12,
+      "tmin": 12.4,
+      "tmax": 21,
+      "precip": 214.4
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 13.4,
+        "tmax": 24.1,
+        "precip": 228.6
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 13.4,
+        "tmax": 23.9,
+        "precip": 115.5
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 13.5,
+        "tmax": 23.3,
+        "precip": 234.4
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 13.2,
+        "tmax": 23.6,
+        "precip": 174.4
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 14,
+        "tmax": 23.9,
+        "precip": 186
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 13.8,
+        "tmax": 23.9,
+        "precip": 121.9
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 14.7,
+        "tmax": 23,
+        "precip": 161.8
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 14.3,
+        "tmax": 22.8,
+        "precip": 184.5
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 14.3,
+        "tmax": 22.1,
+        "precip": 164.9
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 14.4,
+        "tmax": 23.1,
+        "precip": 150
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 14.3,
+        "tmax": 25,
+        "precip": 125.1
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 14.7,
+        "tmax": 24.8,
+        "precip": 182.7
+      }
+    ]
+  }
+}

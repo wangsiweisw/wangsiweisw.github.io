@@ -32,19 +32,34 @@
   roastedIn: { name: London, lat: 51.50, lon: -0.08 }
   flavors: [Chocolate, Roasted nuts, Soft fruit]
   take: >-
-    A London classic, and the bag I'd hand to anyone starting out with espresso. A Brazilian base gives it body;
-    washed Guatemalan and Colombian coffees add sweetness and a bit of lift. Round, hard to get wrong, and happy
-    with or without milk.
-  source: https://www.monmouthcoffee.co.uk/our-coffees
+    A London classic, and the bag I'd hand to anyone starting out with espresso. Guatemala's Las Nubes is the base,
+    a Brazilian pulped natural adds cocoa, and a washed Huila from Colombia brings the high notes. Round, hard to get
+    wrong, and happy with or without milk.
+  source: https://www.monmouthcoffee.co.uk/product/blend-monmouth-espresso
   origins:
+    - id: guatemala-las-nubes
+      label: Las Nubes, Guatemala (base)
+      place: Antigua, Guatemala
+      note: Monmouth's recipe as of November 2026; the farms in the blend change through the year.
+      lat: 14.56
+      lon: -90.73
+      precision: region
+      process: Washed
     - id: brazil-carmo-de-minas
-      label: Brazil (base of the blend)
+      label: Fazenda IP, Brazil
       place: Carmo de Minas, Minas Gerais, Brazil
-      note: A blend of Brazil, Guatemala and Colombia; the farms rotate through the year. Shown for the Brazilian base.
       lat: -22.12
       lon: -45.13
       precision: region
       process: Pulped natural
+    - id: colombia-huila
+      label: Lo Mejor de Huila, Colombia
+      place: Huila, Colombia
+      lat: 1.86
+      lon: -76.05
+      altitude: 1700
+      precision: region
+      process: Washed
 
 - id: winter-espresso
   name: Winter Espresso
@@ -65,12 +80,15 @@
       lon: 36.37
       precision: region
       process: Honey
-    - id: guatemala-el-anonal
+      note: Components as of the November 2026 bags; Square Mile changes them through the year.
+    - id: guatemala-huehuetenango
       label: El Anonal, Guatemala · 50%
-      place: La Libertad, Huehuetenango, Guatemala
-      lat: 15.51
-      lon: -91.87
+      place: Huehuetenango, Guatemala
+      note: Orlando and Gesler Martínez's farm; Square Mile names the department, not the town, so the pin marks Huehuetenango.
+      lat: 15.32
+      lon: -91.47
       precision: region
+      process: Washed
 
 - id: red-brick
   name: Red Brick
@@ -90,8 +108,10 @@
       lon: 36.37
       precision: region
       process: Washed
+      note: Components as of the November 2026 bags; Square Mile changes them with the harvests.
     - id: costa-rica-tarrazu
-      label: Don Oscar, Costa Rica · 53%
+      label: Tarrazú Blend, Costa Rica · 53%
+      note: White honey lots from two neighbouring micromills, La Lía (Luis and Oscar Monge) and Don Oscar (Alejandro Jiménez).
       place: Tarrazú, Costa Rica
       lat: 9.66
       lon: -84.02
@@ -144,10 +164,20 @@
     - id: brazil-carmo-de-minas
       label: Brazil
       place: Carmo de Minas, Minas Gerais, Brazil
-      note: Intelligentsia notes the blend's components change through the year.
+      note: Intelligentsia lists Brazil and Colombia for the current blend; the components change through the year.
       lat: -22.12
       lon: -45.13
       precision: region
+      process: Semi-washed
+    - id: colombia-cauca
+      label: Colombia
+      place: Cauca, Colombia
+      note: Various smallholders, 1,600–1,900 m.
+      lat: 2.5
+      lon: -76.4
+      altitude: 1750
+      precision: region
+      process: Washed
 
 - id: forty-six
   name: Forty-Six
@@ -162,15 +192,17 @@
     - id: peru-incahuasi
       label: Incahuasi, Peru · 70%
       place: Incahuasi, Cusco, Peru
-      note: The recipe rotates with the harvests. This is a recent one published by Counter Culture; the bag sticker lists the current mix.
+      note: >-
+        Counter Culture changes the recipe every few weeks and prints the mix on each bag's sticker. This is one of
+        its published recipes (70% Incahuasi, 20% Hafurza natural, 10% Jabanto washed).
       lat: -13.13
       lon: -73.03
       altitude: 1800
       precision: region
     - id: ethiopia-forty-six
-      label: Ethiopia · 30% (two lots)
+      label: Ethiopia · 30% (Hafurza 20%, Jabanto 10%)
       place: Southern Ethiopia
-      note: A natural and a washed lot (Hafurza and Jabanto) in the same recent recipe.
+      note: A natural lot (Hafurza) and a washed one (Jabanto) from the same recipe.
       lat: 6.2
       lon: 38.5
       altitude: 1900
@@ -220,14 +252,15 @@
     Latin American base.
   source: https://www.nguyencoffeesupply.com/pages/about-us
   origins:
-    - id: vietnam-central-highlands
-      label: Central Highlands, Vietnam
-      place: Central Highlands, Vietnam
+    - id: vietnam-da-lat
+      label: Da Lat, Vietnam
+      place: Da Lat, Lâm Đồng, Vietnam
       note: >-
-        The roaster works with a fourth-generation family farm in Vietnam's Central Highlands; the farm's exact place
-        isn't published, so the pin marks the region.
-      lat: 12.68
-      lon: 108.05
+        Nguyen's partner farm, run by fourth-generation farmer Mr. Ton, is in Da Lat in the Central Highlands; the
+        exact plot isn't published, so the pin marks the town.
+      lat: 11.94
+      lon: 108.44
+      altitude: 1500
       precision: region
 
 - id: illy-classico

@@ -21,7 +21,7 @@ ethiopia-telila:
     Cool nights at this height slow the cherries down, and slow ripening is usually credited for the floral, citrus
     character that southwest Ethiopian coffees are known for.
 
-guatemala-el-anonal: &huehuetenango
+guatemala-huehuetenango: &huehuetenango
   climate: >-
     High, rugged country near the Mexican border. A sharp wet season runs from May to October; winters are dry.
     Warm, dry air rising from Mexico's Tehuantepec plain keeps frost away, which is why coffee can grow unusually
@@ -54,21 +54,30 @@ ethiopia-forty-six:
   cup: >-
     Altitude and cool nights are behind the fruit and floral notes Ethiopian lots bring; sun-dried naturals add berry
     sweetness, washed lots a cleaner, citrus brightness.
-guatemala-huehuetenango: *huehuetenango
 
-vietnam-central-highlands:
+vietnam-da-lat:
   climate: >-
-    A tropical plateau, roughly 500 to 1,500 m up. The southwest monsoon brings a long wet season from about May to
-    October; then the winds turn and the months from November to April are dry and sunny. Height keeps it milder
-    than the coast, with cool nights in the dry season.
+    A cool plateau town about 1,500 m up in the Central Highlands. The southwest monsoon brings a wet season from
+    about May to October; November to April is dry, sunny and mild, with chilly nights for the tropics.
   cup: >-
-    The long, reliable dry season is when cherries are picked and dried, and arabica from the higher parts of the
-    plateau tends toward a gentle sweetness: chocolate, caramel and soft fruit rather than bright acidity.
+    That height and the cool, dry season let arabica ripen slowly, which is usually credited for the softer
+    sweetness of Da Lat coffees: chocolate, caramel and gentle fruit rather than sharp acidity.
 
-guatemala-central-highlands:
+guatemala-central-highlands: &antigua
   climate: >-
     Valleys and slopes between volcanoes, about 1,500 m up. Rain comes from May to October, often as afternoon
     storms; November to April is dry and sunny, with cool, clear nights and a wide swing between day and night.
   cup: >-
     Volcanic soils, a sharp dry season and that big day-to-night swing are usually credited for the chocolate-and-
     spice sweetness and clean acidity of coffees from Guatemala's central highlands.
+guatemala-las-nubes: *antigua
+
+colombia-huila: &southern-colombia
+  climate: >-
+    Steep Andean slopes close to the equator, roughly 1,500 to 2,000 m up. Two rainy seasons a year, around March to
+    May and October to December, with drier spells between, so somewhere nearby is almost always harvesting. Days
+    are mild and nights cool all year.
+  cup: >-
+    Strong equatorial sun at height and cool nights ripen the cherries slowly, which is usually credited for the
+    bright, fruit-forward acidity and caramel sweetness of washed coffees from southern Colombia.
+colombia-cauca: *southern-colombia
