@@ -183,26 +183,26 @@
   name: Forty-Six
   roaster: Counter Culture Coffee
   roastedIn: { name: Durham NC, lat: 35.99, lon: -78.90 }
-  flavors: [Dark chocolate, Smoky, Full-bodied]
+  flavors: [Dark chocolate, Sweet, Full-bodied]
   take: >-
     Counter Culture's darkest roast, and not a subtle one: smoke and dark chocolate with a heavy body. That's the
     point. It's the bag I reach for when the drink is mostly milk and the coffee still has to be heard.
   source: https://counterculturecoffee.com/products/12-oz-forty-six
   origins:
-    - id: peru-incahuasi
-      label: Incahuasi, Peru · 70%
-      place: Incahuasi, Cusco, Peru
+    - id: uganda-mt-elgon
+      label: Mt. Elgon, Uganda · 70%
+      place: Mt. Elgon, Uganda
       note: >-
-        Counter Culture changes the recipe every few weeks and prints the mix on each bag's sticker. This is one of
-        its published recipes (70% Incahuasi, 20% Hafurza natural, 10% Jabanto washed).
-      lat: -13.13
-      lon: -73.03
+        Counter Culture changes the recipe every few weeks and publishes each one by roast date. This is the mix for
+        bags roasted January 7 to February 26, 2026, when this one was.
+      lat: 1.15
+      lon: 34.45
       altitude: 1800
       precision: region
     - id: ethiopia-forty-six
-      label: Ethiopia · 30% (Hafurza 20%, Jabanto 10%)
+      label: Ethiopia · 30% (Jabanto natural 20%, Malabu 10%)
       place: Southern Ethiopia
-      note: A natural lot (Hafurza) and a washed one (Jabanto) from the same recipe.
+      note: Two Ethiopian lots in the same recipe; shown for southern Ethiopia, not the washing stations.
       lat: 6.2
       lon: 38.5
       altitude: 1900

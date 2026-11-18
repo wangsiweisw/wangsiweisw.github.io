@@ -1,0 +1,161 @@
+{
+  "place": "Mt. Elgon, Uganda",
+  "latitude": 1.15,
+  "longitude": 34.45,
+  "elevation": 1800,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-18",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 14.5,
+      "tmax": 24.4,
+      "precip": 109.3
+    },
+    {
+      "month": 2,
+      "tmin": 14.7,
+      "tmax": 25.4,
+      "precip": 98.6
+    },
+    {
+      "month": 3,
+      "tmin": 15.2,
+      "tmax": 24.7,
+      "precip": 252.6
+    },
+    {
+      "month": 4,
+      "tmin": 15.9,
+      "tmax": 23.1,
+      "precip": 555.4
+    },
+    {
+      "month": 5,
+      "tmin": 15.8,
+      "tmax": 22.5,
+      "precip": 595.1
+    },
+    {
+      "month": 6,
+      "tmin": 15.4,
+      "tmax": 22.1,
+      "precip": 429.3
+    },
+    {
+      "month": 7,
+      "tmin": 15.4,
+      "tmax": 21.8,
+      "precip": 519.8
+    },
+    {
+      "month": 8,
+      "tmin": 15.4,
+      "tmax": 22.2,
+      "precip": 535.8
+    },
+    {
+      "month": 9,
+      "tmin": 15.1,
+      "tmax": 22.9,
+      "precip": 377.2
+    },
+    {
+      "month": 10,
+      "tmin": 15.4,
+      "tmax": 22.7,
+      "precip": 569.6
+    },
+    {
+      "month": 11,
+      "tmin": 15.1,
+      "tmax": 22.5,
+      "precip": 417.7
+    },
+    {
+      "month": 12,
+      "tmin": 14.6,
+      "tmax": 23.3,
+      "precip": 178
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 14.3,
+        "tmax": 22.8,
+        "precip": 78.1
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 14.1,
+        "tmax": 22.6,
+        "precip": 192.4
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 14,
+        "tmax": 25.1,
+        "precip": 23.7
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 14.4,
+        "tmax": 22.9,
+        "precip": 155.2
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 14.3,
+        "tmax": 21.3,
+        "precip": 433.8
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 14.2,
+        "tmax": 22,
+        "precip": 453
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 15.3,
+        "tmax": 21.4,
+        "precip": 261.7
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 15.5,
+        "tmax": 22.1,
+        "precip": 61.6
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 15.3,
+        "tmax": 22.2,
+        "precip": 115.5
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 15.4,
+        "tmax": 22.5,
+        "precip": 107.9
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 16.1,
+        "tmax": 22.8,
+        "precip": 108.4
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 15.6,
+        "tmax": 22.1,
+        "precip": 301.2
+      }
+    ]
+  }
+}
