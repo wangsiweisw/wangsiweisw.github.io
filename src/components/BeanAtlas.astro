@@ -281,6 +281,20 @@ const originData = [...pins.values()].map((p) => ({
         ))
       }
     </ul>
+
+    <!-- follows the reader down the cards: the route of the coffee being read or pointed at -->
+    <button type="button" class="mini" data-mini aria-label="Back to the map" hidden>
+      <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+        <path d={sphere} class="sphere" />
+        <path d={belt} class="belt" />
+        <path d={land} class="land" />
+        {[...pins.values()].filter((p) => p.area).map((p) => <path d={p.area} class="area" data-for={p.beans.join(' ')} />)}
+        {arcs.map((a) => <path d={a.d} class="arc" data-for={a.bean} />)}
+        {[...cities.values()].map((c) => <rect x={c.x - 8} y={c.y - 8} width="16" height="16" class="city mcity" data-for={c.beans.join(' ')} />)}
+        {[...pins.values()].filter((p) => !p.area).map((p) => <circle cx={p.x} cy={p.y} r="13" class="mpin" data-for={p.beans.join(' ')} />)}
+      </svg>
+      <span class="mini-name" data-mini-name></span>
+    </button>
   </bean-atlas>
 
   <p class="key">
@@ -323,17 +337,46 @@ const originData = [...pins.values()].map((p) => ({
       this.H = Number(this.dataset.h);
 
       // a coffee in focus: its pins, arcs and roasting city light up and everything else on the map fades back
-      const map = this.querySelector<SVGSVGElement>('.map')!;
-      const mark = (id: string | null) => {
-        map.classList.toggle('focus', !!id);
+      // The card being pointed at wins; otherwise the card being read (crossing the middle of the screen).
+      const maps = this.querySelectorAll<SVGSVGElement>('.map, .mini svg');
+      const miniName = this.querySelector<HTMLElement>('[data-mini-name]')!;
+      let pointed: string | null = null;
+      let reading: string | null = null;
+      const mark = () => {
+        const id = pointed ?? reading;
+        maps.forEach((m) => m.classList.toggle('focus', !!id));
         this.querySelectorAll<SVGElement>('[data-for]').forEach((el) => el.classList.toggle('on', !!id && el.dataset.for!.split(' ').includes(id)));
+        miniName.textContent = id ? (this.querySelector(`[data-bean="${id}"] h3`)?.textContent ?? '') : '';
       };
-      this.querySelectorAll<HTMLElement>('.card').forEach((card) => {
-        card.addEventListener('pointerenter', () => mark(card.dataset.bean!));
-        card.addEventListener('pointerleave', () => mark(null));
-        card.addEventListener('focusin', () => mark(card.dataset.bean!));
-        card.addEventListener('focusout', () => mark(null));
+      const cards = [...this.querySelectorAll<HTMLElement>('.card')];
+      cards.forEach((card) => {
+        const id = card.dataset.bean!;
+        card.addEventListener('pointerenter', () => ((pointed = id), mark()));
+        card.addEventListener('pointerleave', () => ((pointed = null), mark()));
+        card.addEventListener('focusin', () => ((pointed = id), mark()));
+        card.addEventListener('focusout', () => ((pointed = null), mark()));
       });
+      const middle = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            const id = (e.target as HTMLElement).dataset.bean!;
+            if (e.isIntersecting) reading = id;
+            else if (reading === id) reading = null;
+          }
+          mark();
+        },
+        { rootMargin: '-45% 0px -50% 0px' },
+      );
+      cards.forEach((c) => middle.observe(c));
+
+      // The mini map shows while the cards are on screen and the big map isn't.
+      const mini = this.querySelector<HTMLButtonElement>('[data-mini]')!;
+      let mapSeen = true;
+      let cardsSeen = false;
+      const dock = () => (mini.hidden = mapSeen || !cardsSeen);
+      new IntersectionObserver(([e]) => ((mapSeen = e.isIntersecting), dock())).observe(this.querySelector('.map')!);
+      new IntersectionObserver(([e]) => ((cardsSeen = e.isIntersecting), dock()), { rootMargin: '0px 0px -30% 0px' }).observe(this.querySelector('.cards')!);
+      mini.addEventListener('click', () => this.querySelector('.map')!.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }));
       this.querySelectorAll<SVGAElement>('.pin').forEach((pin) => {
         const cards = () => pin.dataset.for!.split(' ').map((id) => this.querySelector(`[data-bean="${id}"]`));
         pin.addEventListener('pointerenter', () => cards().forEach((c) => c?.classList.add('lit')));
@@ -852,11 +895,85 @@ const originData = [...pins.values()].map((p) => ({
     fill: var(--fg);
     font-weight: 600;
   }
-  .map :is(.arc, .area, .pin, .city) {
+  svg :is(.arc, .area, .pin, .city, .mpin) {
     transition: opacity 0.25s ease;
   }
-  .map.focus :is(.arc, .area, .pin, .city):not(.on) {
+  svg.focus :is(.arc, .area, .pin, .city, .mpin):not(.on) {
     opacity: 0.15;
+  }
+  /* --- mini map docked in the corner --- */
+  .mini {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 20;
+    width: 300px;
+    padding: 0.4rem 0.4rem 0.45rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 0 8px 28px rgb(0 0 0 / 0.14);
+    color: var(--fg);
+    cursor: pointer;
+    animation: dock 0.3s ease both;
+  }
+  .mini[hidden] {
+    display: none;
+  }
+  @keyframes dock {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+  .mini svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .mini .mpin {
+    fill: var(--temp);
+    stroke: var(--surface);
+    stroke-width: 3;
+  }
+  .mini .mcity {
+    fill: var(--bg);
+    stroke: var(--fg);
+    stroke-width: 2.5;
+  }
+  .mini .mcity.on {
+    fill: var(--temp);
+    stroke: var(--temp);
+  }
+  .mini .arc.on {
+    stroke-width: 3;
+  }
+  .mini-name {
+    display: block;
+    min-height: 1.2em;
+    padding: 0.3rem 0.3rem 0;
+    font: 500 0.8rem var(--body);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mini-name:empty::before {
+    content: 'Scroll the coffees to trace their routes';
+    color: var(--muted);
+    font-weight: 400;
+  }
+  @media (max-width: 640px) {
+    .mini {
+      right: 0.75rem;
+      bottom: 0.75rem;
+      width: min(62vw, 240px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini {
+      animation: none;
+    }
   }
   .area {
     fill: var(--temp);
