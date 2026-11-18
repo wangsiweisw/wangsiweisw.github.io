@@ -30,7 +30,7 @@ const belt = `M${[...edge(TROPIC, lons), ...edge(-TROPIC, [...lons].reverse())].
 const pins = new Map<string, { origin: Origin; x: number; y: number; beans: string[]; area?: string }>();
 const arcs: { bean: string; d: string }[] = [];
 // nudge labels apart where roasting cities sit close together: [dx, dy, anchor]
-const LABEL: Record<string, [number, number, string]> = { 'Portland OR': [-8, 4, 'end'], Chicago: [-8, -4, 'end'], 'Durham NC': [8, 12, 'start'], Barcelona: [-8, 8, 'end'] };
+const LABEL: Record<string, [number, number, string]> = { 'Portland OR': [-8, 9, 'end'], Seattle: [-8, -3, 'end'], Chicago: [-8, -4, 'end'], 'Durham NC': [8, 12, 'start'], Barcelona: [-8, 8, 'end'] };
 const cities = new Map<string, { name: string; x: number; y: number; beans: string[] }>();
 for (const b of beans) {
   // every roasting city gets a marker, even for a blend with no named origin
