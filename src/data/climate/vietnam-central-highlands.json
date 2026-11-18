@@ -1,0 +1,161 @@
+{
+  "place": "Central Highlands, Vietnam",
+  "latitude": 12.68,
+  "longitude": 108.05,
+  "elevation": 487,
+  "period": "1991–2020",
+  "source": "Open-Meteo Historical Weather API (ERA5), CC BY 4.0",
+  "fetched": "2026-11-18",
+  "months": [
+    {
+      "month": 1,
+      "tmin": 18.1,
+      "tmax": 27.1,
+      "precip": 8.7
+    },
+    {
+      "month": 2,
+      "tmin": 18.9,
+      "tmax": 29.8,
+      "precip": 4.1
+    },
+    {
+      "month": 3,
+      "tmin": 20.7,
+      "tmax": 32.3,
+      "precip": 15.2
+    },
+    {
+      "month": 4,
+      "tmin": 22.1,
+      "tmax": 33,
+      "precip": 55.3
+    },
+    {
+      "month": 5,
+      "tmin": 22.4,
+      "tmax": 31.2,
+      "precip": 142.6
+    },
+    {
+      "month": 6,
+      "tmin": 22.1,
+      "tmax": 29.4,
+      "precip": 140.1
+    },
+    {
+      "month": 7,
+      "tmin": 21.7,
+      "tmax": 28.5,
+      "precip": 167.6
+    },
+    {
+      "month": 8,
+      "tmin": 21.6,
+      "tmax": 28.1,
+      "precip": 184.9
+    },
+    {
+      "month": 9,
+      "tmin": 21,
+      "tmax": 27.7,
+      "precip": 214.6
+    },
+    {
+      "month": 10,
+      "tmin": 20.5,
+      "tmax": 27.5,
+      "precip": 181.3
+    },
+    {
+      "month": 11,
+      "tmin": 20.1,
+      "tmax": 27,
+      "precip": 93.9
+    },
+    {
+      "month": 12,
+      "tmin": 18.9,
+      "tmax": 25.9,
+      "precip": 36.5
+    }
+  ],
+  "recent": {
+    "from": "2025-11",
+    "to": "2026-10",
+    "months": [
+      {
+        "ym": "2025-11",
+        "tmin": 20.5,
+        "tmax": 27,
+        "precip": 350.7
+      },
+      {
+        "ym": "2025-12",
+        "tmin": 19.9,
+        "tmax": 27,
+        "precip": 35.7
+      },
+      {
+        "ym": "2026-01",
+        "tmin": 17.3,
+        "tmax": 26.9,
+        "precip": 0
+      },
+      {
+        "ym": "2026-02",
+        "tmin": 19.6,
+        "tmax": 29.6,
+        "precip": 20.7
+      },
+      {
+        "ym": "2026-03",
+        "tmin": 20.1,
+        "tmax": 31.4,
+        "precip": 12.7
+      },
+      {
+        "ym": "2026-04",
+        "tmin": 23.2,
+        "tmax": 34.9,
+        "precip": 22.2
+      },
+      {
+        "ym": "2026-05",
+        "tmin": 23.4,
+        "tmax": 32.6,
+        "precip": 150.6
+      },
+      {
+        "ym": "2026-06",
+        "tmin": 22.8,
+        "tmax": 30.8,
+        "precip": 189.5
+      },
+      {
+        "ym": "2026-07",
+        "tmin": 22.5,
+        "tmax": 29.2,
+        "precip": 260.1
+      },
+      {
+        "ym": "2026-08",
+        "tmin": 22.8,
+        "tmax": 29.3,
+        "precip": 296.8
+      },
+      {
+        "ym": "2026-09",
+        "tmin": 22.4,
+        "tmax": 28.8,
+        "precip": 426.6
+      },
+      {
+        "ym": "2026-10",
+        "tmin": 22.1,
+        "tmax": 29.6,
+        "precip": 103.2
+      }
+    ]
+  }
+}
