@@ -12,6 +12,9 @@ const blog = defineCollection({
       updated: z.coerce.date().optional(),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
+      // a post written in two languages is two entries: each names the other's id in `translation`
+      lang: z.enum(['en', 'zh']).default('en'),
+      translation: z.string().optional(),
       // alt text is required for every image
       cover: z.object({ src: image(), alt: z.string().min(1) }).optional(),
     }),

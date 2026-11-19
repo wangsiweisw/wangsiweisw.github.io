@@ -1,0 +1,717 @@
+---
+title: Connecting Xiaohongshu (RedNote) to Claude, step by step
+description: Run the open-source xiaohongshu-mcp on a Mac so Claude can search notes and read posts and comments, with a patch for overseas RedNote accounts and a read-only gateway for using it from your phone.
+date: 2026-11-19
+tags: [Claude, MCP, Xiaohongshu]
+translation: xiaohongshu-claude-zh
+---
+
+import XhsDiagram from '../../components/blog/XhsDiagram.astro';
+
+I recently built a [map of the coffee beans](/coffee/#beans) I've been drinking, and wanted to know what people on Xiaohongshu (RedNote, China's big lifestyle-review app) thought of them. Xiaohongshu has no public API, its web search needs a login, and it isn't easy to use from the US. So I connected it to Claude with the open-source [xpzouying/xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp). Now I can tell Claude Code or the Claude desktop app "search Xiaohongshu for …" and it searches notes and reads posts and their comments.
+
+This is the full setup (on v2.7.4), including the two problems I hit: accounts registered with an overseas phone number (RedNote accounts) need a patch, and I wanted to use it from my phone without putting my account on the open internet.
+
+> **The risk, up front**: this is unofficial automation. It runs a local server on your Mac that drives a browser logged in to your own Xiaohongshu account, and the account can be flagged. Keep it personal, light and read-only, ideally on a secondary account. This post has nothing to do with Xiaohongshu or Anthropic.
+
+<XhsDiagram lang="en" />
+
+## First, which kind of account do you have?
+
+| Account | How to tell | Which steps |
+| --- | --- | --- |
+| Xiaohongshu (registered with a +86 number) | After logging in on the web, you stay on xiaohongshu.com | Steps 1, 3 and 4 (skip step 2) |
+| RedNote (overseas number, registered after 2025-12-08) | After logging in on the web, you're sent to rednote.com | All of steps 1–4; without step 2's patch, searches time out every time |
+
+The Claude phone app and claude.ai on the web run in the cloud and can't reach a server on your computer by default. To use this from your phone, finish steps 1–4 and then see step 5.
+
+## What you need
+
+- An Apple Silicon (M-series) Mac. Run `uname -m` in Terminal; it should print `arm64`.
+- [Homebrew](https://brew.sh), then Node (for the desktop app's bridge) and the GitHub CLI: `brew install node gh`, and run `gh auth login` once to sign in to GitHub.
+- The Xiaohongshu app on your phone, logged in, to scan the QR code.
+- Preferably an identity-verified account; if you're wary, a secondary one.
+
+## Step 1: Download the programs and log in with a QR code
+
+Open Terminal and run:
+
+```bash
+mkdir -p ~/tools/xiaohongshu-mcp && cd ~/tools/xiaohongshu-mcp
+gh release download v2.7.4 -R xpzouying/xiaohongshu-mcp -p 'xiaohongshu-login-darwin-arm64' -p 'xiaohongshu-mcp-darwin-arm64'
+chmod +x xiaohongshu-*
+xattr -d com.apple.quarantine xiaohongshu-* 2>/dev/null
+./xiaohongshu-login-darwin-arm64
+```
+
+1. The first run downloads a built-in browser (about 150 MB, once).
+2. A Chromium window then opens with a login QR code (it may be hidden behind other windows). Scan it with the Xiaohongshu app.
+3. When Terminal prints 「登录成功！」 ("logged in"), a `cookies.json` appears in the folder. That's your login; don't share it.
+
+**RedNote accounts**: the official login program hangs loading `xiaohongshu.com` and crashes after 30 seconds (`panic: context deadline exceeded`) before any QR code appears. Skip the last line above; do step 2 first and log in with the patched program.
+
+To try the server on its own: `./xiaohongshu-mcp-darwin-arm64 -port 127.0.0.1:18060`. Always include `127.0.0.1`: by default it listens on every network interface with no password, so anyone on the same network could use your account.
+
+## Step 2 (RedNote accounts only): Patch and build it yourself
+
+The official build hard-codes `www.xiaohongshu.com`, but a RedNote account's login only works on `rednote.com`, so the search page keeps showing 「登录后查看搜索结果」 ("log in to see results") and times out after 60 seconds. The patch makes every URL switchable with the environment variable `XHS_SITE=rednote`. Upstream discussion: [issue #579](https://github.com/xpzouying/xiaohongshu-mcp/issues/579).
+
+Install Go, fetch the source and swap the URLs:
+
+```bash
+brew install go
+cd ~/tools/xiaohongshu-mcp
+git -c advice.detachedHead=false clone --depth 1 --branch v2.7.4 https://github.com/xpzouying/xiaohongshu-mcp.git src
+cd src/xiaohongshu
+for f in $(grep -l '"https://www\.xiaohongshu\.com' *.go | grep -v _test); do perl -pi -e 's{"https://www\.xiaohongshu\.com([^"]*)"}{SiteURL("$1")}g unless m{^\s*//}' "$f"; done
+perl -pi -e 's{"\.xiaohongshu\.com"}{SiteHostSuffix()}' search_ready.go
+```
+
+Then create `src/xiaohongshu/site.go` (after the replacement above, or it gets rewritten too):
+
+```go
+package xiaohongshu
+
+import (
+	"os"
+	"strings"
+)
+
+func isRednote() bool {
+	return strings.EqualFold(strings.TrimSpace(os.Getenv("XHS_SITE")), "rednote")
+}
+
+func SiteURL(path string) string {
+	if isRednote() {
+		return "https://www.rednote.com" + path
+	}
+	return "https://www.xiaohongshu.com" + path
+}
+
+func SiteHostSuffix() string {
+	if isRednote() {
+		return ".rednote.com"
+	}
+	return ".xiaohongshu.com"
+}
+```
+
+Next, **replace the whole of** `src/xiaohongshu/login.go` with the code below. It fixes two things. rednote pages take a long time to report "loaded", and the original waits 30 seconds and crashes; this version waits 12–15 seconds at most and then checks the sidebar for the logged-in link. And RedNote's home page shows no QR code, so the QR login goes to `/login`. (For v2.7.4 only. The file is modified from the upstream code, so its source and changes are noted at the top, as the Apache 2.0 license asks.)
+
+```go
+// Modified from xpzouying/xiaohongshu-mcp v2.7.4, xiaohongshu/login.go
+// Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+// Changes: wait at most 12–15 s for the page to load, then check the sidebar for the logged-in
+// link; on rednote.com, open /login to show the QR code.
+package xiaohongshu
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/go-rod/rod"
+	"github.com/pkg/errors"
+)
+
+type LoginAction struct {
+	page *rod.Page
+}
+
+func NewLogin(page *rod.Page) *LoginAction {
+	return &LoginAction{page: page}
+}
+
+func (a *LoginAction) CheckLoginStatus(ctx context.Context) (bool, error) {
+	pp := a.page.Context(ctx).Timeout(30 * time.Second)
+	if err := pp.Navigate(SiteURL("/explore")); err != nil {
+		return false, errors.Wrap(err, "navigate explore failed")
+	}
+	waitLoadLenient(pp, 12*time.Second)
+
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		exists, _, err := pp.Has(loggedInSelector)
+		if err != nil {
+			return false, errors.Wrap(err, "check login status failed")
+		}
+		if exists {
+			return true, nil
+		}
+		if time.Now().After(deadline) {
+			return false, nil
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+const loggedInSelector = `.main-container .user .link-wrapper .channel`
+
+func waitLoadLenient(p *rod.Page, d time.Duration) {
+	_ = p.Timeout(d).WaitLoad()
+}
+
+func loginPageURL() string {
+	if isRednote() {
+		return SiteURL("/login")
+	}
+	return SiteURL("/explore")
+}
+
+type CurrentUser struct {
+	Nickname string `json:"nickname"`
+	UserID   string `json:"userId"`
+}
+
+func (a *LoginAction) CurrentUser(ctx context.Context) (*CurrentUser, error) {
+	pp := a.page.Context(ctx).Timeout(10 * time.Second)
+
+	res, err := pp.Eval(`() => {
+		const u = window.__INITIAL_STATE__ && window.__INITIAL_STATE__.user;
+		const info = u && u.userInfo && u.userInfo.value !== undefined ? u.userInfo.value : (u && u.userInfo);
+		if (!info || info.guest) return "";
+		return JSON.stringify({nickname: info.nickname, userId: info.userId || info.user_id});
+	}`)
+	if err != nil {
+		return nil, errors.Wrap(err, "read current user state failed")
+	}
+
+	raw := res.Value.String()
+	if raw == "" {
+		return nil, errors.New("current user not found in page state")
+	}
+
+	var user CurrentUser
+	if err := json.Unmarshal([]byte(raw), &user); err != nil {
+		return nil, errors.Wrap(err, "unmarshal current user failed")
+	}
+
+	return &user, nil
+}
+
+func (a *LoginAction) Login(ctx context.Context) error {
+	pp := a.page.Context(ctx)
+
+	if err := pp.Navigate(loginPageURL()); err != nil {
+		return errors.Wrap(err, "navigate login page failed")
+	}
+	waitLoadLenient(pp, 15*time.Second)
+
+	tick := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(1 * time.Second):
+		}
+		if exists, _, _ := pp.Has(loggedInSelector); exists {
+			return nil
+		}
+		tick++
+		if !isRednote() || tick%5 != 0 {
+			continue
+		}
+		path := ""
+		if res, err := pp.Timeout(3 * time.Second).Eval(`() => location.pathname`); err == nil {
+			path = res.Value.Str()
+		}
+		hasQR, _, _ := pp.Has(".login-container .qrcode-img")
+		if path == "/login" && !hasQR {
+			_ = pp.Navigate(SiteURL("/explore"))
+			waitLoadLenient(pp, 15*time.Second)
+		}
+	}
+}
+
+func (a *LoginAction) FetchQrcodeImage(ctx context.Context) (string, bool, error) {
+	pp := a.page.Context(ctx)
+
+	if err := pp.Navigate(loginPageURL()); err != nil {
+		return "", false, errors.Wrap(err, "navigate login page failed")
+	}
+	waitLoadLenient(pp, 15*time.Second)
+
+	time.Sleep(2 * time.Second)
+
+	if exists, _, _ := pp.Has(loggedInSelector); exists {
+		return "", true, nil
+	}
+
+	src, err := pp.MustElement(".login-container .qrcode-img").Attribute("src")
+	if err != nil {
+		return "", false, errors.Wrap(err, "get qrcode src failed")
+	}
+	if src == nil || len(*src) == 0 {
+		return "", false, errors.New("qrcode src is empty")
+	}
+
+	return *src, false, nil
+}
+
+func (a *LoginAction) WaitForLogin(ctx context.Context) bool {
+	pp := a.page.Context(ctx)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-ticker.C:
+			el, err := pp.Element(loggedInSelector)
+			if err == nil && el != nil {
+				return true
+			}
+		}
+	}
+}
+```
+
+Build the server and the login program, and run the tests:
+
+```bash
+cd ~/tools/xiaohongshu-mcp/src
+go build -o ../xiaohongshu-mcp-rednote . && go build -o ../xiaohongshu-login-rednote ./cmd/login && go test ./xiaohongshu/
+```
+
+Log in with the patched program:
+
+```bash
+cd ~/tools/xiaohongshu-mcp && XHS_SITE=rednote ./xiaohongshu-login-rednote
+```
+
+The window opens rednote's login page; scan it with the Xiaohongshu app. If you're already logged in, it prints 「当前登录状态: true」 ("logged in: true").
+
+- `git diff --stat` should show 10 files changed (the new site.go isn't counted).
+- Publishing goes through `creator.xiaohongshu.com`, which the patch doesn't touch, so posting from a RedNote account probably won't work. Search, note details, comments and the login check have been tested.
+- Use the patched program for future logins too; the official one crashes for RedNote accounts.
+
+## Step 3: Start it at login, listening on this Mac only
+
+Claude can only search while the server is running. macOS's own launchd starts it when you log in and restarts it if it crashes.
+
+Save the following as `~/Library/LaunchAgents/com.local.xiaohongshu-mcp.plist`. **Replace every `YOURNAME` (4 places) with your Mac username** (`whoami` in Terminal shows it; a plist can't use `~`).
+
+- +86 accounts: use `xiaohongshu-mcp-darwin-arm64` as the program and delete the whole `EnvironmentVariables` section.
+- RedNote accounts: use it as is.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.xiaohongshu-mcp</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/YOURNAME/tools/xiaohongshu-mcp/xiaohongshu-mcp-rednote</string>
+    <string>-port</string>
+    <string>127.0.0.1:18060</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>XHS_SITE</key>
+    <string>rednote</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/server.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/server.log</string>
+</dict>
+</plist>
+```
+
+Load it and check it's running:
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.xiaohongshu-mcp.plist
+lsof -nP -iTCP:18060 -sTCP:LISTEN
+```
+
+The second command should show `127.0.0.1:18060 (LISTEN)`. To stop it later: `launchctl bootout gui/$(id -u)/com.local.xiaohongshu-mcp`.
+
+## Step 4: Connect it to Claude
+
+**Claude Code**: edit `~/.claude.json` and add this at the top level (if `mcpServers` already exists, add the entry inside it):
+
+```json
+"mcpServers": {
+  "xiaohongshu-mcp": { "type": "http", "url": "http://127.0.0.1:18060/mcp" }
+}
+```
+
+With the `claude` CLI installed you can instead run `claude mcp add --scope user --transport http xiaohongshu-mcp http://127.0.0.1:18060/mcp`. Only sessions **started or restarted** after this pick it up.
+
+**Chat in the Claude desktop app**: Chat's config can only launch local commands, so `mcp-remote` bridges to the server.
+
+1. Claude app → Settings (⌘,) → **Developer** → **Edit Config**.
+2. Inside the outermost braces, after the first entry, add this (mind the commas):
+
+```json
+"mcpServers": {
+  "xiaohongshu": {
+    "command": "/opt/homebrew/bin/npx",
+    "args": ["-y", "mcp-remote", "http://127.0.0.1:18060/mcp"],
+    "env": { "PATH": "/opt/homebrew/bin:/usr/bin:/bin" }
+  }
+},
+```
+
+3. Save with ⌘S, then **immediately** quit the app with ⌘Q and reopen it. While open, the app writes its in-memory settings back to this file and can overwrite your change.
+4. In Settings → Developer, xiaohongshu should show as running. New and existing chats can use it, as long as you chat in the desktop app.
+
+Keep the `PATH` line: without it the app can't find the Node that Homebrew installed.
+
+## Step 5 (optional): Use it from your phone
+
+Two ways; both need the **Mac on, online and not sleeping**. Run `pmset -g | grep sleep` in Terminal: `sleep` should be 0 (display sleep is fine). If it isn't, run `sudo pmset -a sleep 0` or turn off automatic sleep in System Settings.
+
+### Option A: Remote Control (simplest, no config changes)
+
+Drive a Claude Code session on your Mac from your phone, with all its tools.
+
+1. Start a session in the **Code** tab of the Claude desktop app (with Xiaohongshu connected in step 4) and send a first message.
+2. Turn on that session's **Remote Control** switch (or just tell Claude "turn on remote control").
+3. On your phone, Claude app → **Code**, open the session with the same name, and carry on, including Xiaohongshu searches.
+
+The limit: it only works in that Code session, not in ordinary chats on your phone.
+
+### Option B: Ordinary phone chats too (Cloudflare Tunnel + read-only gateway)
+
+A claude.ai custom connector needs a public address. This exposes the server through Cloudflare Tunnel, with a read-only gateway in front:
+
+- Only a URL carrying the right secret gets through; every other request gets a 404, so from outside there's nothing there.
+- Only five read-only tools are allowed: search, note details, home feed, user profile and the login check. Liking, commenting, publishing and deleting cookies are all blocked.
+
+You need a domain on Cloudflare (nameservers pointed at Cloudflare; the free plan is fine). Below, replace `xhs.example.com` with your own subdomain and `YOURNAME` with your Mac username.
+
+**B1. Create a secret and the gateway**
+
+```bash
+brew install cloudflared
+mkdir -p ~/tools/xiaohongshu-mcp/proxy && cd ~/tools/xiaohongshu-mcp/proxy
+openssl rand -hex 24 > secret && chmod 600 secret
+```
+
+The `secret` file is the key; never paste it into a chat, a screenshot or a group. Then save this as `~/tools/xiaohongshu-mcp/proxy/readonly-proxy.mjs`:
+
+```javascript
+// Read-only gateway in front of the local xiaohongshu MCP server.
+// - Only POST /<secret>/mcp is served; everything else is 404.
+// - tools/call is allowed only for read-only tools; tools/list is filtered to match.
+// - Listens on 127.0.0.1 only; exposed to the internet via Cloudflare Tunnel.
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { timingSafeEqual } from "node:crypto";
+
+const HERE = path.dirname(new URL(import.meta.url).pathname);
+const SECRET = fs.readFileSync(path.join(HERE, "secret"), "utf8").trim();
+const LISTEN_PORT = Number(process.env.PROXY_PORT || 18070);
+const UPSTREAM = process.env.UPSTREAM || "http://127.0.0.1:18060/mcp";
+const MAX_BODY = 1 << 20; // 1 MiB
+
+const ALLOWED_TOOLS = new Set([
+  "search_feeds",
+  "get_feed_detail",
+  "list_feeds",
+  "user_profile",
+  "check_login_status",
+]);
+
+if (SECRET.length < 32) throw new Error("secret too short");
+
+function pathOk(urlPath) {
+  const want = `/${SECRET}/mcp`;
+  const a = Buffer.from(urlPath);
+  const b = Buffer.from(want);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function log(...args) {
+  console.log(new Date().toISOString(), ...args);
+}
+
+function rpcError(id, message) {
+  return { jsonrpc: "2.0", id: id ?? null, error: { code: -32601, message } };
+}
+
+function screen(msgs) {
+  const forward = [];
+  const blocked = [];
+  for (const m of msgs) {
+    if (m && m.method === "tools/call") {
+      const name = m.params && m.params.name;
+      if (!ALLOWED_TOOLS.has(name)) {
+        log("blocked tool", JSON.stringify(name));
+        if (m.id !== undefined) blocked.push(rpcError(m.id, `Tool "${name}" is disabled on this read-only endpoint`));
+        continue;
+      }
+      log("tool", name);
+    }
+    forward.push(m);
+  }
+  return { forward, blocked };
+}
+
+function filterResult(obj) {
+  if (obj && obj.result && Array.isArray(obj.result.tools)) {
+    obj.result.tools = obj.result.tools.filter((t) => ALLOWED_TOOLS.has(t.name));
+  }
+  return obj;
+}
+
+// Upstream may answer with JSON or an SSE stream; collect every JSON-RPC message.
+function parseUpstream(text, contentType) {
+  if ((contentType || "").includes("text/event-stream")) {
+    const out = [];
+    for (const block of text.split(/\r?\n\r?\n/)) {
+      const data = block
+        .split(/\r?\n/)
+        .filter((l) => l.startsWith("data:"))
+        .map((l) => l.slice(5).trimStart())
+        .join("\n");
+      if (data) {
+        try { out.push(JSON.parse(data)); } catch { /* ignore non-JSON events */ }
+      }
+    }
+    return out;
+  }
+  if (!text.trim()) return [];
+  const parsed = JSON.parse(text);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+const server = http.createServer(async (req, res) => {
+  const urlPath = (req.url || "").split("?")[0];
+  const shown = urlPath.split(SECRET).join("<secret>");
+  res.on("finish", () => log("req", req.method, shown, res.statusCode, JSON.stringify(req.headers["user-agent"] || "")));
+  if (!pathOk(urlPath)) {
+    res.writeHead(404).end();
+    return;
+  }
+  if (req.method !== "POST") {
+    res.writeHead(405, { Allow: "POST" }).end();
+    return;
+  }
+
+  let size = 0;
+  const chunks = [];
+  for await (const c of req) {
+    size += c.length;
+    if (size > MAX_BODY) {
+      res.writeHead(413).end();
+      return;
+    }
+    chunks.push(c);
+  }
+
+  let msgs;
+  let isBatch = false;
+  try {
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    isBatch = Array.isArray(body);
+    msgs = isBatch ? body : [body];
+  } catch {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(rpcError(null, "Parse error")));
+    return;
+  }
+
+  const { forward, blocked } = screen(msgs);
+  let responses = [...blocked];
+
+  if (forward.length) {
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    };
+    for (const h of ["mcp-session-id", "mcp-protocol-version"]) {
+      if (req.headers[h]) headers[h] = req.headers[h];
+    }
+    let up;
+    try {
+      up = await fetch(UPSTREAM, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(isBatch ? forward : forward[0]),
+        signal: AbortSignal.timeout(170_000),
+      });
+    } catch (e) {
+      log("upstream error", e.message);
+      res.writeHead(502).end();
+      return;
+    }
+    const text = await up.text();
+    if (up.status === 202 && !text.trim() && !blocked.length) {
+      res.writeHead(202).end();
+      return;
+    }
+    try {
+      responses = responses.concat(parseUpstream(text, up.headers.get("content-type")).map(filterResult));
+    } catch (e) {
+      log("bad upstream body", e.message);
+      res.writeHead(502).end();
+      return;
+    }
+    const sid = up.headers.get("mcp-session-id");
+    if (sid) res.setHeader("Mcp-Session-Id", sid);
+  }
+
+  if (!responses.length) {
+    res.writeHead(202).end();
+    return;
+  }
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(isBatch ? responses : responses[0]));
+});
+
+server.listen(LISTEN_PORT, "127.0.0.1", () => log(`read-only proxy on 127.0.0.1:${LISTEN_PORT}`));
+```
+
+**B2. Start the gateway at login**: save as `~/Library/LaunchAgents/com.local.xiaohongshu-proxy.plist` (`YOURNAME` in 4 places):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.xiaohongshu-proxy</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/readonly-proxy.mjs</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/proxy.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/proxy.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.xiaohongshu-proxy.plist
+```
+
+**B3. Create the tunnel**
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create xhs-mcp
+cloudflared tunnel route dns xhs-mcp xhs.example.com
+```
+
+The first command opens a browser to authorize a domain; if it doesn't, open the URL it prints. The second prints a tunnel ID (`xxxxxxxx-xxxx-…`), shown below as `<TUNNEL_ID>`. Create `~/.cloudflared/xhs-mcp.yml`:
+
+```yaml
+tunnel: <TUNNEL_ID>
+credentials-file: /Users/YOURNAME/.cloudflared/<TUNNEL_ID>.json
+ingress:
+  - hostname: xhs.example.com
+    service: http://127.0.0.1:18070
+  - service: http_status:404
+```
+
+Then save `~/Library/LaunchAgents/com.local.cloudflared-xhs.plist` (`YOURNAME` in 3 places):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.cloudflared-xhs</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/cloudflared</string>
+    <string>tunnel</string>
+    <string>--no-autoupdate</string>
+    <string>--config</string>
+    <string>/Users/YOURNAME/.cloudflared/xhs-mcp.yml</string>
+    <string>run</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/cloudflared.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/cloudflared.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.cloudflared-xhs.plist
+```
+
+**B4. Test**: the first command should return 404; the second should list exactly 5 tools.
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://xhs.example.com/
+curl -s -X POST "https://xhs.example.com/$(cat ~/tools/xiaohongshu-mcp/proxy/secret)/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+**B5. Add it to claude.ai**
+
+1. Copy the full URL to the clipboard (so the secret never shows on screen): `printf 'https://xhs.example.com/%s/mcp' "$(cat ~/tools/xiaohongshu-mcp/proxy/secret)" | pbcopy`
+2. On your computer, open claude.ai → **Settings → Connectors → Add custom connector**, name it "Xiaohongshu", and paste the URL with ⌘V.
+3. **Don't pick a type that needs sign-in**; leave OAuth Client ID / Secret empty, or you'll get "Couldn't register with … sign-in service".
+4. It syncs to your phone. Start a new chat there, check that Xiaohongshu is on in the tools menu, and ask "search Xiaohongshu for …". A search takes about 10–20 seconds.
+
+**If the URL leaks**: create a new secret and restart the gateway; the old URL stops working at once. Then delete the connector on claude.ai and add it again with the new URL:
+
+```bash
+cd ~/tools/xiaohongshu-mcp/proxy && openssl rand -hex 24 > secret && launchctl kickstart -k gui/$(id -u)/com.local.xiaohongshu-proxy
+```
+
+To close the public entrance completely: `launchctl bootout gui/$(id -u)/com.local.cloudflared-xhs`. The gateway's log, `proxy/proxy.log`, records every request with the secret replaced by `<secret>`.
+
+## Testing, common problems and upkeep
+
+Once it's set up, ask Claude in turn: "check the Xiaohongshu login status" → "search Xiaohongshu for pour-over coffee" → "open the first one and read the comments". A search normally returns 20 notes in about 6–15 seconds.
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Every search times out after 60 s, but the home feed loads | A RedNote account on the official build | Do step 2, and make sure the plist has `XHS_SITE=rednote` |
+| The login check sometimes times out | rednote pages are slow to report "loaded" and the original waits indefinitely | Make sure step 2's login.go patch is in; if it still times out, try again |
+| Claude doesn't show the Xiaohongshu tools | The session started before the config, or the app overwrote Chat's config | Start a new session; for Chat, redo step 4 and quit with ⌘Q right away |
+| "Not logged in" | The cookie expired (every few months) | Stop the server → run the login program and scan again (the patched one for RedNote) → start the server |
+| You need the logs | — | `~/tools/xiaohongshu-mcp/server.log` |
+| Adding the connector fails with "Couldn't register with … sign-in service" | A connector type that needs sign-in (OAuth) was chosen | Delete it and add it again without sign-in, OAuth fields empty |
+| Phone searches hang or spin | The Mac is asleep, or the gateway/tunnel isn't running | `pmset -g \| grep sleep` should be 0; check `proxy/proxy.log` and `proxy/cloudflared.log` for new requests |
+
+**Risks**
+
+- This is unofficial automation, and accounts can be flagged. The project's author says it has run for over a year without a ban; still, don't fire off searches in quick bursts.
+- Besides search, the tools can like, comment, publish and delete cookies. Claude asks before it calls a tool; read those requests before you allow them.
+- Keep the server bound to `127.0.0.1` and never expose it directly: it has no password, and anyone who reaches it can act as you. For phone chats, put the read-only gateway and secret from step 5, option B in front.
+
+**Upgrading**: for +86 accounts, download the new binaries and swap them in. For RedNote accounts, redo step 2 with the new version number (delete `src` first), then restart the server with `launchctl kickstart -k gui/$(id -u)/com.local.xiaohongshu-mcp`.
+
+## What I used it for
+
+I used it to look up what Xiaohongshu says about the beans on my [Coffee page](/coffee/#beans): some split opinion sharply, and some nobody had written about at all, which was more interesting than I expected.
+
+## Credits and licenses
+
+- [xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp) is by xpzouying, under the [Apache License 2.0](https://github.com/xpzouying/xiaohongshu-mcp/blob/main/LICENSE).
+- Step 2's `login.go` is modified from `xiaohongshu/login.go` in its v2.7.4 release; the changes are noted at the top of the code.
+- `site.go`, the read-only gateway and the plists are mine; use them freely, without warranty.

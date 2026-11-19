@@ -10,7 +10,7 @@ import { site } from '../lib/site';
 
 export async function GET(context: APIContext) {
   const container = await AstroContainer.create({ renderers: await loadRenderers([getContainerRenderer()]) });
-  const posts = (await getPosts()).filter((p) => !p.data.draft);
+  const posts = (await getPosts('en')).filter((p) => !p.data.draft);
 
   const items = await Promise.all(
     posts.map(async (post) => {

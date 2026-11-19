@@ -8,35 +8,58 @@ import H3 from '../../components/H3.astro';
 import { getPosts, readingTime, formatDate, tagSlug, type Post } from '../../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getPosts();
-  return posts.map((post, i) => ({
-    params: { slug: post.id },
-    // posts are newest first: "newer" is the previous index
-    props: { post, newer: posts[i - 1], older: posts[i + 1] },
-  }));
+  const all = await getPosts();
+  return all.map((post) => {
+    // prev/next stay within the post's own language; posts are newest first, so "newer" is the previous index
+    const same = all.filter((p) => p.data.lang === post.data.lang);
+    const i = same.indexOf(post);
+    const translation = all.find((p) => p.id === post.data.translation);
+    return { params: { slug: post.id }, props: { post, newer: same[i - 1], older: same[i + 1], translation } };
+  });
 }
 
 interface Props {
   post: Post;
   newer?: Post;
   older?: Post;
+  translation?: Post;
 }
 
-const { post, newer, older } = Astro.props;
+const { post, newer, older, translation } = Astro.props;
 const { Content, headings } = await render(post);
 const h2Count = headings.filter((h) => h.depth === 2).length;
 const toc = h2Count >= 3 ? headings.filter((h) => h.depth === 2 || h.depth === 3) : [];
-const { title, description, date, updated, tags, cover, draft } = post.data;
+const { title, description, date, updated, tags, cover, draft, lang } = post.data;
+const zh = lang === 'zh';
+const t = zh
+  ? { min: '分钟阅读', draft: '草稿', contents: '目录', updated: '更新于', older: '← 更早', newer: '更新 →', more: '更多文章' }
+  : { min: 'min read', draft: 'Draft', contents: 'Contents', updated: 'Updated', older: '← Older', newer: 'Newer →', more: 'More posts' };
+const site = Astro.site!;
 ---
 
-<Base title={title} description={description} ogType="article">
+<Base title={title} description={description} ogType="article" lang={lang} og={`post-${post.id}`}>
+  {
+    translation && (
+      <Fragment slot="head">
+        <link rel="alternate" hreflang={zh ? 'zh-CN' : 'en'} href={new URL(`/blog/${post.id}/`, site)} />
+        <link rel="alternate" hreflang={zh ? 'en' : 'zh-CN'} href={new URL(`/blog/${translation.id}/`, site)} />
+      </Fragment>
+    )
+  }
   <article class="post">
     <header class="post-head">
       <p class="meta">
-        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        <time datetime={date.toISOString()}>{formatDate(date, lang)}</time>
         <span aria-hidden="true">·</span>
-        <span>{readingTime(post.body)} min read</span>
-        {draft && <span class="draft">Draft</span>}
+        <span>{readingTime(post.body, lang)} {t.min}</span>
+        {draft && <span class="draft">{t.draft}</span>}
+        {
+          translation && (
+            <a class="lang" href={`/blog/${translation.id}/`} hreflang={zh ? 'en' : 'zh-CN'} lang={zh ? 'en' : 'zh-CN'}>
+              {zh ? 'Read in English' : '中文版'}
+            </a>
+          )
+        }
       </p>
       <h1>{title}</h1>
       <p class="dek">{description}</p>
@@ -58,7 +81,7 @@ const { title, description, date, updated, tags, cover, draft } = post.data;
     {
       toc.length > 0 && (
         <nav class="toc" aria-label="Table of contents">
-          <p class="kicker">Contents</p>
+          <p class="kicker">{t.contents}</p>
           <ol>
             {toc.map((h) => (
               <li class={`depth-${h.depth}`}>
@@ -74,14 +97,14 @@ const { title, description, date, updated, tags, cover, draft } = post.data;
       <Content components={{ h2: H2, h3: H3 }} />
     </div>
 
-    {updated && <p class="updated">Updated {formatDate(updated)}</p>}
+    {updated && <p class="updated">{t.updated} {formatDate(updated, lang)}</p>}
 
     {
       (newer || older) && (
-        <nav class="pager" aria-label="More posts">
+        <nav class="pager" aria-label={t.more}>
           {older ? (
             <a class="older" href={`/blog/${older.id}/`}>
-              <span class="kicker">← Older</span>
+              <span class="kicker">{t.older}</span>
               {older.data.title}
             </a>
           ) : (
@@ -89,7 +112,7 @@ const { title, description, date, updated, tags, cover, draft } = post.data;
           )}
           {newer && (
             <a class="newer" href={`/blog/${newer.id}/`}>
-              <span class="kicker">Newer →</span>
+              <span class="kicker">{t.newer}</span>
               {newer.data.title}
             </a>
           )}
@@ -112,6 +135,20 @@ const { title, description, date, updated, tags, cover, draft } = post.data;
     color: var(--muted);
     font-size: 0.9rem;
   }
+  .lang {
+    margin-left: auto;
+    padding: 0 0.65rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    color: var(--fg);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: border-color var(--ease), color var(--ease);
+  }
+  .lang:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
   .draft {
     padding: 0 0.5rem;
     border: 1px dashed var(--accent);
@@ -128,6 +165,9 @@ const { title, description, date, updated, tags, cover, draft } = post.data;
     margin: 1rem 0 0;
     color: var(--muted);
     font: italic 400 1.2rem / 1.45 var(--display);
+  }
+  :global(:lang(zh)) .dek {
+    font-style: normal;
   }
   .tags {
     display: flex;

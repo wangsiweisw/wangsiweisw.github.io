@@ -17,8 +17,7 @@ export const nav: NavItem[] = [
   { href: '/photos', label: 'Photography', live: albums.length > 0 },
   { href: '/coffee', label: 'Coffee', live: pours.length > 0 },
   { href: '/running', label: 'Running', live: true },
-  // Flip to live once the first post is published (drafts are excluded from production).
-  { href: '/blog', label: 'Blog', live: false },
+  { href: '/blog', label: 'Blog', live: true },
 ];
 
 export const visibleNav = nav.filter((item) => item.live || import.meta.env.DEV);

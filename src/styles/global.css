@@ -271,3 +271,10 @@ a {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg);
 }
+
+/* Chinese has no true italic: keep quotes and subtitles upright instead of a synthetic slant */
+:lang(zh) .prose blockquote,
+:lang(zh) .prose em,
+:lang(zh) .dek {
+  font-style: normal;
+}

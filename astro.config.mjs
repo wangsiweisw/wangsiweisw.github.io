@@ -14,13 +14,11 @@ export default defineConfig({
   site: 'https://siweiwang.me',
   // CSS is only a few KB: inline it so first paint doesn't wait on a separate request.
   build: { inlineStylesheets: 'always' },
-  // TODO(owner): drop the /blog filter once the first post is published (also flip `live` in src/data/nav.ts).
   integrations: [
     mdx(),
     sitemap({
       filter: (page) =>
-        !page.includes('/blog') &&
-        !page.includes('/coffee/beans/') && // share links that forward to a card on /coffee
+        !page.includes('/coffee/beans/') && // bean share pages
         (resumeLive || !page.includes('/resume')) && (photosLive || !page.includes('/photos')),
     }),
   ],

@@ -22,6 +22,11 @@ const { posts } = Astro.props;
               {post.data.title}
             </a>
             {post.data.draft && <span class="draft">Draft</span>}
+            {post.data.translation && (
+              <a class="zh" href={`/blog/${post.data.translation}/`} hreflang="zh-CN" lang="zh-CN">
+                中文
+              </a>
+            )}
             <p>{post.data.description}</p>
           </div>
         </li>
@@ -64,6 +69,20 @@ const { posts } = Astro.props;
   p {
     margin: 0.3rem 0 0;
     color: var(--muted);
+  }
+.zh {
+    margin-left: 0.5rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-decoration: none;
+    vertical-align: 0.2em;
+  }
+  .zh:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
   .draft {
     margin-left: 0.6rem;

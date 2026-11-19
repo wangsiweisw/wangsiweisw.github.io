@@ -1,0 +1,718 @@
+---
+title: 把小红书接进 Claude：Mac 本地部署完整教程
+description: 用开源的 xiaohongshu-mcp 让 Claude 搜小红书笔记、读正文和评论，包括 RedNote 海外账号的补丁，以及在手机上安全使用的只读网关。
+date: 2026-11-19
+tags: [Claude, MCP, 小红书]
+lang: zh
+translation: xiaohongshu-claude
+---
+
+import XhsDiagram from '../../components/blog/XhsDiagram.astro';
+
+最近给网站做了一张[咖啡豆地图](/coffee/#beans)，想知道这些豆子在小红书上大家怎么评价。小红书没有公开的 API，网页版搜索要登录，从美国用起来也不顺手。于是我用开源项目 [xpzouying/xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp) 把它接进了 Claude：现在在 Claude Code 或 Claude 桌面 app 里直接说「帮我搜小红书上的 xxx」，Claude 就能搜笔记、读正文和评论。
+
+这篇是完整的部署记录（基于 v2.7.4），包括我踩到的两个坑：海外手机号注册的 RedNote 账号要自己打补丁；想在手机上用，又不想把账号直接暴露到公网。
+
+> **先说清楚风险**：这是非官方的自动化工具，它在你的 Mac 上开一个本地服务，用自动化浏览器登录你自己的小红书账号，有被风控的可能。建议只做个人、低频、只读的使用，最好用小号。本文与小红书、Anthropic 都没有关系。
+
+<XhsDiagram lang="zh" />
+
+## 先看你是哪种账号
+
+| 账号类型 | 怎么判断 | 走哪条路 |
+| --- | --- | --- |
+| 小红书（+86 手机号注册） | 网页版登录后停在 xiaohongshu.com | 第 1 步 → 第 3 步 → 第 4 步（跳过第 2 步） |
+| RedNote（海外手机号，2025-12-08 后注册） | 网页版登录后被跳到 rednote.com | 第 1–4 步全做；不做第 2 步的补丁，搜索会一直超时 |
+
+手机上的 Claude app 和网页版 claude.ai 跑在云端，默认连不到你电脑上的本地服务。想在手机上用，做完第 1–4 步后看第 5 步。
+
+## 准备工作
+
+- 一台 Apple Silicon（M 系列芯片）的 Mac。在「终端」里运行 `uname -m`，显示 `arm64` 就对。
+- [Homebrew](https://brew.sh)，然后装 Node（给 Chat 的桥接用）和 GitHub 命令行工具：`brew install node gh`，再运行一次 `gh auth login` 登录 GitHub。
+- 手机上装好小红书 App、已登录，用来扫码。
+- 尽量用已实名认证的账号；不放心的话用小号。
+
+## 第 1 步：下载程序并扫码登录
+
+打开 Mac 自带的「终端」，依次运行：
+
+```bash
+mkdir -p ~/tools/xiaohongshu-mcp && cd ~/tools/xiaohongshu-mcp
+gh release download v2.7.4 -R xpzouying/xiaohongshu-mcp -p 'xiaohongshu-login-darwin-arm64' -p 'xiaohongshu-mcp-darwin-arm64'
+chmod +x xiaohongshu-*
+xattr -d com.apple.quarantine xiaohongshu-* 2>/dev/null
+./xiaohongshu-login-darwin-arm64
+```
+
+1. 第一次运行会先下载一个内置浏览器（约 150 MB，只下一次）。
+2. 然后会弹出一个 Chromium 窗口，里面是登录二维码（可能被别的窗口挡住）。用小红书 App 扫码。
+3. 终端显示「登录成功！」后，目录里会多出一个 `cookies.json`，就是你的登录凭证，别发给别人。
+
+**RedNote 账号注意**：官方登录程序会卡在加载 `xiaohongshu.com`，30 秒后崩溃（`panic: context deadline exceeded`），二维码根本不会出来。上面最后一行先别运行，做完第 2 步再用补丁版登录程序扫码。
+
+想先试跑的话：`./xiaohongshu-mcp-darwin-arm64 -port 127.0.0.1:18060`。一定要加 `127.0.0.1`：默认会监听所有网卡且没有密码，同一网络里的人都能用你的账号。
+
+## 第 2 步（仅 RedNote 账号）：打补丁自己编译
+
+官方版把网址写死成 `www.xiaohongshu.com`，但 RedNote 账号的登录凭证只在 `rednote.com` 有效，所以搜索页一直显示「登录后查看搜索结果」，60 秒后超时。补丁把所有网址改成可以用环境变量 `XHS_SITE=rednote` 切换。上游相关讨论见 [issue #579](https://github.com/xpzouying/xiaohongshu-mcp/issues/579)。
+
+先装 Go，再拉源码并把网址替换掉：
+
+```bash
+brew install go
+cd ~/tools/xiaohongshu-mcp
+git -c advice.detachedHead=false clone --depth 1 --branch v2.7.4 https://github.com/xpzouying/xiaohongshu-mcp.git src
+cd src/xiaohongshu
+for f in $(grep -l '"https://www\.xiaohongshu\.com' *.go | grep -v _test); do perl -pi -e 's{"https://www\.xiaohongshu\.com([^"]*)"}{SiteURL("$1")}g unless m{^\s*//}' "$f"; done
+perl -pi -e 's{"\.xiaohongshu\.com"}{SiteHostSuffix()}' search_ready.go
+```
+
+然后新建 `src/xiaohongshu/site.go`（一定要在上面的替换之后再建，否则它自己也会被改掉）：
+
+```go
+package xiaohongshu
+
+import (
+	"os"
+	"strings"
+)
+
+func isRednote() bool {
+	return strings.EqualFold(strings.TrimSpace(os.Getenv("XHS_SITE")), "rednote")
+}
+
+func SiteURL(path string) string {
+	if isRednote() {
+		return "https://www.rednote.com" + path
+	}
+	return "https://www.xiaohongshu.com" + path
+}
+
+func SiteHostSuffix() string {
+	if isRednote() {
+		return ".rednote.com"
+	}
+	return ".xiaohongshu.com"
+}
+```
+
+再用下面内容**整个覆盖** `src/xiaohongshu/login.go`。它修两件事：一是 rednote 页面很久不报「加载完成」，原版死等 30 秒就崩，改成最多等 12–15 秒后直接看左侧栏有没有「我」；二是 RedNote 首页不弹二维码，扫码登录改走 `/login` 页。（只适用于 v2.7.4。这个文件改自上游代码，按 Apache 2.0 许可证在顶部注明了来源和改动。）
+
+```go
+// Modified from xpzouying/xiaohongshu-mcp v2.7.4, xiaohongshu/login.go
+// Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+// Changes: wait at most 12–15 s for the page to load, then check the sidebar for the logged-in
+// link; on rednote.com, open /login to show the QR code.
+package xiaohongshu
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/go-rod/rod"
+	"github.com/pkg/errors"
+)
+
+type LoginAction struct {
+	page *rod.Page
+}
+
+func NewLogin(page *rod.Page) *LoginAction {
+	return &LoginAction{page: page}
+}
+
+func (a *LoginAction) CheckLoginStatus(ctx context.Context) (bool, error) {
+	pp := a.page.Context(ctx).Timeout(30 * time.Second)
+	if err := pp.Navigate(SiteURL("/explore")); err != nil {
+		return false, errors.Wrap(err, "navigate explore failed")
+	}
+	waitLoadLenient(pp, 12*time.Second)
+
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		exists, _, err := pp.Has(loggedInSelector)
+		if err != nil {
+			return false, errors.Wrap(err, "check login status failed")
+		}
+		if exists {
+			return true, nil
+		}
+		if time.Now().After(deadline) {
+			return false, nil
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+const loggedInSelector = `.main-container .user .link-wrapper .channel`
+
+func waitLoadLenient(p *rod.Page, d time.Duration) {
+	_ = p.Timeout(d).WaitLoad()
+}
+
+func loginPageURL() string {
+	if isRednote() {
+		return SiteURL("/login")
+	}
+	return SiteURL("/explore")
+}
+
+type CurrentUser struct {
+	Nickname string `json:"nickname"`
+	UserID   string `json:"userId"`
+}
+
+func (a *LoginAction) CurrentUser(ctx context.Context) (*CurrentUser, error) {
+	pp := a.page.Context(ctx).Timeout(10 * time.Second)
+
+	res, err := pp.Eval(`() => {
+		const u = window.__INITIAL_STATE__ && window.__INITIAL_STATE__.user;
+		const info = u && u.userInfo && u.userInfo.value !== undefined ? u.userInfo.value : (u && u.userInfo);
+		if (!info || info.guest) return "";
+		return JSON.stringify({nickname: info.nickname, userId: info.userId || info.user_id});
+	}`)
+	if err != nil {
+		return nil, errors.Wrap(err, "read current user state failed")
+	}
+
+	raw := res.Value.String()
+	if raw == "" {
+		return nil, errors.New("current user not found in page state")
+	}
+
+	var user CurrentUser
+	if err := json.Unmarshal([]byte(raw), &user); err != nil {
+		return nil, errors.Wrap(err, "unmarshal current user failed")
+	}
+
+	return &user, nil
+}
+
+func (a *LoginAction) Login(ctx context.Context) error {
+	pp := a.page.Context(ctx)
+
+	if err := pp.Navigate(loginPageURL()); err != nil {
+		return errors.Wrap(err, "navigate login page failed")
+	}
+	waitLoadLenient(pp, 15*time.Second)
+
+	tick := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(1 * time.Second):
+		}
+		if exists, _, _ := pp.Has(loggedInSelector); exists {
+			return nil
+		}
+		tick++
+		if !isRednote() || tick%5 != 0 {
+			continue
+		}
+		path := ""
+		if res, err := pp.Timeout(3 * time.Second).Eval(`() => location.pathname`); err == nil {
+			path = res.Value.Str()
+		}
+		hasQR, _, _ := pp.Has(".login-container .qrcode-img")
+		if path == "/login" && !hasQR {
+			_ = pp.Navigate(SiteURL("/explore"))
+			waitLoadLenient(pp, 15*time.Second)
+		}
+	}
+}
+
+func (a *LoginAction) FetchQrcodeImage(ctx context.Context) (string, bool, error) {
+	pp := a.page.Context(ctx)
+
+	if err := pp.Navigate(loginPageURL()); err != nil {
+		return "", false, errors.Wrap(err, "navigate login page failed")
+	}
+	waitLoadLenient(pp, 15*time.Second)
+
+	time.Sleep(2 * time.Second)
+
+	if exists, _, _ := pp.Has(loggedInSelector); exists {
+		return "", true, nil
+	}
+
+	src, err := pp.MustElement(".login-container .qrcode-img").Attribute("src")
+	if err != nil {
+		return "", false, errors.Wrap(err, "get qrcode src failed")
+	}
+	if src == nil || len(*src) == 0 {
+		return "", false, errors.New("qrcode src is empty")
+	}
+
+	return *src, false, nil
+}
+
+func (a *LoginAction) WaitForLogin(ctx context.Context) bool {
+	pp := a.page.Context(ctx)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return false
+		case <-ticker.C:
+			el, err := pp.Element(loggedInSelector)
+			if err == nil && el != nil {
+				return true
+			}
+		}
+	}
+}
+```
+
+编译服务和登录程序、跑测试：
+
+```bash
+cd ~/tools/xiaohongshu-mcp/src
+go build -o ../xiaohongshu-mcp-rednote . && go build -o ../xiaohongshu-login-rednote ./cmd/login && go test ./xiaohongshu/
+```
+
+用补丁版登录程序扫码：
+
+```bash
+cd ~/tools/xiaohongshu-mcp && XHS_SITE=rednote ./xiaohongshu-login-rednote
+```
+
+弹出的窗口会直接打开 rednote 的登录页，用小红书 App 扫码；已经登录过的话会直接显示「当前登录状态: true」。
+
+- `git diff --stat` 应显示改了 10 个文件（新建的 site.go 不算在内）。
+- 发布内容走的是 `creator.xiaohongshu.com`，补丁没改，RedNote 账号下发布多半用不了；搜索、笔记详情、评论、登录检查已实测可用。
+- 以后重新扫码也用这个补丁版，官方登录程序对 RedNote 账号会崩。
+
+## 第 3 步：设成开机自启，只监听本机
+
+服务要一直开着 Claude 才能搜。用 macOS 自带的 launchd，登录电脑就自动启动、崩溃自动重启。
+
+把下面内容存成 `~/Library/LaunchAgents/com.local.xiaohongshu-mcp.plist`。**把所有 `YOURNAME`（共 4 处）改成你的 Mac 用户名**（终端里运行 `whoami` 可以看到；plist 里不能用 `~`）。
+
+- +86 账号：程序用 `xiaohongshu-mcp-darwin-arm64`，并删掉整个 `EnvironmentVariables` 段。
+- RedNote 账号：按下面原样用。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.xiaohongshu-mcp</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/YOURNAME/tools/xiaohongshu-mcp/xiaohongshu-mcp-rednote</string>
+    <string>-port</string>
+    <string>127.0.0.1:18060</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>XHS_SITE</key>
+    <string>rednote</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/server.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/server.log</string>
+</dict>
+</plist>
+```
+
+加载并确认在跑：
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.xiaohongshu-mcp.plist
+lsof -nP -iTCP:18060 -sTCP:LISTEN
+```
+
+第二行输出里应该看到 `127.0.0.1:18060 (LISTEN)`。以后要停掉就运行 `launchctl bootout gui/$(id -u)/com.local.xiaohongshu-mcp`。
+
+## 第 4 步：接入 Claude
+
+**Claude Code**：编辑 `~/.claude.json`，在最外层加上（已有 `mcpServers` 就往里面加一项）：
+
+```json
+"mcpServers": {
+  "xiaohongshu-mcp": { "type": "http", "url": "http://127.0.0.1:18060/mcp" }
+}
+```
+
+装了命令行版 `claude` 的话，也可以直接运行 `claude mcp add --scope user --transport http xiaohongshu-mcp http://127.0.0.1:18060/mcp`。之后**新开或重启**的 session 才会加载，正在跑的不会。
+
+**Claude 桌面 app 的 Chat**：Chat 的配置只支持启动本地命令，所以用 `mcp-remote` 做转接。
+
+1. Claude app → 设置（⌘,）→ **Developer** → **Edit Config**。
+2. 在文件最外层大括号里、第一项后面加上这段（注意前后的逗号）：
+
+```json
+"mcpServers": {
+  "xiaohongshu": {
+    "command": "/opt/homebrew/bin/npx",
+    "args": ["-y", "mcp-remote", "http://127.0.0.1:18060/mcp"],
+    "env": { "PATH": "/opt/homebrew/bin:/usr/bin:/bin" }
+  }
+},
+```
+
+3. ⌘S 保存后**马上** ⌘Q 完全退出 app，再重新打开。app 开着时会把自己内存里的设置写回这个文件，慢了你的改动会被覆盖。
+4. 设置 → Developer 里 xiaohongshu 显示 running 就好了。新的和老的 Chat 都能用，但必须是在电脑 app 里聊。
+
+`PATH` 那行不能省：app 启动命令时找不到 Homebrew 装的 node。
+
+## 第 5 步（可选）：在手机上用
+
+两种办法，前提都是 **Mac 一直开着、联网、不休眠**。终端运行 `pmset -g | grep sleep`，`sleep` 那一项要是 0（显示器睡眠没关系）；不是的话运行 `sudo pmset -a sleep 0`，或在系统设置里关掉自动睡眠。
+
+### 方法 A：Remote Control（最简单，不用改配置）
+
+在手机上直接操控电脑上的一个 Claude Code 会话，所有工具都能用。
+
+1. 在 Claude 桌面 app 的 **Code** 里开一个会话（第 4 步已经接好小红书），先发一条消息。
+2. 打开这个会话的 **Remote Control** 开关（也可以直接跟 Claude 说「打开 remote control」）。
+3. 手机 Claude app → **Code**，点开同名会话，就能接着聊、让它搜小红书。
+
+限制：只能在这个 Code 会话里用，手机上的普通 Chat 还是用不了。
+
+### 方法 B：手机上的普通 Chat 也能用（Cloudflare Tunnel + 只读网关）
+
+claude.ai 的「自定义连接器」需要一个公网地址。做法是用 Cloudflare Tunnel 把服务暴露出去，中间加一层只读网关：
+
+- 网址里必须带对密钥才放行，其他请求一律 404，外面看起来什么都没有；
+- 只放行 5 个只读工具：搜索、笔记详情、首页推荐、用户主页、登录检查。点赞、评论、发布、删 cookie 全部拦掉。
+
+需要一个托管在 Cloudflare 上的域名（NS 指向 Cloudflare，免费套餐即可）。下面 `xhs.example.com` 换成你自己的子域名，`YOURNAME` 换成 Mac 用户名。
+
+**B1. 生成密钥、建网关**
+
+```bash
+brew install cloudflared
+mkdir -p ~/tools/xiaohongshu-mcp/proxy && cd ~/tools/xiaohongshu-mcp/proxy
+openssl rand -hex 24 > secret && chmod 600 secret
+```
+
+`secret` 文件就是钥匙，别打印到聊天记录、截图或群里。然后把下面内容存成 `~/tools/xiaohongshu-mcp/proxy/readonly-proxy.mjs`：
+
+```javascript
+// Read-only gateway in front of the local xiaohongshu MCP server.
+// - Only POST /<secret>/mcp is served; everything else is 404.
+// - tools/call is allowed only for read-only tools; tools/list is filtered to match.
+// - Listens on 127.0.0.1 only; exposed to the internet via Cloudflare Tunnel.
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { timingSafeEqual } from "node:crypto";
+
+const HERE = path.dirname(new URL(import.meta.url).pathname);
+const SECRET = fs.readFileSync(path.join(HERE, "secret"), "utf8").trim();
+const LISTEN_PORT = Number(process.env.PROXY_PORT || 18070);
+const UPSTREAM = process.env.UPSTREAM || "http://127.0.0.1:18060/mcp";
+const MAX_BODY = 1 << 20; // 1 MiB
+
+const ALLOWED_TOOLS = new Set([
+  "search_feeds",
+  "get_feed_detail",
+  "list_feeds",
+  "user_profile",
+  "check_login_status",
+]);
+
+if (SECRET.length < 32) throw new Error("secret too short");
+
+function pathOk(urlPath) {
+  const want = `/${SECRET}/mcp`;
+  const a = Buffer.from(urlPath);
+  const b = Buffer.from(want);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function log(...args) {
+  console.log(new Date().toISOString(), ...args);
+}
+
+function rpcError(id, message) {
+  return { jsonrpc: "2.0", id: id ?? null, error: { code: -32601, message } };
+}
+
+function screen(msgs) {
+  const forward = [];
+  const blocked = [];
+  for (const m of msgs) {
+    if (m && m.method === "tools/call") {
+      const name = m.params && m.params.name;
+      if (!ALLOWED_TOOLS.has(name)) {
+        log("blocked tool", JSON.stringify(name));
+        if (m.id !== undefined) blocked.push(rpcError(m.id, `Tool "${name}" is disabled on this read-only endpoint`));
+        continue;
+      }
+      log("tool", name);
+    }
+    forward.push(m);
+  }
+  return { forward, blocked };
+}
+
+function filterResult(obj) {
+  if (obj && obj.result && Array.isArray(obj.result.tools)) {
+    obj.result.tools = obj.result.tools.filter((t) => ALLOWED_TOOLS.has(t.name));
+  }
+  return obj;
+}
+
+// Upstream may answer with JSON or an SSE stream; collect every JSON-RPC message.
+function parseUpstream(text, contentType) {
+  if ((contentType || "").includes("text/event-stream")) {
+    const out = [];
+    for (const block of text.split(/\r?\n\r?\n/)) {
+      const data = block
+        .split(/\r?\n/)
+        .filter((l) => l.startsWith("data:"))
+        .map((l) => l.slice(5).trimStart())
+        .join("\n");
+      if (data) {
+        try { out.push(JSON.parse(data)); } catch { /* ignore non-JSON events */ }
+      }
+    }
+    return out;
+  }
+  if (!text.trim()) return [];
+  const parsed = JSON.parse(text);
+  return Array.isArray(parsed) ? parsed : [parsed];
+}
+
+const server = http.createServer(async (req, res) => {
+  const urlPath = (req.url || "").split("?")[0];
+  const shown = urlPath.split(SECRET).join("<secret>");
+  res.on("finish", () => log("req", req.method, shown, res.statusCode, JSON.stringify(req.headers["user-agent"] || "")));
+  if (!pathOk(urlPath)) {
+    res.writeHead(404).end();
+    return;
+  }
+  if (req.method !== "POST") {
+    res.writeHead(405, { Allow: "POST" }).end();
+    return;
+  }
+
+  let size = 0;
+  const chunks = [];
+  for await (const c of req) {
+    size += c.length;
+    if (size > MAX_BODY) {
+      res.writeHead(413).end();
+      return;
+    }
+    chunks.push(c);
+  }
+
+  let msgs;
+  let isBatch = false;
+  try {
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    isBatch = Array.isArray(body);
+    msgs = isBatch ? body : [body];
+  } catch {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(rpcError(null, "Parse error")));
+    return;
+  }
+
+  const { forward, blocked } = screen(msgs);
+  let responses = [...blocked];
+
+  if (forward.length) {
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    };
+    for (const h of ["mcp-session-id", "mcp-protocol-version"]) {
+      if (req.headers[h]) headers[h] = req.headers[h];
+    }
+    let up;
+    try {
+      up = await fetch(UPSTREAM, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(isBatch ? forward : forward[0]),
+        signal: AbortSignal.timeout(170_000),
+      });
+    } catch (e) {
+      log("upstream error", e.message);
+      res.writeHead(502).end();
+      return;
+    }
+    const text = await up.text();
+    if (up.status === 202 && !text.trim() && !blocked.length) {
+      res.writeHead(202).end();
+      return;
+    }
+    try {
+      responses = responses.concat(parseUpstream(text, up.headers.get("content-type")).map(filterResult));
+    } catch (e) {
+      log("bad upstream body", e.message);
+      res.writeHead(502).end();
+      return;
+    }
+    const sid = up.headers.get("mcp-session-id");
+    if (sid) res.setHeader("Mcp-Session-Id", sid);
+  }
+
+  if (!responses.length) {
+    res.writeHead(202).end();
+    return;
+  }
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(isBatch ? responses : responses[0]));
+});
+
+server.listen(LISTEN_PORT, "127.0.0.1", () => log(`read-only proxy on 127.0.0.1:${LISTEN_PORT}`));
+```
+
+**B2. 网关开机自启**：存成 `~/Library/LaunchAgents/com.local.xiaohongshu-proxy.plist`（`YOURNAME` 共 4 处）：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.xiaohongshu-proxy</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/readonly-proxy.mjs</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/proxy.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/proxy.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.xiaohongshu-proxy.plist
+```
+
+**B3. 建隧道**
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create xhs-mcp
+cloudflared tunnel route dns xhs-mcp xhs.example.com
+```
+
+第一行会打开浏览器让你选域名授权；没弹出来就复制终端里打印的网址手动打开。第二行输出里有一串 tunnel ID（`xxxxxxxx-xxxx-…`），下面用 `<TUNNEL_ID>` 表示。新建 `~/.cloudflared/xhs-mcp.yml`：
+
+```yaml
+tunnel: <TUNNEL_ID>
+credentials-file: /Users/YOURNAME/.cloudflared/<TUNNEL_ID>.json
+ingress:
+  - hostname: xhs.example.com
+    service: http://127.0.0.1:18070
+  - service: http_status:404
+```
+
+再存一个 `~/Library/LaunchAgents/com.local.cloudflared-xhs.plist`（`YOURNAME` 共 3 处）：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.local.cloudflared-xhs</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/cloudflared</string>
+    <string>tunnel</string>
+    <string>--no-autoupdate</string>
+    <string>--config</string>
+    <string>/Users/YOURNAME/.cloudflared/xhs-mcp.yml</string>
+    <string>run</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/cloudflared.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOURNAME/tools/xiaohongshu-mcp/proxy/cloudflared.log</string>
+</dict>
+</plist>
+```
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.cloudflared-xhs.plist
+```
+
+**B4. 测试**：第一条应返回 404；第二条应只列出 5 个工具。
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://xhs.example.com/
+curl -s -X POST "https://xhs.example.com/$(cat ~/tools/xiaohongshu-mcp/proxy/secret)/mcp" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+**B5. 加到 claude.ai**
+
+1. 把完整网址复制到剪贴板（这样密钥不会显示在屏幕上）：`printf 'https://xhs.example.com/%s/mcp' "$(cat ~/tools/xiaohongshu-mcp/proxy/secret)" | pbcopy`
+2. 电脑浏览器打开 claude.ai → **Settings → Connectors → Add custom connector**，名字填「小红书」，URL 一栏 ⌘V 粘贴。
+3. **不要选需要 sign-in 的类型**，OAuth Client ID / Secret 留空，否则会报 “Couldn't register with … sign-in service”。
+4. 加好后会同步到手机。手机上新开一个 Chat，在工具菜单里确认「小红书」开着，问「用小红书搜一下 xxx」。一次搜索约 10–20 秒。
+
+**网址泄露了怎么办**：重新生成密钥并重启网关，旧网址立刻失效，然后在 claude.ai 里删掉连接器、用新网址重加：
+
+```bash
+cd ~/tools/xiaohongshu-mcp/proxy && openssl rand -hex 24 > secret && launchctl kickstart -k gui/$(id -u)/com.local.xiaohongshu-proxy
+```
+
+想彻底关掉公网入口：`launchctl bootout gui/$(id -u)/com.local.cloudflared-xhs`。网关日志 `proxy/proxy.log` 会记下每个请求，里面的密钥已替换成 `<secret>`。
+
+## 测试、常见问题和维护
+
+装好后在 Claude 里依次问：「检查小红书登录状态」→「帮我搜小红书上的手冲咖啡」→「打开第一篇看评论」。正常的话搜索约 6–15 秒返回 20 条。
+
+| 现象 | 原因 | 怎么办 |
+| --- | --- | --- |
+| 搜索每次 60 秒超时，但首页推荐能拉到 | RedNote 账号在用官方版 | 做第 2 步，并确认 plist 里有 `XHS_SITE=rednote` |
+| 登录检查偶尔超时 | rednote 页面迟迟不报「加载完成」，原版会死等 | 确认做了第 2 步的 login.go 补丁；仍超时就重试一次 |
+| Claude 里看不到小红书工具 | session 是配置前开的，或 Chat 配置被 app 覆盖 | 新开 session；Chat 重做第 4 步并马上 ⌘Q |
+| 提示未登录 | cookie 过期（几个月一次） | 停服务 → 重新运行登录程序扫码（RedNote 用补丁版）→ 启动服务 |
+| 需要看日志 | — | `~/tools/xiaohongshu-mcp/server.log` |
+| 加连接器报 “Couldn't register with … sign-in service” | 选成了需要登录（OAuth）的连接器类型 | 删掉重加，不选 sign-in，OAuth 两栏留空 |
+| 手机上搜索没反应或一直转圈 | Mac 睡着了，或网关/隧道没在跑 | `pmset -g \| grep sleep` 应为 0；看 `proxy/proxy.log` 和 `proxy/cloudflared.log` 有没有新请求 |
+
+**风险**
+
+- 这是非官方自动化，有被风控的可能。作者自述稳定跑了一年多没封号；别短时间密集搜索。
+- 工具里除了搜索，还有点赞、评论、发布、删除 cookie。Claude 调用工具前会问你，这类操作看清楚再允许。
+- 服务只绑 `127.0.0.1`，别把它直接暴露到公网：它没有密码，谁连上都能操作你的账号。要在手机 Chat 里用，按第 5 步方法 B 在前面加一层只读网关和密钥。
+
+**升级**：+86 账号下载新版二进制替换即可。RedNote 账号要用新版本号重做第 2 步（先删掉 `src`），然后运行 `launchctl kickstart -k gui/$(id -u)/com.local.xiaohongshu-mcp` 重启服务。
+
+## 用它做了什么
+
+我就是用它查了 [Coffee 页](/coffee/#beans)上那些豆子在小红书上的评价：有的豆子大家意见两极，有的根本没人写过，比我自己想象的有意思。
+
+## 致谢与许可
+
+- [xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp) 由 xpzouying 开发，采用 [Apache License 2.0](https://github.com/xpzouying/xiaohongshu-mcp/blob/main/LICENSE)。
+- 第 2 步的 `login.go` 改自它 v2.7.4 版本的 `xiaohongshu/login.go`，改动在代码顶部注明。
+- `site.go`、只读网关和各个 plist 是我写的，可以随意使用，不提供任何保证。

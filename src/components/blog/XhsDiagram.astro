@@ -1,0 +1,155 @@
+---
+// How Claude reaches Xiaohongshu in the "Connecting Xiaohongshu to Claude" post: the local path (steps 1–4) and the
+// optional path from the phone through Cloudflare Tunnel and a read-only gateway (step 5B). Labels in either language.
+interface Props {
+  lang?: 'en' | 'zh';
+}
+const { lang = 'en' } = Astro.props;
+const zh = lang === 'zh';
+const L = zh
+  ? {
+      mac: '你的 Mac（一直开着）',
+      phone: ['手机上的 Claude', 'claude.ai 自定义连接器'],
+      tunnel: ['cloudflared', 'Cloudflare Tunnel'],
+      gateway: ['只读网关', '密钥路径 · 5 个只读工具'],
+      desktop: ['Claude Code /', 'Claude 桌面 app'],
+      mcp: ['xiaohongshu-mcp', '127.0.0.1:18060'],
+      xhs: ['小红书', '内置浏览器 + 你的 cookie'],
+      https: 'HTTPS，带密钥的网址',
+      local: '第 1–4 步',
+      remote: '第 5 步（可选）',
+      desc: '示意图：Claude Code 或桌面 app 直接连本机的 xiaohongshu-mcp，它再用内置浏览器和你的登录 cookie 访问小红书；手机上的 Claude 通过 Cloudflare Tunnel 先到只读网关，网关只放行带密钥的请求和 5 个只读工具，再转给本机服务。',
+    }
+  : {
+      mac: 'Your Mac (always on)',
+      phone: ['Claude on your phone', 'claude.ai connector'],
+      tunnel: ['cloudflared', 'Cloudflare Tunnel'],
+      gateway: ['Read-only gateway', 'secret path · 5 read tools'],
+      desktop: ['Claude Code /', 'Claude desktop app'],
+      mcp: ['xiaohongshu-mcp', '127.0.0.1:18060'],
+      xhs: ['Xiaohongshu', 'built-in browser + cookie'],
+      https: 'HTTPS, secret URL',
+      local: 'Steps 1–4',
+      remote: 'Step 5 (optional)',
+      desc: 'Diagram: Claude Code or the desktop app talks to xiaohongshu-mcp on the Mac, which reaches Xiaohongshu with a built-in browser and your login cookie. Claude on the phone goes through Cloudflare Tunnel to a read-only gateway, which only lets through requests with the secret and five read-only tools, then on to the local server.',
+    };
+const W = 170;
+const H = 62;
+const box = (x: number, y: number) => ({ x, y, cx: x + W / 2, cy: y + H / 2 });
+const phone = box(10, 52);
+const tunnel = box(220, 52);
+const gateway = box(420, 52);
+const desktop = box(220, 196);
+const mcp = box(420, 196);
+const xhs = box(635, 196);
+---
+
+<figure class="xhs-diagram">
+  <svg viewBox="0 0 815 290" role="img" aria-label={L.desc}>
+    <defs>
+      <marker id="xhs-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" class="head" />
+      </marker>
+    </defs>
+    <rect x="200" y="14" width="405" height="266" rx="12" class="mac" />
+    <text x="214" y="35" class="region">{L.mac}</text>
+
+    <text x={phone.x} y="35" class="step">{L.remote}</text>
+    <text x={desktop.x} y="186" class="step">{L.local}</text>
+
+    <path d={`M${phone.x + W},${phone.cy} H${tunnel.x - 4}`} class="link remote" marker-end="url(#xhs-arrow)" />
+    <text x={phone.cx} y={phone.y + H + 18} class="note" text-anchor="middle">{L.https} →</text>
+    <path d={`M${tunnel.x + W},${tunnel.cy} H${gateway.x - 4}`} class="link remote" marker-end="url(#xhs-arrow)" />
+    <path d={`M${gateway.cx},${gateway.y + H} V${mcp.y - 4}`} class="link remote" marker-end="url(#xhs-arrow)" />
+    <path d={`M${desktop.x + W},${desktop.cy} H${mcp.x - 4}`} class="link" marker-end="url(#xhs-arrow)" />
+    <path d={`M${mcp.x + W},${mcp.cy} H${xhs.x - 4}`} class="link" marker-end="url(#xhs-arrow)" />
+
+    {
+      [
+        [phone, L.phone, 'outside'],
+        [tunnel, L.tunnel, ''],
+        [gateway, L.gateway, 'guard'],
+        [desktop, L.desktop, ''],
+        [mcp, L.mcp, 'core'],
+        [xhs, L.xhs, 'outside'],
+      ].map(([b, [a, c], kind]: any) => (
+        <g class:list={['node', kind]}>
+          <rect x={b.x} y={b.y} width={W} height={H} rx="8" />
+          <text x={b.cx} y={b.cy - 4} text-anchor="middle" class="t1">{a}</text>
+          <text x={b.cx} y={b.cy + 15} text-anchor="middle" class="t2">{c}</text>
+        </g>
+      ))
+    }
+  </svg>
+</figure>
+
+<style>
+  .xhs-diagram {
+    margin: 2rem 0;
+    padding: 0;
+    /* on a phone the diagram keeps a readable size and scrolls sideways */
+    overflow-x: auto;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+    font-family: var(--body);
+  }
+  .mac {
+    fill: var(--surface);
+    stroke: var(--rule);
+    stroke-dasharray: 5 5;
+  }
+  .region,
+  .step {
+    fill: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+  }
+  .node rect {
+    fill: var(--bg);
+    stroke: var(--fg);
+    stroke-width: 1.2;
+  }
+  .node.outside rect {
+    fill: var(--surface);
+    stroke: var(--muted);
+  }
+  .node.guard rect {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .node.core rect {
+    fill: var(--fg);
+  }
+  .node.core text {
+    fill: var(--bg);
+  }
+  .t1 {
+    fill: var(--fg);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .t2 {
+    fill: var(--muted);
+    font-size: 11.5px;
+  }
+  .link {
+    fill: none;
+    stroke: var(--fg);
+    stroke-width: 1.5;
+  }
+  .link.remote {
+    stroke: var(--accent);
+    stroke-dasharray: 5 4;
+  }
+  .head {
+    fill: var(--fg);
+  }
+  .note {
+    fill: var(--muted);
+    font-size: 11px;
+  }
+</style>

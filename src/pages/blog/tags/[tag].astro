@@ -5,7 +5,7 @@ import PostList from '../../../components/PostList.astro';
 import { getPosts, allTags, tagSlug } from '../../../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getPosts();
+  const posts = await getPosts('en');
   return allTags(posts).map(({ slug, tag }) => ({
     params: { tag: slug },
     props: { tag, posts: posts.filter((p) => p.data.tags.some((t) => tagSlug(t) === slug)) },

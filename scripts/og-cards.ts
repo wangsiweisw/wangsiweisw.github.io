@@ -2,7 +2,7 @@
 // the built home page supplies the self-hosted fonts and colors. Commit the output.
 import { createServer } from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { parse } from 'yaml';
 import sharp from 'sharp';
@@ -43,6 +43,11 @@ const beans: {
   origins?: BeanOrigin[];
   originsText?: string;
 }[] = parse(readFileSync('src/data/beans.yaml', 'utf8')).filter((b: { roaster: string | null }) => b.roaster);
+// published blog posts: title and description from each post's frontmatter
+const posts = readdirSync('src/content/blog')
+  .filter((f) => /\.mdx?$/.test(f))
+  .map((f) => ({ id: f.replace(/\.mdx?$/, ''), data: parse(readFileSync(join('src/content/blog', f), 'utf8').split(/^---$/m)[1]) }))
+  .filter((p) => !p.data.draft);
 const land110 = JSON.parse(readFileSync('node_modules/world-atlas/land-110m.json', 'utf8'));
 
 const byFile = (file: string) => photos.find((p) => p.file === file);
@@ -124,6 +129,10 @@ const cards: [slug: string, html: string][] = [
     ),
   ],
   ...beans.map((b): [string, string] => [`bean-${b.id}`, beanCard(b)]),
+  ...posts.map((p): [string, string] => [
+    `post-${p.id}`,
+    `<div class="post-card">${split(p.data.lang === 'zh' ? '博客' : 'Blog', esc(p.data.title), esc(p.data.description))}</div>`,
+  ]),
   ...albums.flatMap((a): [string, string][] => {
     const img = src(coverOf(a));
     return img ? [[`album-${a.id}`, bleed(esc(a.title), esc(a.subtitle ?? ''), img)]] : [];
@@ -144,6 +153,9 @@ const STYLE = `
   .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
   b { font-weight: 600; color: var(--fg); }
   b.m1 { box-shadow: inset 0 -4px #b4532a; } b.m2 { box-shadow: inset 0 -4px #2f6db5; } b.m3 { box-shadow: inset 0 -4px #2a8a5a; }
+  .post-card { height: 100%; }
+  .post-card h1 { font-size: 64px; text-wrap: balance; }
+  .post-card p { font-size: 28px; }
   .bean { display: flex; height: 100%; }
   .bean .text { flex: 1; min-width: 0; padding: 72px 40px 64px 80px; display: flex; flex-direction: column; }
   .bean h1 { font-size: 66px; margin: 16px 0 18px; text-wrap: balance; }

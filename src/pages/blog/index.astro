@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 import PostList from '../../components/PostList.astro';
 import { getPosts, allTags } from '../../lib/posts';
 
-const posts = await getPosts();
+const posts = await getPosts('en');
 const tags = allTags(posts);
 ---
 
