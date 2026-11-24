@@ -171,16 +171,21 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 
 - **Where it runs:** entirely in the visitor's browser; the site stays static on GitHub Pages. No server, no API keys, $0. Open-Meteo's free non-commercial tier limits by IP (600/min, 5,000/h, 10,000/day), so each visitor spends their own quota. Don't proxy through a server: one shared IP hits 429s (seen from the cloud sandbox).
 - **Input:** search box (Open-Meteo Geocoding API, `language=en|zh`) or a click on the map; optional target date (today to +35 days). Share link: `/forecast/?lat=&lon=&name=&date=&lang=`.
-- **Data per card** (~8 requests, ~4 MB raw / ~0.6 MB gzipped, about 2 s; the history requests take ~1.5 s for 6 months and ~2 s for 12 months, in parallel):
+- **Data per card** (~15 requests in parallel, ~2 MB raw / ~0.3 MB gzipped, about 1–2 s):
   - Ensembles: `ecmwf_aifs025` and `ecmwf_ifs025` (51 members each, 15 days) and `gfs025` (31, 10 days). For targets past 15 days, add `gfs05` (31, 35 days) and `gem_global` (21, 16 days).
-  - History: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads of 1, 2, 3, 5 and 7 days, **last 12 months**. Truth is ERA5 (`archive-api`, about 5 days behind).
+  - History, **by season, not "the last N days"**: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads 1–7 days. Fetch only the target date ±6 weeks in every past year the archive holds, plus this year's days up to ERA5's lag.
+    - Coverage: IFS and GFS go back to early 2024 (two full seasons now), AIFS to Feb 2025 (one).
+    - The archive gains a season each year with no code change.
+    - One request per model per season. Truth is ERA5 (`archive-api`, about 5 days behind), fetched for the same windows.
+    - Measured for Seattle around Dec 9: 12 requests, ~1 s each in parallel, 1.2 MB raw / 155 KB gzipped, 191 scored days (106 for AIFS). The last 12 months would be 3.4 MB for 175 days spread over every season.
   - Climatology: 30 years of ERA5 daily data, ±7 days around the target date (one request).
 - **Card contents** (general, not tied to an activity):
   - Headline and a short verdict built from rules and templates. No LLM.
   - Per day: chance of ≥1 mm precipitation; chance of ≥1 cm snow (row shown only if any member snows); median high/low with a 10–90% band.
   - Rows per model, plus a climatology row when the target is more than 7 days out.
-  - Accuracy at this spot, by lead (1–7 days): "said dry → stayed dry", "said wet → was wet", the climatological wet-day rate drawn as the "just guess" line, and daily-high error.
-  - Accuracy is scored only on days in the same season as the target (±2 months). That's why the window is 12 months: a 6-month window in November holds about 17 winter days.
+  - Accuracy at this spot, by lead (1–7 days): "said dry → stayed dry", "said wet → was wet", and daily-high error.
+  - Draw a "just guess" line: the wet-day rate in the same scored days. It's the baseline for "said wet → was wet" only, so draw it in that line's color.
+  - Scored on the same-season windows only. In Seattle the rate is 64% for late Oct–mid Jan against 55% for Nov–Apr, so a whole-year or whole-winter base would mislead.
   - Past 7 days: say plainly it can't be back-tested (the archive stores leads of 1–7 days only) and compare with climatology instead.
   - Footer: sources, the ERA5 caveat (≈25 km grid, not a station), Open-Meteo attribution.
 - **Language:** English by default, with a 中文 toggle on the card. The rest of the site stays English.
