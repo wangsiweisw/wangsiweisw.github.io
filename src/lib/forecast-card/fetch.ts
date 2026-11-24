@@ -96,6 +96,22 @@ async function getJSON(url: string, tries = 2): Promise<any> {
   return null;
 }
 
+/**
+ * One model's ensemble, kept in memory for 30 minutes so changing dates doesn't ask again. Lengths come in a few
+ * steps (10 days, the model's full run) so nearby dates share a request.
+ */
+const ensCache = new Map<string, { t: number; v: Promise<any> }>();
+function ensemble(q: string, m: Ensemble, reach: number): Promise<any> {
+  const days = reach <= 10 ? Math.min(10, m.days) : m.days;
+  const key = `${q}:${m.id}:${days}`;
+  const hit = ensCache.get(key);
+  if (hit && Date.now() - hit.t < 30 * 60_000) return hit.v;
+  const v = getJSON(`${ENS}?${q}&models=${m.id}&hourly=temperature_2m,precipitation,snowfall&forecast_days=${days}`);
+  ensCache.set(key, { t: Date.now(), v });
+  v.then((j) => j || ensCache.delete(key)); // don't keep a failure
+  return v;
+}
+
 /** Long-lived per-browser cache for things that barely change (normals, past scores). */
 const store = {
   get<T>(key: string, maxAgeMs: number): T | null {
@@ -128,9 +144,7 @@ export async function loadCard(place: Place, from: string, to: string, onUpdate:
   // through the last day the card will show, plus slack for places a day ahead of the visitor
   const reach = daysBetween(today, cardDays(today, from, to, HORIZON).at(-1)!) + 2;
   const ens = ENSEMBLES.filter((m) => !m.onlyFar || reach > 16);
-  const ensJson = await Promise.all(
-    ens.map((m) => getJSON(`${ENS}?${q}&models=${m.id}&hourly=temperature_2m,precipitation,snowfall&forecast_days=${Math.min(m.days, reach)}`)),
-  );
+  const ensJson = await Promise.all(ens.map((m) => ensemble(q, m, reach)));
 
   // the place's own today: forecasts start at its local midnight
   const first = ensJson.find((j) => j?.hourly?.time?.length)?.hourly.time[0] as string | undefined;

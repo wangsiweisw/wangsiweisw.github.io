@@ -90,20 +90,27 @@
         // moving the start drags the end along; an end before the start becomes a single day
         if (moved === 'from' && to < from) to = from;
         if (moved === 'to' && to < from) from = to;
-        let note = '';
+        let clamped = false;
         if (daysBetween(from, to) + 1 > MAX_RANGE) {
           if (moved === 'from') to = addDays(from, MAX_RANGE - 1);
           else from = addDays(to, -(MAX_RANGE - 1));
-          note = UI[this.lang].tooLong;
+          clamped = true;
         }
+        // say when a range was cut short; clear that only once the dates really change
+        if (clamped) this.note(UI[this.lang].tooLong);
+        else if (from !== this.from || to !== this.to) this.note('');
         this.from = fromIn.value = from;
         this.to = toIn.value = to;
+        // the pickers themselves can't go past the limits: "to" stays within MAX_RANGE days of "from" and the horizon
         toIn.min = from;
-        this.note(note);
+        toIn.max = addDays(from, MAX_RANGE - 1) < fromIn.max ? addDays(from, MAX_RANGE - 1) : fromIn.max;
       };
       this.setDates(this.from, this.to, 'from');
-      fromIn.addEventListener('change', () => fromIn.value && (this.setDates(fromIn.value, this.to, 'from'), this.refresh()));
-      toIn.addEventListener('change', () => toIn.value && (this.setDates(this.from, toIn.value, 'to'), this.refresh()));
+      // wait for the visitor to settle on dates before asking the weather service again
+      let pending = 0;
+      const later = () => (clearTimeout(pending), (pending = window.setTimeout(() => this.refresh(), 500)));
+      fromIn.addEventListener('change', () => fromIn.value && (this.setDates(fromIn.value, this.to, 'from'), later()));
+      toIn.addEventListener('change', () => toIn.value && (this.setDates(this.from, toIn.value, 'to'), later()));
       this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((b) => b.addEventListener('click', () => this.setLang(b.dataset.lang as Lang)));
       this.querySelector('[data-save]')!.addEventListener('click', () => this.save());
       this.querySelector('[data-link]')!.addEventListener('click', () => this.copyLink());
@@ -112,11 +119,13 @@
         const c = (e as CustomEvent<Place & { id?: string }>).detail;
         if (c.lat === this.place.lat && c.lon === this.place.lon && c.name === this.place.name && this.started) return;
         this.place = { name: c.name, lat: c.lat, lon: c.lon, detail: c.detail };
+        this.note('');
         this.refresh();
       });
       document.addEventListener('fx-pick', (e) => {
         const { lat, lon } = (e as CustomEvent<{ lat: number; lon: number }>).detail;
         this.place = { name: coords(lat, lon), lat, lon };
+        this.note('');
         this.refresh();
       });
       document.addEventListener('unitschange', () => this.draw());
@@ -170,7 +179,6 @@
       const token = ++this.token;
       this.data = null;
       this.toggle(false);
-      this.note('');
       this.querySelector('[data-card]')!.innerHTML = `<p class="status">${UI[this.lang].loading(this.place.name)}</p>`;
       this.done = false;
       try {
