@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { averageScores, cardDays, climatology, mergeHourly, memberDays, scoreLeads, seasonWindows, summarize, type Hourly } from './stats';
+import { averageScores, cardDays, climRange, climateWindows, climatology, memberSeries, mergeHourly, memberDays, rangeStat, scoreLeads, seasonWindows, summarize, type Hourly } from './stats';
 
 /** Hourly block for `days` local days starting at `start`, with `fill(var, member, dayIndex, hour)` values. */
 function hourly(start: string, days: number, vars: string[], members: string[], fill: (v: string, m: string, d: number, h: number) => number | null): Hourly {
@@ -117,11 +117,64 @@ describe('scoring past forecasts', () => {
 });
 
 describe('card days', () => {
-  it('centres on the target but starts no earlier than today', () => {
-    expect(cardDays('2026-11-24', '2026-12-09')[0]).toBe('2026-12-05');
-    expect(cardDays('2026-11-24', '2026-11-25')[0]).toBe('2026-11-24');
+  it('shows a short range inside a 10-day window, starting no earlier than today', () => {
+    expect(cardDays('2026-11-24', '2026-12-09', '2026-12-09')[0]).toBe('2026-12-05');
+    expect(cardDays('2026-11-24', '2026-11-25', '2026-11-25')[0]).toBe('2026-11-24');
+    expect(cardDays('2026-11-24', '2026-12-01', '2026-12-03')).toHaveLength(10);
+  });
+  it('shows a week or more exactly', () => {
+    const d = cardDays('2026-11-24', '2026-12-01', '2026-12-10');
+    expect([d[0], d.at(-1), d.length]).toEqual(['2026-12-01', '2026-12-10', 10]);
   });
   it('stays inside the horizon', () => {
-    expect(cardDays('2026-11-24', '2026-12-28', 34).at(-1)).toBe('2026-12-28');
+    expect(cardDays('2026-11-24', '2026-12-28', '2026-12-28', 34).at(-1)).toBe('2026-12-28');
+  });
+});
+
+describe('ranges', () => {
+  // three members over three days: member k is wet on days < k
+  const members = ['', '_member01', '_member02'];
+  const h = hourly('2026-12-01', 3, ['temperature_2m', 'precipitation', 'snowfall'], members, (v, m, d) => {
+    const k = members.indexOf(m);
+    if (v === 'precipitation') return d < k ? 0.1 : 0;
+    if (v === 'snowfall') return 0;
+    return 5;
+  });
+  const days = ['2026-12-01', '2026-12-02', '2026-12-03'];
+
+  it('follows each member through the range', () => {
+    const r = rangeStat([memberSeries(h)], days)!;
+    expect(r.n).toBe(3);
+    expect(r.pAnyWet).toBe(67);
+    expect(r.wetDays[1]).toBe(1);
+  });
+
+  it('drops members that miss a day', () => {
+    const gappy = { ...h, temperature_2m_member02: (h.temperature_2m_member02 as (number | null)[]).map((v, i) => (i < 10 ? null : v)) } as Hourly;
+    expect(rangeStat([memberSeries(gappy)], days)!.n).toBe(2);
+  });
+
+  it('counts wet days in the same dates of past years', () => {
+    const time: string[] = [];
+    for (let y = 2006; y <= 2025; y++) for (let d = 0; d < 10; d++) time.push(`${y}-12-${String(d + 1).padStart(2, '0')}`);
+    const daily = {
+      time,
+      precipitation_sum: time.map((t) => (t.endsWith('-02') ? 3 : 0)), // Dec 2 is always wet
+      snowfall_sum: time.map(() => 0),
+      temperature_2m_max: time.map(() => 8),
+      temperature_2m_min: time.map(() => 1),
+    };
+    const c = climRange(daily, '2026-12-01', '2026-12-03')!;
+    expect(c).toMatchObject({ years: 20, pAnyWet: 100, wetDays: 1, hi: 8 });
+    expect(climRange(daily, '2026-12-05', '2026-12-07')!.pAnyWet).toBe(0);
+  });
+
+  it('asks for one window per past year, all of it already in ERA5', () => {
+    const w = climateWindows(['2026-12-28', '2027-01-02'], '2026-11-24', 3);
+    expect(w).toEqual([
+      { start: '2023-12-21', end: '2024-01-09' },
+      { start: '2024-12-21', end: '2025-01-09' },
+      { start: '2025-12-21', end: '2026-01-09' },
+    ]);
   });
 });

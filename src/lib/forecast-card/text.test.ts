@@ -14,16 +14,22 @@ function card(o: { target?: Partial<DayStat>; models?: Record<string, number>; t
     name,
     org: { en: '', zh: '' },
     byDay: { [target]: day({ ...o.target, pWet: p }) },
+    range: null,
   }));
   return {
     place: { name: 'Seattle', lat: 47.6, lon: -122.3 },
     today: o.today ?? '2026-11-24',
-    target,
+    from: target,
+    to: target,
     days: [target],
     models,
     pooled: { [target]: t },
-    atTarget: t,
+    atDay: t,
+    range: null,
     clim: { [target]: { n: 450, pWet: 56, pHeavy: 22, pSnow: 3, hi: o.normalHi ?? 10, lo: 4 } },
+    climRange: null,
+    climStatus: 'ok',
+    scoresStatus: o.scores ? 'ok' : 'few',
     scores: o.scores
       ? [1, 2, 3, 4, 5, 6, 7].map((lead) => ({ lead, days: 191, base: 64, wetOk: 90 - lead, dryOk: 80 - lead, maeHi: 1 }))
       : null,
@@ -53,5 +59,17 @@ describe('verdict', () => {
     const v = verdict(card({ target: { pWet: 3 }, today: '2026-12-06', scores: true }), 'en', fmt);
     expect(v.headline[0]).toBe('Wed, Dec 9: almost certainly dry');
     expect(v.lede).toContain('forecasts 3 days out that said "dry" were right 77% of the time');
+  });
+
+  it('sums up a range by wet days', () => {
+    const d = card({ target: { pWet: 60 } });
+    d.to = '2026-12-13';
+    d.days = ['2026-12-09', '2026-12-10', '2026-12-11', '2026-12-12', '2026-12-13'];
+    for (const x of d.days) d.pooled[x] = day({ pWet: 60 });
+    d.range = { n: 52, pAnyWet: 90, pAnySnow: 0, wetDays: [2, 3, 3.4] };
+    d.climRange = { years: 20, pAnyWet: 95, pAnySnow: 0, wetDays: 2.9, hi: 10, lo: 4 };
+    const v = verdict(d, 'en', fmt);
+    expect(v.headline[0]).toBe('Dec 9–Dec 13: rain on about 2–3 of 5 days');
+    expect(verdict(d, 'zh', fmt).headline[0]).toBe('12/9–12/13：5 天里大约 2–3 天下雨');
   });
 });

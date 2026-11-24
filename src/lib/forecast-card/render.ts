@@ -3,6 +3,7 @@
 import type { CardData, Lang } from './fetch';
 import { LEADS, daysBetween, type DayStat } from './stats';
 import { T, dayLabel, md, seasonLabel, verdict, weekday } from './text';
+import { addDays } from './stats';
 
 export type Units = 'F' | 'C';
 /** Width in px of `text` at `size` px; `face` picks the display or body font. */
@@ -89,25 +90,18 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
 
   // header
   const place = d.place.detail ? `${d.place.name} · ${d.place.detail}` : d.place.name;
-  const lead = daysBetween(d.today, d.target);
+  const lead = daysBetween(d.today, d.from);
+  const inRange = (day: string) => day >= d.from && day <= d.to;
   para(PAD, `${place} · ${L.forecastFrom(d.today, lead)}`, 12, 17, CARD_W - 2 * PAD, { fill: C.muted });
   y += 4;
   v.headline.forEach((h, i) => para(PAD, h, zh ? 25 : 27, zh ? 34 : 33, CARD_W - 2 * PAD, { weight: zh ? 700 : 500, face: 'display', fill: i ? C.accent : C.fg }));
   y += 6;
   if (v.lede) para(PAD, v.lede, 13.5, 21, CARD_W - 2 * PAD, { fill: '#3d3a34' });
 
-  // the target day vs normal
-  const t = d.atTarget;
-  const normal = d.clim?.[d.target];
-  if (t) {
-    panel(zh ? `${dayLabel(d.target, lang)}当天` : `On ${dayLabel(d.target, lang)}`, null, (x) => {
-      const snowy = t.pSnow >= 5 || (normal?.pSnow ?? 0) >= 5;
-      const tiles: [string, string, string, string][] = [
-        [L.tiles.wet, `${t.pWet}`, '%', normal ? `${L.tiles.normal} ${normal.pWet}%` : ''],
-        snowy ? [L.tiles.snow, `${t.pSnow}`, '%', normal ? `${L.tiles.normal} ${normal.pSnow}%` : ''] : [L.tiles.heavy, `${t.pHeavy}`, '%', normal ? `${L.tiles.normal} ${normal.pHeavy}%` : ''],
-        [L.tiles.hi, `${Math.round(temp(t.hi[1]))}`, `°${units}`, normal ? `${L.tiles.normal} ${fmt.temp(normal.hi)}` : ''],
-        [L.tiles.lo, `${Math.round(temp(t.lo[1]))}`, `°${units}`, normal ? `${L.tiles.normal} ${fmt.temp(normal.lo)}` : ''],
-      ];
+  // the day (or range) vs normal
+  const climNote = d.climStatus === 'loading' ? L.climLoading : d.climStatus === 'failed' ? L.climFailed : null;
+  const tilesPanel = (title: string, tiles: [string, string, string, string][]) =>
+    panel(title, climNote, (x) => {
       const tw = (INNER - 8) / 2;
       const th = 74;
       tiles.forEach(([label, val, unit, sub], i) => {
@@ -121,6 +115,39 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
       });
       y += 2 * th + 8;
     });
+  const t = d.atDay;
+  const normal = d.clim?.[d.from];
+  const nl = (s: string) => (s ? `${L.tiles.normal} ${s}` : '');
+  if (d.from === d.to && t) {
+    const snowy = t.pSnow >= 5 || (normal?.pSnow ?? 0) >= 5;
+    tilesPanel(zh ? `${dayLabel(d.from, lang)}当天` : `On ${dayLabel(d.from, lang)}`, [
+      [L.tiles.wet, `${t.pWet}`, '%', normal ? nl(`${normal.pWet}%`) : ''],
+      snowy ? [L.tiles.snow, `${t.pSnow}`, '%', normal ? nl(`${normal.pSnow}%`) : ''] : [L.tiles.heavy, `${t.pHeavy}`, '%', normal ? nl(`${normal.pHeavy}%`) : ''],
+      [L.tiles.hi, `${Math.round(temp(t.hi[1]))}`, `°${units}`, normal ? nl(fmt.temp(normal.hi)) : ''],
+      [L.tiles.lo, `${Math.round(temp(t.lo[1]))}`, `°${units}`, normal ? nl(fmt.temp(normal.lo)) : ''],
+    ]);
+  } else if (d.from !== d.to && d.range) {
+    const r = d.range;
+    const c = d.climRange;
+    const len = daysBetween(d.from, d.to) + 1;
+    const span = d.days.filter(inRange).map((day) => d.pooled[day]).filter(Boolean);
+    const range = (xs: number[]) => {
+      const a = Math.round(Math.min(...xs));
+      const b = Math.round(Math.max(...xs));
+      return a === b ? `${a}` : `${a}–${b}`;
+    };
+    const wa = Math.round(r.wetDays[0]);
+    const wb = Math.round(r.wetDays[2]);
+    const snowy = r.pAnySnow >= 10 || (c?.pAnySnow ?? 0) >= 10;
+    const R = L.rangeTiles;
+    tilesPanel(L.onRange(d.from, d.to), [
+      [R.anyWet, `${r.pAnyWet}`, '%', c ? nl(`${c.pAnyWet}%`) : ''],
+      snowy
+        ? [R.anySnow, `${r.pAnySnow}`, '%', c ? nl(`${c.pAnySnow}%`) : '']
+        : [R.wetDays, wa === wb ? `${wa}` : `${wa}–${wb}`, R.of(len), c ? nl(c.wetDays.toFixed(1)) : ''],
+      [R.his, range(span.map((s) => temp(s.hi[1]))), `°${units}`, c ? nl(fmt.temp(c.hi)) : ''],
+      [R.los, range(span.map((s) => temp(s.lo[1]))), `°${units}`, c ? nl(fmt.temp(c.lo)) : ''],
+    ]);
   }
 
   // chance strip: one row per model, plus normal
@@ -131,7 +158,7 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
       const rowh = 28;
       d.days.forEach((day, i) => {
         const cx = x + lab + cw * (i + 0.5);
-        const pick = day === d.target;
+        const pick = inRange(day);
         const o = { fill: pick ? C.accent : C.muted, weight: pick ? 700 : 400, anchor: 'middle' };
         text(cx, y + 10, weekday(day, lang).replace('周', ''), 10, o);
         text(cx, y + 23, md(day, 'zh'), 9.5, o);
@@ -143,9 +170,10 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
         vals: d.days.map((day) => m.byDay[day]?.[field] ?? null),
       }));
       if (d.clim) rows.push({ name: L.normalRow[0], org: L.normalRow[1], vals: d.days.map((day) => d.clim![day][climField]), normal: true });
-      const ti = d.days.indexOf(d.target);
-      if (ti >= 0)
-        out.push(`<rect x="${r1(x + lab + cw * ti - 1)}" y="${y - 3}" width="${r1(cw + 2)}" height="${rows.length * (rowh + 2) + 4}" rx="6" fill="none" stroke="${C.accent}" stroke-width="1.6"/>`);
+      const i0 = d.days.findIndex(inRange);
+      const n = d.days.filter(inRange).length;
+      if (i0 >= 0)
+        out.push(`<rect x="${r1(x + lab + cw * i0 - 1)}" y="${y - 3}" width="${r1(cw * n + 2)}" height="${rows.length * (rowh + 2) + 4}" rx="6" fill="none" stroke="${C.accent}" stroke-width="1.6"/>`);
       rows.forEach((row) => {
         text(x, y + 12, row.name, 11, { weight: 700 });
         text(x, y + 24, row.org, 9, { fill: C.muted });
@@ -166,7 +194,7 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
     });
 
   const members = Math.max(...d.days.map((day) => d.pooled[day]?.n ?? 0));
-  strip(L.stripTitle, L.stripSub(members), 'pWet', 'pWet');
+  strip(L.stripTitle, climNote ?? L.stripSub(members), 'pWet', 'pWet');
   if (Math.max(...d.days.map((day) => d.pooled[day]?.pSnow ?? 0)) >= 10) strip(L.snowTitle, '', 'pSnow', 'pSnow');
 
   // highs and lows: median of everything, normal high as a tick
@@ -192,7 +220,7 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
     }
     stats.forEach((s, i) => {
       const cx = x + lab + cw * (i + 0.5);
-      const pick = d.days[i] === d.target;
+      const pick = inRange(d.days[i]);
       if (d.clim) {
         const n = yy(temp(d.clim[d.days[i]].hi));
         out.push(`<line x1="${r1(cx - 8)}" x2="${r1(cx + 8)}" y1="${r1(n)}" y2="${r1(n)}" stroke="${C.muted}" stroke-width="1.5"/>`);
@@ -210,7 +238,9 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
 
   // past accuracy at this spot, same season
   const s = d.scores;
-  panel(L.accTitle, s ? L.accSub(s[0].days, seasonLabel(d, lang)) : L.accNone, (x) => {
+  const accSub =
+    d.scoresStatus === 'loading' ? L.accLoading : d.scoresStatus === 'failed' ? L.accFailed : s ? L.accSub(s[0].days, seasonLabel(d, lang)) : L.accNone;
+  panel(L.accTitle, accSub, (x) => {
     if (!s) return;
     const H = 190;
     const left = 34;
@@ -219,8 +249,10 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
     const lo = 40;
     const xx = (n: number) => x + left + ((n - 1) / 6) * (INNER - left - right);
     const yy = (v: number) => top + ((100 - v) / (100 - lo)) * (H - 40);
-    const lead = Math.max(1, daysBetween(d.today, d.target));
-    if (lead <= 7) out.push(`<rect x="${r1(xx(lead) - 8)}" y="${top}" width="16" height="${H - 40}" rx="6" fill="${C.accent}" fill-opacity="0.08"/>`);
+    // shade the leads this card's days sit at
+    const l0 = Math.max(1, daysBetween(d.today, d.from));
+    const l1 = Math.min(7, Math.max(1, daysBetween(d.today, d.to)));
+    if (l0 <= 7) out.push(`<rect x="${r1(xx(l0) - 8)}" y="${top}" width="${r1(xx(l1) - xx(l0) + 16)}" height="${H - 40}" rx="6" fill="${C.accent}" fill-opacity="0.08"/>`);
     for (const g of [40, 60, 80, 100]) {
       out.push(`<line x1="${x + left}" x2="${r1(xx(7) + 8)}" y1="${r1(yy(g))}" y2="${r1(yy(g))}" stroke="${C.rule}"/>`);
       text(x + left - 6, yy(g) + 3.5, `${g}%`, 9.5, { fill: C.muted, anchor: 'end' });

@@ -33,8 +33,11 @@ const quantile = (sorted: number[], p: number) => {
   return sorted[lo] + (sorted[Math.min(lo + 1, sorted.length - 1)] - sorted[lo]) * (i - lo);
 };
 
-/** Every member's daily totals and extremes, keyed by local date. Days with fewer than 20 valid hours are left out. */
-export function memberDays(h: Hourly): Map<string, MemberDay[]> {
+/**
+ * Every member's daily totals and extremes, keyed by local date, in a fixed member order (`null` where a member has
+ * fewer than 20 valid hours that day), so a member can be followed across days.
+ */
+export function memberSeries(h: Hourly): Map<string, (MemberDay | null)[]> {
   const suffixes = Object.keys(h)
     .filter((k) => k === 'temperature_2m' || k.startsWith('temperature_2m_member'))
     .map((k) => k.slice('temperature_2m'.length));
@@ -43,25 +46,29 @@ export function memberDays(h: Hourly): Map<string, MemberDay[]> {
     const d = t.slice(0, 10);
     byDay.set(d, [...(byDay.get(d) ?? []), i]);
   });
-  const out = new Map<string, MemberDay[]>();
+  const out = new Map<string, (MemberDay | null)[]>();
   for (const [d, idx] of byDay) {
-    const members: MemberDay[] = [];
-    for (const s of suffixes) {
+    const members = suffixes.map((s): MemberDay | null => {
       const T = h[`temperature_2m${s}`] as (number | null)[];
       const P = (h[`precipitation${s}`] ?? []) as (number | null)[];
       const S = (h[`snowfall${s}`] ?? []) as (number | null)[];
       const ok = idx.filter((i) => num(T[i]) && num(P[i]));
-      if (ok.length < 20) continue;
-      members.push({
+      if (ok.length < 20) return null;
+      return {
         p: ok.reduce((a, i) => a + (P[i] as number), 0),
         sn: ok.reduce((a, i) => a + (num(S[i]) ? (S[i] as number) : 0), 0),
         tx: Math.max(...ok.map((i) => T[i] as number)),
         tn: Math.min(...ok.map((i) => T[i] as number)),
-      });
-    }
-    if (members.length) out.set(d, members);
+      };
+    });
+    if (members.some(Boolean)) out.set(d, members);
   }
   return out;
+}
+
+/** Like `memberSeries`, without the gaps: only the members that cover each day. */
+export function memberDays(h: Hourly): Map<string, MemberDay[]> {
+  return new Map([...memberSeries(h)].map(([d, m]) => [d, m.filter(Boolean) as MemberDay[]]));
 }
 
 export function summarize(members: MemberDay[]): DayStat {
@@ -195,10 +202,99 @@ export function averageScores(perModel: LeadScore[][], minDays = 30): LeadScore[
   }));
 }
 
-/** The days the card shows: 10 days around the target, kept inside what the forecasts cover. */
-export function cardDays(today: string, target: string, horizon = 34, count = 10): string[] {
-  let start = addDays(target, -4);
+/** A stretch of days across an ensemble: each member is followed through every day of the range. */
+export type RangeStat = {
+  n: number;
+  /** chance of at least one wet (≥1 mm) day, %. */
+  pAnyWet: number;
+  /** chance of at least one snowy (≥1 cm) day, %. */
+  pAnySnow: number;
+  /** number of wet days: [p25, p50, p75]. */
+  wetDays: [number, number, number];
+};
+
+/** Range stats pooled over models; members missing any day of the range are left out. */
+export function rangeStat(series: Map<string, (MemberDay | null)[]>[], days: string[]): RangeStat | null {
+  const rows: { wet: number; snow: boolean }[] = [];
+  for (const s of series) {
+    const perDay = days.map((d) => s.get(d));
+    if (perDay.some((x) => !x)) continue;
+    const width = perDay[0]!.length;
+    for (let i = 0; i < width; i++) {
+      const m = perDay.map((x) => x![i]);
+      if (m.some((x) => !x)) continue;
+      rows.push({ wet: m.filter((x) => x!.p >= WET_MM).length, snow: m.some((x) => x!.sn >= SNOW_CM) });
+    }
+  }
+  if (!rows.length) return null;
+  const wet = rows.map((r) => r.wet).sort((a, b) => a - b);
+  return {
+    n: rows.length,
+    pAnyWet: pct(rows.filter((r) => r.wet > 0).length, rows.length),
+    pAnySnow: pct(rows.filter((r) => r.snow).length, rows.length),
+    wetDays: [quantile(wet, 0.25), quantile(wet, 0.5), quantile(wet, 0.75)],
+  };
+}
+
+export type ClimRange = { years: number; pAnyWet: number; pAnySnow: number; wetDays: number; hi: number; lo: number };
+
+/** The same dates in each past year: how many were wet, and how warm. `daily` may hold many years' windows. */
+export function climRange(
+  daily: { time: string[]; precipitation_sum: (number | null)[]; snowfall_sum: (number | null)[]; temperature_2m_max: (number | null)[]; temperature_2m_min: (number | null)[] },
+  from: string,
+  to: string,
+): ClimRange | null {
+  const idx = new Map(daily.time.map((t, i) => [t, i]));
+  const len = daysBetween(from, to) + 1;
+  const years: { wet: number; snow: boolean; hi: number[]; lo: number[] }[] = [];
+  for (let k = 1; k <= 60; k++) {
+    const start = `${Number(from.slice(0, 4)) - k}${from.slice(4) === '-02-29' ? '-02-28' : from.slice(4)}`;
+    const ds = Array.from({ length: len }, (_, i) => addDays(start, i));
+    const rows = ds.map((d) => idx.get(d)).filter((i): i is number => i != null);
+    if (rows.length < len) continue;
+    const p = rows.map((i) => daily.precipitation_sum[i]);
+    const tx = rows.map((i) => daily.temperature_2m_max[i]);
+    const tn = rows.map((i) => daily.temperature_2m_min[i]);
+    if (![...p, ...tx, ...tn].every(num)) continue;
+    years.push({
+      wet: (p as number[]).filter((x) => x >= WET_MM).length,
+      snow: rows.some((i) => (daily.snowfall_sum[i] ?? 0) >= SNOW_CM),
+      hi: tx as number[],
+      lo: tn as number[],
+    });
+  }
+  if (years.length < 5) return null;
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  return {
+    years: years.length,
+    pAnyWet: pct(years.filter((y) => y.wet > 0).length, years.length),
+    pAnySnow: pct(years.filter((y) => y.snow).length, years.length),
+    wetDays: mean(years.map((y) => y.wet)),
+    hi: mean(years.flatMap((y) => y.hi)),
+    lo: mean(years.flatMap((y) => y.lo)),
+  };
+}
+
+/** Days with something to show: a range of a week or more as it is, a shorter one inside a 10-day window around it. */
+export function cardDays(today: string, from: string, to: string, horizon = 34, count = 10): string[] {
+  const len = daysBetween(from, to) + 1;
+  if (len >= 7) return Array.from({ length: len }, (_, i) => addDays(from, i));
+  let start = addDays(from, -Math.floor((count - len) / 2));
   if (start < today) start = today;
   if (daysBetween(today, addDays(start, count - 1)) > horizon) start = addDays(today, horizon - count + 1);
   return Array.from({ length: count }, (_, i) => addDays(start, i));
+}
+
+/** For each past year, the window of daily data the normals need: the shown days ±`pad`, wholly in ERA5's past. */
+export function climateWindows(days: string[], today: string, years = 20, pad = 7, lag = 6): Window[] {
+  const first = addDays(days[0], -pad);
+  const last = addDays(days.at(-1)!, pad);
+  const lastTruth = addDays(today, -lag);
+  const shift = (iso: string, k: number) => `${Number(iso.slice(0, 4)) - k}${iso.slice(4) === '-02-29' ? '-02-28' : iso.slice(4)}`;
+  const out: Window[] = [];
+  for (let k = 1; out.length < years && k < 80; k++) {
+    const w = { start: shift(first, k), end: shift(last, k) };
+    if (w.end <= lastTruth) out.push(w);
+  }
+  return out.reverse();
 }

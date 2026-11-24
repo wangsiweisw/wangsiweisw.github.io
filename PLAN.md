@@ -173,16 +173,22 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 - **Input:**
   - A search box in the lab (Open-Meteo Geocoding API). It only matches names written in Latin script, so it asks for English.
   - Or a city chip, or a click on the map.
-  - A target date from today to +32 days (GEFS runs 35 days, but the newest run's last full day is about 32 out).
+  - A date, or a range of up to 14 days, from today to +32 days (GEFS runs 35 days, but the newest run's last full day is about 32 out). "Today" is the place's own date, taken from the forecast response (`timezone=auto`), so a place already into tomorrow doesn't show an empty first day.
+  - A range shows its own tiles: chance of at least one wet day, how many wet days (members followed day by day), the spread of highs and lows. Normals come from the same dates in each past year.
   - Share link: `/forecast/?lat=&lon=&name=&detail=&date=&lang=#card`.
-- **Data per card** (~15 requests in parallel, ~2 MB raw / ~0.3 MB gzipped, about 1–2 s):
+- **Cost.** Open-Meteo limits each IP by request *cost* (600/min, 10,000/day). Cost grows with days × variables, so a request for 30 years of daily data alone costs ~313. That is what blanked the normals and scores on the first live test.
+  - Budget: about 100 per card. Normals and scores are cached in `localStorage` for 30 and 3 days.
+  - On a per-minute 429, wait 20 s and retry once; the daily limit isn't retried.
+  - The forecast is drawn first (~1 s); normals and scores fill in.
+  - A failed load says so ("couldn't load… try again in a minute"), separately from "not enough data".
+- **Data per card** (~35 small requests in parallel, about 1–3 s):
   - Ensembles: `ecmwf_aifs025` and `ecmwf_ifs025` (51 members each, 15 days) and `gfs025` (31, 10 days). For targets past 15 days, add `gfs05` (31, 35 days) and `gem_global` (21, 16 days).
-  - History, **by season, not "the last N days"**: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads 1–7 days. Fetch only the target date ±6 weeks in every past year the archive holds, plus this year's days up to ERA5's lag.
+  - History, **by season, not "the last N days"**: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads 1, 2, 3, 5 and 7 days. Fetch only the target date ±6 weeks in every past year the archive holds, plus this year's days up to ERA5's lag.
     - Coverage: IFS and GFS go back to early 2024 (two full seasons now), AIFS to Feb 2025 (one).
     - The archive gains a season each year with no code change.
     - One request per model per season. Truth is ERA5 (`archive-api`, about 5 days behind), fetched for the same windows.
     - Measured for Seattle around Dec 9: 12 requests, ~1 s each in parallel, 1.2 MB raw / 155 KB gzipped, 191 scored days (106 for AIFS). The last 12 months would be 3.4 MB for 175 days spread over every season.
-  - Climatology: 30 years of ERA5 daily data, ±7 days around the target date (one request).
+  - Normals: the last 20 years of ERA5 daily data, one small request per year covering just the shown days ±7. Total cost ≈ 16, against 313 for one 30-year request.
 - **Card contents** (general, not tied to an activity):
   - Headline and a short verdict built from rules and templates. No LLM.
   - Per day: chance of ≥1 mm precipitation; chance of ≥1 cm snow (row shown only if any member snows); median high/low with a 10–90% band.
