@@ -4,6 +4,7 @@
 import Base from '../layouts/Base.astro';
 import ForecastMap from '../components/ForecastMap.astro';
 import ForecastVerify from '../components/ForecastVerify.astro';
+import ForecastCard from '../components/ForecastCard.astro';
 import citiesData from '../data/forecast-cities.json';
 
 // shared with scripts/forecast-data/build.py, which prepares the map data for these regions
@@ -32,6 +33,10 @@ const models = [
         {cities.map((c, i) => <button type="button" class="chip" data-city={c.id} aria-pressed={i === 0 ? 'true' : 'false'}>{c.name}</button>)}
         <button type="button" class="chip pin" data-pin aria-pressed="false" hidden></button>
       </div>
+      <form class="search" role="search" data-search>
+        <input type="search" placeholder="Search any place (in English)" aria-label="Search any place" autocomplete="off" data-q />
+        <ul class="results" role="listbox" data-results hidden></ul>
+      </form>
       <div class="chips" role="group" aria-label="Variable">
         <button type="button" class="chip" data-var="temp" aria-pressed="true">Temperature</button>
         <button type="button" class="chip" data-var="precip" aria-pressed="false">Chance of rain</button>
@@ -69,6 +74,16 @@ const models = [
       <div data-table></div>
     </details>
   </forecast-lab>
+
+  <section class="map-section" id="card">
+    <h2 class="section-title">Make a forecast card</h2>
+    <p class="section-intro">
+      One picture for the place above (search, a city, or a spot on the map) and a date up to about a month out: the chance
+      of rain or snow, highs and lows against a normal year, and how often forecasts here have been right in the same
+      season. Save it to send, or copy a link.
+    </p>
+    <ForecastCard />
+  </section>
 
   <section class="map-section">
     <h2 class="section-title">Across the region</h2>
@@ -122,6 +137,53 @@ const models = [
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+  }
+  .search {
+    position: relative;
+    flex: 1 1 14rem;
+    max-width: 20rem;
+  }
+  .search input {
+    width: 100%;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: var(--surface);
+    color: var(--fg);
+    font: 0.9rem var(--body);
+  }
+  .search input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .results {
+    position: absolute;
+    z-index: 1100;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0.3rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+    list-style: none;
+  }
+  .results :global(li) {
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .results :global(li span) {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .results :global(li:hover),
+  .results :global(li:focus) {
+    outline: none;
+    background: var(--bg);
   }
   .chip {
     padding: 0.35rem 0.85rem;
@@ -329,7 +391,9 @@ const models = [
 </style>
 
 <script>
-  type City = { id: string; name: string; lat: number; lon: number };
+  import { searchPlaces, type Place } from '../lib/forecast-card/fetch';
+
+  type City = { id: string; name: string; lat: number; lon: number; detail?: string };
   type Model = { id: string; name: string; org: string; key: string };
   type Series = { key: string; time: number[]; members: (number | null)[][]; precip: (number | null)[][] };
 
@@ -440,6 +504,9 @@ const models = [
         this.load();
         this.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
       });
+      // a place from the search box or a shared card link
+      document.addEventListener('fx-place', (e) => this.choose((e as CustomEvent<Place>).detail));
+      this.wireSearch();
       document.addEventListener('unitschange', () => this.render());
       new MutationObserver(() => this.render()).observe(document.documentElement, {
         attributes: true,
@@ -448,6 +515,74 @@ const models = [
       let rt = 0;
       window.addEventListener('resize', () => (clearTimeout(rt), (rt = window.setTimeout(() => this.render(), 150))));
       this.load();
+    }
+
+    choose(p: Place) {
+      const pin = this.querySelector<HTMLButtonElement>('[data-pin]')!;
+      this.city = { id: `q${p.lat.toFixed(2)}_${p.lon.toFixed(2)}`, name: p.name, lat: p.lat, lon: p.lon, detail: p.detail };
+      pin.textContent = `📍 ${p.name}`;
+      pin.hidden = false;
+      this.querySelectorAll('[data-city]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+      pin.setAttribute('aria-pressed', 'true');
+      document.dispatchEvent(new CustomEvent('fx-city', { detail: this.city }));
+      this.load();
+    }
+
+    wireSearch() {
+      const form = this.querySelector<HTMLFormElement>('[data-search]')!;
+      const input = form.querySelector<HTMLInputElement>('[data-q]')!;
+      const list = form.querySelector<HTMLUListElement>('[data-results]')!;
+      let found: Place[] = [];
+      let timer = 0;
+      let seq = 0;
+      const close = () => ((list.hidden = true), input.setAttribute('aria-expanded', 'false'));
+      const pick = (p: Place) => {
+        close();
+        input.value = '';
+        input.blur();
+        this.choose(p);
+      };
+      const show = () => {
+        list.innerHTML = '';
+        found.forEach((p) => {
+          const li = document.createElement('li');
+          li.setAttribute('role', 'option');
+          li.tabIndex = -1;
+          li.innerHTML = `<strong></strong> <span></span>`;
+          li.querySelector('strong')!.textContent = p.name;
+          li.querySelector('span')!.textContent = p.detail ?? '';
+          li.addEventListener('mousedown', (e) => (e.preventDefault(), pick(p)));
+          li.addEventListener('keydown', (e) => e.key === 'Enter' && pick(p));
+          list.append(li);
+        });
+        list.hidden = !found.length;
+        input.setAttribute('aria-expanded', String(!list.hidden));
+      };
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) return ((found = []), close());
+        timer = window.setTimeout(async () => {
+          const mine = ++seq;
+          const res = await searchPlaces(q, 'en');
+          if (mine === seq) (found = res), show();
+        }, 250);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+        if (e.key === 'ArrowDown' && !list.hidden) (e.preventDefault(), (list.firstElementChild as HTMLElement)?.focus());
+      });
+      list.addEventListener('keydown', (e) => {
+        const cur = document.activeElement as HTMLElement;
+        if (e.key === 'ArrowDown') (e.preventDefault(), (cur.nextElementSibling as HTMLElement)?.focus());
+        if (e.key === 'ArrowUp') (e.preventDefault(), ((cur.previousElementSibling as HTMLElement) ?? input).focus());
+        if (e.key === 'Escape') (close(), input.focus());
+      });
+      input.addEventListener('blur', () => setTimeout(() => form.contains(document.activeElement) || close(), 0));
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (found[0]) pick(found[0]);
+      });
     }
 
     press(sel: string, btn: HTMLElement) {

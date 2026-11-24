@@ -167,10 +167,14 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 
 > ✅ **Built:** city chips (`src/data/forecast-cities.json`), 15-day ensemble plumes from AIFS ENS, IFS ENS and GEFS, a region map from precomputed `public/fx/` (CI every 6 h, `scripts/forecast-data/build.py`), and "How did the models do?" scored against ERA5. All forecast data is fetched client-side from Open-Meteo.
 
-**Forecast card (Phase 7, planned).** Pick any place (search or map click) and optionally a date → a shareable card with a general forecast and how accurate forecasts have been at that spot. Modeled on three hand-made cards (Sequoia trip, Thanksgiving skiing in Maine/Vermont, Seattle on a date 15 days out).
+**Forecast card (Phase 7, ✅ built on branch `forecast-card`).** Code in `src/lib/forecast-card/` (stats, fetch, text, render, export; tests alongside) and `src/components/ForecastCard.astro`. Pick any place (search or map click) and optionally a date → a shareable card with a general forecast and how accurate forecasts have been at that spot. Modeled on three hand-made cards (Sequoia trip, Thanksgiving skiing in Maine/Vermont, Seattle on a date 15 days out).
 
 - **Where it runs:** entirely in the visitor's browser; the site stays static on GitHub Pages. No server, no API keys, $0. Open-Meteo's free non-commercial tier limits by IP (600/min, 5,000/h, 10,000/day), so each visitor spends their own quota. Don't proxy through a server: one shared IP hits 429s (seen from the cloud sandbox).
-- **Input:** search box (Open-Meteo Geocoding API, `language=en|zh`) or a click on the map; optional target date (today to +35 days). Share link: `/forecast/?lat=&lon=&name=&date=&lang=`.
+- **Input:**
+  - A search box in the lab (Open-Meteo Geocoding API). It only matches names written in Latin script, so it asks for English.
+  - Or a city chip, or a click on the map.
+  - A target date from today to +32 days (GEFS runs 35 days, but the newest run's last full day is about 32 out).
+  - Share link: `/forecast/?lat=&lon=&name=&detail=&date=&lang=#card`.
 - **Data per card** (~15 requests in parallel, ~2 MB raw / ~0.3 MB gzipped, about 1–2 s):
   - Ensembles: `ecmwf_aifs025` and `ecmwf_ifs025` (51 members each, 15 days) and `gfs025` (31, 10 days). For targets past 15 days, add `gfs05` (31, 35 days) and `gem_global` (21, 16 days).
   - History, **by season, not "the last N days"**: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads 1–7 days. Fetch only the target date ±6 weeks in every past year the archive holds, plus this year's days up to ERA5's lag.
@@ -189,7 +193,9 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
   - Past 7 days: say plainly it can't be back-tested (the archive stores leads of 1–7 days only) and compare with climatology instead.
   - Footer: sources, the ERA5 caveat (≈25 km grid, not a station), Open-Meteo attribution.
 - **Language:** English by default, with a 中文 toggle on the card. The rest of the site stays English.
-- **Export:** "Save image" draws the card with the Canvas 2D API in the page's loaded fonts (no new dependency), at 3× for phones, and offers the Web Share API where available. If canvas drawing proves too fiddly, ask before adding `html-to-image`.
+- **Export:** the card is one SVG, used on the page and for "Save image", so the two always match. Text is wrapped with canvas `measureText`.
+  - To save, the site's fonts are inlined as data URIs, then the SVG is drawn to a canvas at 3× and saved as a PNG. No new dependency.
+  - Chinese uses system fonts. Phones get the share sheet (Web Share API with files); desktops download the file.
 - **Not in v1:**
   - Per-location link previews. These need a Cloudflare Worker, about $5/mo for image rendering.
   - Verdicts written by an LLM.

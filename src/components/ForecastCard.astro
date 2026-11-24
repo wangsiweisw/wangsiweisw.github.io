@@ -1,0 +1,303 @@
+---
+// Forecast card: a shareable summary for the place picked in the lab (city chip, search or map click) and a date:
+// ensemble chances, highs and lows against normal, and how past forecasts did here in the same season. Built in the
+// browser from Open-Meteo (src/lib/forecast-card), drawn as one SVG, saved as a PNG. English or Chinese.
+---
+
+<forecast-card>
+  <div class="controls">
+    <label class="date">
+      <span data-l="date">Date</span>
+      <input type="date" data-date />
+    </label>
+    <div class="chips" role="group" aria-label="Card language">
+      <button type="button" class="chip" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" class="chip" data-lang="zh" aria-pressed="false">中文</button>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn primary" data-save disabled><span data-l="save">Save image</span></button>
+      <button type="button" class="btn" data-link disabled><span data-l="link">Copy link</span></button>
+    </div>
+  </div>
+  <p class="note" data-note aria-live="polite"></p>
+  <div class="frame" data-card>
+    <p class="status" data-l="idle">Scroll here to build a card for the place above.</p>
+  </div>
+</forecast-card>
+
+<script>
+  import { HORIZON, addDays, loadCard, localToday, type CardData, type Lang, type Place } from '../lib/forecast-card/fetch';
+  import { CARD_W, renderCard } from '../lib/forecast-card/render';
+  import { canvasMeasure, cardPng, pageFonts, saveOrShare } from '../lib/forecast-card/export';
+
+  const UI = {
+    en: {
+      date: 'Date',
+      save: 'Save image',
+      link: 'Copy link',
+      idle: 'Scroll here to build a card for the place above.',
+      loading: (p: string) => `Building a card for ${p}: today's ensembles, 30 years of normals and past forecasts from the same season…`,
+      failed: 'Could not load the forecasts right now (the free weather service may be busy). Try again in a bit.',
+      saving: 'Drawing the image…',
+      saved: 'Saved.',
+      copied: 'Link copied.',
+    },
+    zh: {
+      date: '日期',
+      save: '保存图片',
+      link: '复制链接',
+      idle: '滚动到这里，为上面选的地方生成卡片。',
+      loading: (p: string) => `正在为 ${p} 生成卡片：今天的集合预报、30 年的往年数据和往年同季节的预报…`,
+      failed: '暂时拿不到预报（免费的天气服务可能太忙），过一会儿再试。',
+      saving: '正在生成图片…',
+      saved: '已保存。',
+      copied: '链接已复制。',
+    },
+  };
+
+  const coords = (lat: number, lon: number) =>
+    `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`;
+
+  class ForecastCard extends HTMLElement {
+    place!: Place;
+    lang: Lang = 'en';
+    target = addDays(localToday(), 1);
+    data: CardData | null = null;
+    svg: { svg: string; height: number } | null = null;
+    started = false;
+    token = 0;
+
+    connectedCallback() {
+      const lab = document.querySelector<HTMLElement>('forecast-lab');
+      const first = JSON.parse(lab?.dataset.cities ?? '[]')[0];
+      this.place = { name: first?.name ?? 'New York', lat: first?.lat ?? 40.71, lon: first?.lon ?? -74.01 };
+
+      const today = localToday();
+      const date = this.querySelector<HTMLInputElement>('[data-date]')!;
+      date.min = today;
+      date.max = addDays(today, HORIZON);
+      date.value = this.target;
+      date.addEventListener('change', () => {
+        if (!date.value) return;
+        this.target = date.value < date.min ? date.min : date.value > date.max ? date.max : date.value;
+        this.refresh();
+      });
+      this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((b) => b.addEventListener('click', () => this.setLang(b.dataset.lang as Lang)));
+      this.querySelector('[data-save]')!.addEventListener('click', () => this.save());
+      this.querySelector('[data-link]')!.addEventListener('click', () => this.copyLink());
+
+      document.addEventListener('fx-city', (e) => {
+        const c = (e as CustomEvent<Place & { id?: string }>).detail;
+        if (c.lat === this.place.lat && c.lon === this.place.lon && c.name === this.place.name && this.started) return;
+        this.place = { name: c.name, lat: c.lat, lon: c.lon, detail: c.detail };
+        this.refresh();
+      });
+      document.addEventListener('fx-pick', (e) => {
+        const { lat, lon } = (e as CustomEvent<{ lat: number; lon: number }>).detail;
+        this.place = { name: coords(lat, lon), lat, lon };
+        this.refresh();
+      });
+      document.addEventListener('unitschange', () => this.draw());
+
+      // a shared link: /forecast/?lat=…&lon=…&name=…&date=…&lang=…#card
+      const q = new URLSearchParams(location.search);
+      const lat = Number(q.get('lat'));
+      const lon = Number(q.get('lon'));
+      if (q.get('lang') === 'zh') this.setLang('zh', false);
+      const d = q.get('date');
+      if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+        this.target = d < date.min ? date.min : d > date.max ? date.max : d;
+        date.value = this.target;
+      }
+      if (q.has('lat') && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+        const place = { name: q.get('name')?.slice(0, 80) || coords(lat, lon), detail: q.get('detail')?.slice(0, 80) || undefined, lat, lon };
+        // let the lab, map and scores follow too; they listen for this once the page has set up
+        requestAnimationFrame(() => document.dispatchEvent(new CustomEvent('fx-place', { detail: place })));
+        this.place = place;
+        this.started = true;
+        this.refresh();
+        this.closest('section')?.scrollIntoView({ block: 'start' });
+      }
+
+      new IntersectionObserver(
+        (entries, io) => {
+          if (entries.some((x) => x.isIntersecting)) {
+            io.disconnect();
+            if (!this.started) (this.started = true), this.refresh();
+          }
+        },
+        { rootMargin: '300px' },
+      ).observe(this);
+    }
+
+    setLang(lang: Lang, redraw = true) {
+      this.lang = lang;
+      this.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.lang === lang)));
+      this.querySelectorAll<HTMLElement>('[data-l]').forEach((el) => {
+        const v = UI[lang][el.dataset.l as 'date'];
+        if (typeof v === 'string') el.textContent = v;
+      });
+      this.lang === 'zh' ? this.setAttribute('lang', 'zh-CN') : this.removeAttribute('lang');
+      if (redraw) this.draw();
+    }
+
+    note(text: string) {
+      this.querySelector('[data-note]')!.textContent = text;
+    }
+
+    async refresh() {
+      if (!this.started) return;
+      const token = ++this.token;
+      this.data = null;
+      this.toggle(false);
+      this.note('');
+      this.querySelector('[data-card]')!.innerHTML = `<p class="status">${UI[this.lang].loading(this.place.name)}</p>`;
+      try {
+        const data = await loadCard(this.place, this.target);
+        if (token !== this.token) return;
+        this.data = data;
+        this.draw();
+      } catch {
+        if (token !== this.token) return;
+        this.querySelector('[data-card]')!.innerHTML = `<p class="status">${UI[this.lang].failed}</p>`;
+      }
+    }
+
+    draw() {
+      if (!this.data) return;
+      const units = document.documentElement.dataset.units === 'metric' ? 'C' : 'F';
+      const fonts = pageFonts();
+      this.svg = renderCard(this.data, this.lang, units, canvasMeasure(fonts), fonts);
+      this.querySelector('[data-card]')!.innerHTML = this.svg.svg;
+      this.toggle(true);
+    }
+
+    toggle(on: boolean) {
+      this.querySelectorAll<HTMLButtonElement>('[data-save], [data-link]').forEach((b) => (b.disabled = !on));
+    }
+
+    link() {
+      const u = new URL('/forecast/', location.origin);
+      const p = this.place;
+      u.searchParams.set('lat', p.lat.toFixed(3));
+      u.searchParams.set('lon', p.lon.toFixed(3));
+      u.searchParams.set('name', p.name);
+      if (p.detail) u.searchParams.set('detail', p.detail);
+      u.searchParams.set('date', this.target);
+      if (this.lang === 'zh') u.searchParams.set('lang', 'zh');
+      u.hash = 'card';
+      return u.toString();
+    }
+
+    async copyLink() {
+      const url = this.link();
+      try {
+        await navigator.clipboard.writeText(url);
+        this.note(UI[this.lang].copied);
+      } catch {
+        this.note(url);
+      }
+    }
+
+    async save() {
+      if (!this.svg || !this.data) return;
+      const btn = this.querySelector<HTMLButtonElement>('[data-save]')!;
+      btn.disabled = true;
+      this.note(UI[this.lang].saving);
+      try {
+        const png = await cardPng(this.svg.svg, CARD_W, this.svg.height, 3);
+        const slug = this.data.place.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'place';
+        const how = await saveOrShare(png, `forecast-${slug}-${this.target}.png`, this.data.place.name);
+        this.note(how === 'downloaded' ? UI[this.lang].saved : '');
+      } catch {
+        this.note(UI[this.lang].failed);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  }
+  customElements.define('forecast-card', ForecastCard);
+</script>
+
+<style>
+  forecast-card {
+    display: block;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+  }
+  .date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .date input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--fg);
+    font: inherit;
+  }
+  .chips,
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chip,
+  .btn {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--fg);
+    font: 500 0.85rem var(--body);
+    cursor: pointer;
+    transition: background var(--ease), border-color var(--ease);
+  }
+  .chip[aria-pressed='true'] {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .btn.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .note {
+    min-height: 1.4em;
+    margin: 0.5rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+  .frame {
+    max-width: 440px;
+    margin-top: 0.5rem;
+  }
+  .frame :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.08);
+  }
+  .status {
+    padding: 2rem 1rem;
+    border: 1px dashed var(--rule);
+    border-radius: 12px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
