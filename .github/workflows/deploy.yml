@@ -45,6 +45,13 @@ jobs:
           pip install -r scripts/forecast-data/requirements.txt
           python scripts/forecast-data/build.py
       - run: pnpm build
+      # GitHub Pages takes sites up to 1 GB: warn at 500 MB, stop at 900 MB
+      - name: Check site size
+        run: |
+          mb=$(du -sm dist | cut -f1)
+          echo "dist is ${mb} MB"
+          if [ "$mb" -gt 900 ]; then echo "::error::dist is ${mb} MB, near GitHub Pages' 1 GB limit"; exit 1; fi
+          if [ "$mb" -gt 500 ]; then echo "::warning::dist is ${mb} MB (GitHub Pages limit is 1 GB)"; fi
       # skipped on the 6-hourly schedule: only the forecast data changes there, and this step installs a browser
       - name: Print resume PDF
         if: github.event_name != 'pull_request' && github.event_name != 'schedule'

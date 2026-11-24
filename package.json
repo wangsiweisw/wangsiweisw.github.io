@@ -20,7 +20,8 @@
     "running:stats": "node scripts/running-stats.ts",
     "running:weather": "node scripts/running-weather.ts",
     "og:cards": "node scripts/og-cards.ts",
-    "climate": "node scripts/fetch-climate.ts"
+    "climate": "node scripts/fetch-climate.ts",
+    "r2:usage": "node scripts/r2-usage.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",

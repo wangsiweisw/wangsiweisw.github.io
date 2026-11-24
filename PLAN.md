@@ -29,6 +29,12 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 - **Interactivity:** small islands in vanilla TS / Web Components. No React/Vue unless a component genuinely needs it (ask first).
 - **Hosting:** GitHub Pages, deployed by GitHub Actions, custom domain via `CNAME`.
 - **Images:** originals stay local (gitignored); resized variants live in Cloudflare R2 served from `{{R2_PUBLIC_HOST}}`. Never commit photo files to the repo.
+- **Staying free:**
+  - R2 is the only paid service. Its free tier is 10 GB stored, 1M writes and 10M reads a month; egress is free. It held 91 MB (550 files) in Nov 2026.
+  - `pnpm r2:usage` reports what's stored.
+  - `photos:sync` refuses an upload that would take the bucket past 9 GB, unless run with `--allow-over-free`.
+  - The repo is public, so Actions and Pages cost nothing. CI warns when `dist` passes 500 MB and fails at 900 MB (Pages limit: 1 GB; ~38 MB now).
+  - Open-Meteo is free for non-commercial use and can't bill; over its limits it answers 429.
 - **Allowed dependencies:** `@astrojs/mdx`, `@astrojs/rss`, `@astrojs/sitemap`, `sharp`, `exifr`, `@aws-sdk/client-s3`, `yaml`, `leaflet` (+ `leaflet.markercluster`), `playwright` (dev only). Ask before adding anything else.
 
 ## 2. Site map
@@ -189,7 +195,11 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
     - One request per model per season. Truth is ERA5 (`archive-api`, about 5 days behind), fetched for the same windows.
     - Measured for Seattle around Dec 9: 12 requests, ~1 s each in parallel, 1.2 MB raw / 155 KB gzipped, 191 scored days (106 for AIFS). The last 12 months would be 3.4 MB for 175 days spread over every season.
   - Normals: the last 20 years of ERA5 daily data, one small request per year covering just the shown days ±7. Total cost ≈ 16, against 313 for one 30-year request.
-- **Card contents** (general, not tied to an activity):
+- **Card contents** (general, not tied to an activity). Rain and snow are kept apart:
+  - Rain is each hour's precipitation minus the water in its snow (Open-Meteo: 7 cm of snow = 10 mm of water).
+  - Rain gets its own row, and snow gets one wherever it's a real chance, now or in a normal year.
+  - Normals use ERA5's own `rain_sum` and `snowfall_sum`.
+  - Past-forecast scores stay on rain-or-snow ≥1 mm, because the archive only keeps total precipitation; the card says so.
   - Headline and a short verdict built from rules and templates. No LLM.
   - Per day: chance of ≥1 mm precipitation; chance of ≥1 cm snow (row shown only if any member snows); median high/low with a 10–90% band.
   - Rows per model, plus a climatology row when the target is more than 7 days out.

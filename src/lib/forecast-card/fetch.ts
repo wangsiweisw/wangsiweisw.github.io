@@ -203,7 +203,7 @@ export async function loadCard(place: Place, from: string, to: string, onUpdate:
 
 /** Normals from ERA5: one small request per past year, just the weeks around the shown days. */
 async function loadNormals(data: CardData, q: string, cell: string, rangeDays: string[], onUpdate: (d: CardData) => void) {
-  const key = `fxclim2:${cell}:${data.days[0]}:${data.days.at(-1)}:${data.from}:${data.to}`;
+  const key = `fxclim3:${cell}:${data.days[0]}:${data.days.at(-1)}:${data.from}:${data.to}`;
   const cached = store.get<Pick<CardData, 'clim' | 'climRange'>>(key, 30 * 86_400_000);
   if (cached) {
     Object.assign(data, cached, { climStatus: 'ok' });
@@ -212,7 +212,7 @@ async function loadNormals(data: CardData, q: string, cell: string, rangeDays: s
   const windows = climateWindows(data.days, data.today);
   const blocks = await Promise.all(
     windows.map((w) =>
-      getJSON(`${ARCHIVE}?${q}&models=era5&daily=precipitation_sum,snowfall_sum,temperature_2m_max,temperature_2m_min&start_date=${w.start}&end_date=${w.end}`),
+      getJSON(`${ARCHIVE}?${q}&models=era5&daily=precipitation_sum,rain_sum,snowfall_sum,temperature_2m_max,temperature_2m_min&start_date=${w.start}&end_date=${w.end}`),
     ),
   );
   const ok = blocks.filter((b) => b?.daily);
@@ -220,7 +220,7 @@ async function loadNormals(data: CardData, q: string, cell: string, rangeDays: s
     data.climStatus = 'failed';
     return onUpdate({ ...data });
   }
-  const vars = ['precipitation_sum', 'snowfall_sum', 'temperature_2m_max', 'temperature_2m_min'] as const;
+  const vars = ['precipitation_sum', 'rain_sum', 'snowfall_sum', 'temperature_2m_max', 'temperature_2m_min'] as const;
   const daily = { time: ok.flatMap((b) => b.daily.time) } as any;
   for (const v of vars) daily[v] = ok.flatMap((b) => b.daily[v]);
   const entries = data.days.map((d) => [d, climatology(daily, d)] as const);

@@ -117,11 +117,16 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
     });
   const t = d.atDay;
   const normal = d.clim?.[d.from];
+  // snow gets its own tile and row wherever it's a real possibility, now or in a normal year
+  const snowy =
+    Math.max(...d.days.map((day) => d.pooled[day]?.pSnow ?? 0)) >= 5 ||
+    Math.max(...d.days.map((day) => d.clim?.[day]?.pSnow ?? 0)) >= 5 ||
+    (d.range?.pAnySnow ?? 0) >= 5 ||
+    (d.climRange?.pAnySnow ?? 0) >= 5;
   const nl = (s: string) => (s ? `${L.tiles.normal} ${s}` : '');
   if (d.from === d.to && t) {
-    const snowy = t.pSnow >= 5 || (normal?.pSnow ?? 0) >= 5;
     tilesPanel(zh ? `${dayLabel(d.from, lang)}当天` : `On ${dayLabel(d.from, lang)}`, [
-      [L.tiles.wet, `${t.pWet}`, '%', normal ? nl(`${normal.pWet}%`) : ''],
+      [L.tiles.rain, `${t.pRain}`, '%', normal ? nl(`${normal.pRain}%`) : ''],
       snowy ? [L.tiles.snow, `${t.pSnow}`, '%', normal ? nl(`${normal.pSnow}%`) : ''] : [L.tiles.heavy, `${t.pHeavy}`, '%', normal ? nl(`${normal.pHeavy}%`) : ''],
       [L.tiles.hi, `${Math.round(temp(t.hi[1]))}`, `°${units}`, normal ? nl(fmt.temp(normal.hi)) : ''],
       [L.tiles.lo, `${Math.round(temp(t.lo[1]))}`, `°${units}`, normal ? nl(fmt.temp(normal.lo)) : ''],
@@ -136,22 +141,21 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
       const b = Math.round(Math.max(...xs));
       return a === b ? `${a}` : `${a}–${b}`;
     };
-    const wa = Math.round(r.wetDays[0]);
-    const wb = Math.round(r.wetDays[2]);
-    const snowy = r.pAnySnow >= 10 || (c?.pAnySnow ?? 0) >= 10;
+    const wa = Math.round(r.rainDays[0]);
+    const wb = Math.round(r.rainDays[2]);
     const R = L.rangeTiles;
     tilesPanel(L.onRange(d.from, d.to), [
-      [R.anyWet, `${r.pAnyWet}`, '%', c ? nl(`${c.pAnyWet}%`) : ''],
+      [R.anyRain, `${r.pAnyRain}`, '%', c ? nl(`${c.pAnyRain}%`) : ''],
       snowy
         ? [R.anySnow, `${r.pAnySnow}`, '%', c ? nl(`${c.pAnySnow}%`) : '']
-        : [R.wetDays, wa === wb ? `${wa}` : `${wa}–${wb}`, R.of(len), c ? nl(c.wetDays.toFixed(1)) : ''],
+        : [R.rainDays, wa === wb ? `${wa}` : `${wa}–${wb}`, R.of(len), c ? nl(c.rainDays.toFixed(1)) : ''],
       [R.his, range(span.map((s) => temp(s.hi[1]))), `°${units}`, c ? nl(fmt.temp(c.hi)) : ''],
       [R.los, range(span.map((s) => temp(s.lo[1]))), `°${units}`, c ? nl(fmt.temp(c.lo)) : ''],
     ]);
   }
 
   // chance strip: one row per model, plus normal
-  const strip = (title: string, sub: string, field: 'pWet' | 'pSnow', climField: 'pWet' | 'pSnow') =>
+  const strip = (title: string, sub: string, field: 'pRain' | 'pSnow', climField: 'pRain' | 'pSnow') =>
     panel(title, sub, (x) => {
       const lab = 74;
       const cw = (INNER - lab) / d.days.length;
@@ -194,8 +198,8 @@ export function renderCard(d: CardData, lang: Lang, units: Units, measure: Measu
     });
 
   const members = Math.max(...d.days.map((day) => d.pooled[day]?.n ?? 0));
-  strip(L.stripTitle, climNote ?? L.stripSub(members), 'pWet', 'pWet');
-  if (Math.max(...d.days.map((day) => d.pooled[day]?.pSnow ?? 0)) >= 10) strip(L.snowTitle, '', 'pSnow', 'pSnow');
+  strip(L.stripTitle, climNote ?? L.stripSub(members), 'pRain', 'pRain');
+  if (snowy) strip(L.snowTitle, L.snowSub, 'pSnow', 'pSnow');
 
   // highs and lows: median of everything, normal high as a tick
   panel(`${L.tempTitle} (°${units})`, L.tempSub, (x) => {

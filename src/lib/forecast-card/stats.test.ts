@@ -30,6 +30,9 @@ describe('ensemble days', () => {
     const day0 = md.get('2026-12-01')!;
     expect(day0.map((m) => +m.p.toFixed(6))).toEqual([0, 1.2, 2.4, 3.6]);
     expect(day0[3].sn).toBeCloseTo(2.4);
+    // 2.4 cm of snow is ~3.4 mm of water, so member 3's 3.6 mm is nearly all snow
+    expect(day0[3].r).toBeCloseTo(3.6 - 2.4 / 0.7);
+    expect(day0[2].r).toBeCloseTo(2.4);
     expect(day0[0].tx).toBe(18);
     expect(day0[0].tn).toBe(-5);
   });
@@ -37,7 +40,8 @@ describe('ensemble days', () => {
   it('turns members into chances and percentiles', () => {
     const s = summarize(memberDays(h).get('2026-12-01')!);
     expect(s.n).toBe(4);
-    expect(s.pWet).toBe(75); // three of four members get ≥1 mm
+    expect(s.pWet).toBe(75); // three of four members get ≥1 mm of something
+    expect(s.pRain).toBe(50); // …but one of those is snow
     expect(s.pSnow).toBe(25);
     expect(s.hi[1]).toBeCloseTo(19.5); // median of 18, 19, 20, 21
   });
@@ -73,6 +77,7 @@ describe('climatology', () => {
   const daily = {
     time,
     precipitation_sum: time.map((_, i) => (i % 2 ? 5 : 0)),
+    rain_sum: time.map((_, i) => (i % 2 ? 5 : 0)),
     snowfall_sum: time.map(() => 0),
     temperature_2m_max: time.map(() => 10),
     temperature_2m_min: time.map(() => 2),
@@ -80,8 +85,8 @@ describe('climatology', () => {
   it('averages the same calendar days across years', () => {
     const c = climatology(daily, '2026-12-09')!;
     expect(c.n).toBe(30 * 15);
-    expect(c.pWet).toBeGreaterThan(45);
-    expect(c.pWet).toBeLessThan(55);
+    expect(c.pRain).toBeGreaterThan(45);
+    expect(c.pRain).toBeLessThan(55);
     expect(c.hi).toBe(10);
   });
   it('wraps around New Year', () => {
@@ -145,8 +150,9 @@ describe('ranges', () => {
   it('follows each member through the range', () => {
     const r = rangeStat([memberSeries(h)], days)!;
     expect(r.n).toBe(3);
-    expect(r.pAnyWet).toBe(67);
-    expect(r.wetDays[1]).toBe(1);
+    expect(r.pAnyRain).toBe(67);
+    expect(r.rainDays[1]).toBe(1);
+    expect(r.pAnySnow).toBe(0);
   });
 
   it('drops members that miss a day', () => {
@@ -160,13 +166,14 @@ describe('ranges', () => {
     const daily = {
       time,
       precipitation_sum: time.map((t) => (t.endsWith('-02') ? 3 : 0)), // Dec 2 is always wet
-      snowfall_sum: time.map(() => 0),
+      rain_sum: time.map((t) => (t.endsWith('-02') ? 3 : 0)),
+      snowfall_sum: time.map((t) => (t.endsWith('-03') ? 2 : 0)), // and Dec 3 always snowy
       temperature_2m_max: time.map(() => 8),
       temperature_2m_min: time.map(() => 1),
     };
     const c = climRange(daily, '2026-12-01', '2026-12-03')!;
-    expect(c).toMatchObject({ years: 20, pAnyWet: 100, wetDays: 1, hi: 8 });
-    expect(climRange(daily, '2026-12-05', '2026-12-07')!.pAnyWet).toBe(0);
+    expect(c).toMatchObject({ years: 20, pAnyRain: 100, rainDays: 1, pAnySnow: 100, snowDays: 1, hi: 8 });
+    expect(climRange(daily, '2026-12-05', '2026-12-07')!.pAnyRain).toBe(0);
   });
 
   it('asks for one window per past year, all of it already in ERA5', () => {

@@ -4,16 +4,16 @@ import type { DayStat } from './stats';
 import { verdict } from './text';
 
 const fmt = { temp: (c: number) => `${Math.round(c)}°C`, delta: (c: number) => `${Math.round(c)}°C` };
-const day = (o: Partial<DayStat>): DayStat => ({ n: 52, pWet: 40, pHeavy: 5, pSnow: 0, hi: [5, 8, 11], lo: [0, 3, 5], ...o });
+const day = (o: Partial<DayStat>): DayStat => ({ n: 52, pRain: 40, pWet: 40, pHeavy: 5, pSnow: 0, hi: [5, 8, 11], lo: [0, 3, 5], ...o });
 
 function card(o: { target?: Partial<DayStat>; models?: Record<string, number>; today?: string; normalHi?: number; scores?: boolean } = {}): CardData {
   const target = '2026-12-09';
   const t = day(o.target ?? {});
-  const models = Object.entries(o.models ?? { GEFS: t.pWet }).map(([name, p]) => ({
+  const models = Object.entries(o.models ?? { GEFS: t.pRain }).map(([name, p]) => ({
     key: name.toLowerCase(),
     name,
     org: { en: '', zh: '' },
-    byDay: { [target]: day({ ...o.target, pWet: p }) },
+    byDay: { [target]: day({ ...o.target, pRain: p, pWet: p }) },
     range: null,
   }));
   return {
@@ -26,7 +26,7 @@ function card(o: { target?: Partial<DayStat>; models?: Record<string, number>; t
     pooled: { [target]: t },
     atDay: t,
     range: null,
-    clim: { [target]: { n: 450, pWet: 56, pHeavy: 22, pSnow: 3, hi: o.normalHi ?? 10, lo: 4 } },
+    clim: { [target]: { n: 450, pRain: 56, pWet: 56, pHeavy: 22, pSnow: 3, hi: o.normalHi ?? 10, lo: 4 } },
     climRange: null,
     climStatus: 'ok',
     scoresStatus: o.scores ? 'ok' : 'few',
@@ -39,35 +39,36 @@ function card(o: { target?: Partial<DayStat>; models?: Record<string, number>; t
 
 describe('verdict', () => {
   it('puts the chance in tenths and compares with normal', () => {
-    const v = verdict(card({ target: { pWet: 38 } }), 'en', fmt);
+    const v = verdict(card({ target: { pRain: 38 } }), 'en', fmt);
     expect(v.headline).toEqual(['Wed, Dec 9: about a 4 in 10 chance of rain', '2°C colder than usual']);
     expect(v.lede).toContain("can't be checked");
   });
 
   it('says so when the models disagree', () => {
-    const v = verdict(card({ target: { pWet: 38 }, models: { GEFS: 52, GEM: 19 } }), 'zh', fmt);
+    const v = verdict(card({ target: { pRain: 38 }, models: { GEFS: 52, GEM: 19 } }), 'zh', fmt);
     expect(v.headline[0]).toBe('12/9（周三）大约四成会下雨');
     expect(v.lede).toContain('模型还对不上：GEFS 52%，GEM 19%');
   });
 
-  it('calls snow snow, and stays neutral near freezing', () => {
-    expect(verdict(card({ target: { pWet: 80, pSnow: 70, hi: [-5, -3, 0] } }), 'en', fmt).headline[0]).toContain('about a 7 in 10 chance of snow');
-    expect(verdict(card({ target: { pWet: 60, pSnow: 20, hi: [-6, -4, -1] } }), 'en', fmt).headline[0]).toContain('rain or snow');
+  it('keeps rain and snow apart, leading with the likelier', () => {
+    expect(verdict(card({ target: { pRain: 10, pSnow: 70, hi: [-5, -3, 0] } }), 'en', fmt).headline[0]).toBe('Wed, Dec 9: about a 7 in 10 chance of snow');
+    expect(verdict(card({ target: { pRain: 40, pSnow: 35 } }), 'en', fmt).headline[0]).toBe('Wed, Dec 9: about a 4 in 10 chance of rain; 35% for snow');
+    expect(verdict(card({ target: { pRain: 40, pSnow: 35 } }), 'zh', fmt).headline[0]).toBe('12/9（周三）大约四成会下雨，下雪也有 35%');
   });
 
   it('quotes the past hit rate for forecasts a few days out', () => {
-    const v = verdict(card({ target: { pWet: 3 }, today: '2026-12-06', scores: true }), 'en', fmt);
+    const v = verdict(card({ target: { pRain: 3, pWet: 3 }, today: '2026-12-06', scores: true }), 'en', fmt);
     expect(v.headline[0]).toBe('Wed, Dec 9: almost certainly dry');
     expect(v.lede).toContain('forecasts 3 days out that said "dry" were right 77% of the time');
   });
 
   it('sums up a range by wet days', () => {
-    const d = card({ target: { pWet: 60 } });
+    const d = card({ target: { pRain: 60 } });
     d.to = '2026-12-13';
     d.days = ['2026-12-09', '2026-12-10', '2026-12-11', '2026-12-12', '2026-12-13'];
-    for (const x of d.days) d.pooled[x] = day({ pWet: 60 });
-    d.range = { n: 52, pAnyWet: 90, pAnySnow: 0, wetDays: [2, 3, 3.4] };
-    d.climRange = { years: 20, pAnyWet: 95, pAnySnow: 0, wetDays: 2.9, hi: 10, lo: 4 };
+    for (const x of d.days) d.pooled[x] = day({ pRain: 60 });
+    d.range = { n: 52, pAnyRain: 90, pAnySnow: 0, pAnyWet: 90, rainDays: [2, 3, 3.4], snowDays: [0, 0, 0] };
+    d.climRange = { years: 20, pAnyRain: 95, pAnySnow: 0, rainDays: 2.9, snowDays: 0, hi: 10, lo: 4 };
     const v = verdict(d, 'en', fmt);
     expect(v.headline[0]).toBe('Dec 9–Dec 13: rain on about 2–3 of 5 days');
     expect(verdict(d, 'zh', fmt).headline[0]).toBe('12/9–12/13：5 天里大约 2–3 天下雨');

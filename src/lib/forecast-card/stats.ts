@@ -4,19 +4,25 @@
 /** Open-Meteo `hourly` block: local ISO times plus one array per variable (ensemble members as `<var>_memberNN`). */
 export type Hourly = { time: string[] } & Record<string, (number | null)[] | string[]>;
 
-/** One ensemble member's day. Precipitation in mm, snowfall in cm, temperatures in °C. */
-export type MemberDay = { p: number; sn: number; tx: number; tn: number };
+/** One ensemble member's day: all precipitation and the rain part of it in mm, snowfall in cm, temperatures in °C. */
+export type MemberDay = { p: number; r: number; sn: number; tx: number; tn: number };
 
-/** A day across an ensemble (or several): chances in %, temperature percentiles [p10, p50, p90] in °C. */
-export type DayStat = { n: number; pWet: number; pHeavy: number; pSnow: number; hi: [number, number, number]; lo: [number, number, number] };
+/**
+ * A day across an ensemble (or several): chances in % of rain (≥1 mm), heavy rain (≥10 mm), snow (≥1 cm) and of
+ * any precipitation (≥1 mm of rain or snow's water), plus temperature percentiles [p10, p50, p90] in °C.
+ */
+export type DayStat = { n: number; pRain: number; pHeavy: number; pSnow: number; pWet: number; hi: [number, number, number]; lo: [number, number, number] };
 
 /** What the same calendar days have been like over past years. */
-export type ClimStat = { n: number; pWet: number; pHeavy: number; pSnow: number; hi: number; lo: number };
+export type ClimStat = { n: number; pRain: number; pHeavy: number; pSnow: number; pWet: number; hi: number; lo: number };
 
 /** How forecasts made `lead` days ahead did on the scored days. */
 export type LeadScore = { lead: number; days: number; base: number; wetOk: number | null; dryOk: number | null; maeHi: number };
 
 export const WET_MM = 1;
+export const RAIN_MM = 1;
+/** Open-Meteo's snowfall is 7 cm of snow per 10 mm of water. */
+const SNOW_CM_PER_MM = 0.7;
 export const HEAVY_MM = 10;
 export const SNOW_CM = 1;
 export const LEADS = [1, 2, 3, 4, 5, 6, 7];
@@ -54,8 +60,11 @@ export function memberSeries(h: Hourly): Map<string, (MemberDay | null)[]> {
       const S = (h[`snowfall${s}`] ?? []) as (number | null)[];
       const ok = idx.filter((i) => num(T[i]) && num(P[i]));
       if (ok.length < 20) return null;
+      // rain is whatever precipitation isn't snow, hour by hour
+      const snowWater = (i: number) => (num(S[i]) ? (S[i] as number) / SNOW_CM_PER_MM : 0);
       return {
         p: ok.reduce((a, i) => a + (P[i] as number), 0),
+        r: ok.reduce((a, i) => a + Math.max(0, (P[i] as number) - snowWater(i)), 0),
         sn: ok.reduce((a, i) => a + (num(S[i]) ? (S[i] as number) : 0), 0),
         tx: Math.max(...ok.map((i) => T[i] as number)),
         tn: Math.min(...ok.map((i) => T[i] as number)),
@@ -77,23 +86,34 @@ export function summarize(members: MemberDay[]): DayStat {
   const q = (s: number[]) => [quantile(s, 0.1), quantile(s, 0.5), quantile(s, 0.9)] as [number, number, number];
   return {
     n: members.length,
-    pWet: pct(members.filter((m) => m.p >= WET_MM).length, members.length),
-    pHeavy: pct(members.filter((m) => m.p >= HEAVY_MM).length, members.length),
+    pRain: pct(members.filter((m) => m.r >= RAIN_MM).length, members.length),
+    pHeavy: pct(members.filter((m) => m.r >= HEAVY_MM).length, members.length),
     pSnow: pct(members.filter((m) => m.sn >= SNOW_CM).length, members.length),
+    pWet: pct(members.filter((m) => m.p >= WET_MM).length, members.length),
     hi: q(hi),
     lo: q(lo),
   };
 }
 
+/** An archive `daily` block: ERA5 rain and all precipitation in mm, snowfall in cm, temperatures in °C. */
+export type Daily = {
+  time: string[];
+  precipitation_sum: (number | null)[];
+  rain_sum: (number | null)[];
+  snowfall_sum: (number | null)[];
+  temperature_2m_max: (number | null)[];
+  temperature_2m_min: (number | null)[];
+};
+
 /** Climatology for a calendar day: every year's days within ±`halfWidth` days of it. `daily` is an archive `daily` block. */
 export function climatology(
-  daily: { time: string[]; precipitation_sum: (number | null)[]; snowfall_sum: (number | null)[]; temperature_2m_max: (number | null)[]; temperature_2m_min: (number | null)[] },
+  daily: Daily,
   isoDay: string,
   halfWidth = 7,
 ): ClimStat | null {
   // Feb 29 counts as Feb 28 so every year has the day
   const md = isoDay.slice(5) === '02-29' ? '02-28' : isoDay.slice(5);
-  const rows: { p: number; sn: number; tx: number; tn: number }[] = [];
+  const rows: { p: number; r: number; sn: number; tx: number; tn: number }[] = [];
   daily.time.forEach((t, i) => {
     const y = Number(t.slice(0, 4));
     // the same calendar day in this row's year and the years either side, so windows can cross New Year
@@ -101,15 +121,16 @@ export function climatology(
     const p = daily.precipitation_sum[i];
     const tx = daily.temperature_2m_max[i];
     const tn = daily.temperature_2m_min[i];
-    if (near && num(p) && num(tx) && num(tn)) rows.push({ p, sn: daily.snowfall_sum[i] ?? 0, tx, tn });
+    if (near && num(p) && num(tx) && num(tn)) rows.push({ p, r: daily.rain_sum[i] ?? p, sn: daily.snowfall_sum[i] ?? 0, tx, tn });
   });
   if (rows.length < 30) return null;
   const mean = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0) / rows.length;
   return {
     n: rows.length,
-    pWet: pct(rows.filter((r) => r.p >= WET_MM).length, rows.length),
-    pHeavy: pct(rows.filter((r) => r.p >= HEAVY_MM).length, rows.length),
+    pRain: pct(rows.filter((r) => r.r >= RAIN_MM).length, rows.length),
+    pHeavy: pct(rows.filter((r) => r.r >= HEAVY_MM).length, rows.length),
     pSnow: pct(rows.filter((r) => r.sn >= SNOW_CM).length, rows.length),
+    pWet: pct(rows.filter((r) => r.p >= WET_MM).length, rows.length),
     hi: mean((r) => r.tx),
     lo: mean((r) => r.tn),
   };
@@ -205,17 +226,20 @@ export function averageScores(perModel: LeadScore[][], minDays = 30): LeadScore[
 /** A stretch of days across an ensemble: each member is followed through every day of the range. */
 export type RangeStat = {
   n: number;
-  /** chance of at least one wet (≥1 mm) day, %. */
-  pAnyWet: number;
+  /** chance of at least one rainy (≥1 mm of rain) day, %. */
+  pAnyRain: number;
   /** chance of at least one snowy (≥1 cm) day, %. */
   pAnySnow: number;
-  /** number of wet days: [p25, p50, p75]. */
-  wetDays: [number, number, number];
+  /** chance of at least one day with ≥1 mm of anything, %. */
+  pAnyWet: number;
+  /** number of rainy days and of snowy days: [p25, p50, p75]. */
+  rainDays: [number, number, number];
+  snowDays: [number, number, number];
 };
 
 /** Range stats pooled over models; members missing any day of the range are left out. */
 export function rangeStat(series: Map<string, (MemberDay | null)[]>[], days: string[]): RangeStat | null {
-  const rows: { wet: number; snow: boolean }[] = [];
+  const rows: { rain: number; snow: number; wet: number }[] = [];
   for (const s of series) {
     const perDay = days.map((d) => s.get(d));
     if (perDay.some((x) => !x)) continue;
@@ -223,42 +247,47 @@ export function rangeStat(series: Map<string, (MemberDay | null)[]>[], days: str
     for (let i = 0; i < width; i++) {
       const m = perDay.map((x) => x![i]);
       if (m.some((x) => !x)) continue;
-      rows.push({ wet: m.filter((x) => x!.p >= WET_MM).length, snow: m.some((x) => x!.sn >= SNOW_CM) });
+      rows.push({
+        rain: m.filter((x) => x!.r >= RAIN_MM).length,
+        snow: m.filter((x) => x!.sn >= SNOW_CM).length,
+        wet: m.filter((x) => x!.p >= WET_MM).length,
+      });
     }
   }
   if (!rows.length) return null;
-  const wet = rows.map((r) => r.wet).sort((a, b) => a - b);
+  const q3 = (xs: number[]) => {
+    const s = [...xs].sort((a, b) => a - b);
+    return [quantile(s, 0.25), quantile(s, 0.5), quantile(s, 0.75)] as [number, number, number];
+  };
   return {
     n: rows.length,
+    pAnyRain: pct(rows.filter((r) => r.rain > 0).length, rows.length),
+    pAnySnow: pct(rows.filter((r) => r.snow > 0).length, rows.length),
     pAnyWet: pct(rows.filter((r) => r.wet > 0).length, rows.length),
-    pAnySnow: pct(rows.filter((r) => r.snow).length, rows.length),
-    wetDays: [quantile(wet, 0.25), quantile(wet, 0.5), quantile(wet, 0.75)],
+    rainDays: q3(rows.map((r) => r.rain)),
+    snowDays: q3(rows.map((r) => r.snow)),
   };
 }
 
-export type ClimRange = { years: number; pAnyWet: number; pAnySnow: number; wetDays: number; hi: number; lo: number };
+export type ClimRange = { years: number; pAnyRain: number; pAnySnow: number; rainDays: number; snowDays: number; hi: number; lo: number };
 
-/** The same dates in each past year: how many were wet, and how warm. `daily` may hold many years' windows. */
-export function climRange(
-  daily: { time: string[]; precipitation_sum: (number | null)[]; snowfall_sum: (number | null)[]; temperature_2m_max: (number | null)[]; temperature_2m_min: (number | null)[] },
-  from: string,
-  to: string,
-): ClimRange | null {
+/** The same dates in each past year: how many had rain or snow, and how warm. `daily` may hold many years' windows. */
+export function climRange(daily: Daily, from: string, to: string): ClimRange | null {
   const idx = new Map(daily.time.map((t, i) => [t, i]));
   const len = daysBetween(from, to) + 1;
-  const years: { wet: number; snow: boolean; hi: number[]; lo: number[] }[] = [];
+  const years: { rain: number; snow: number; hi: number[]; lo: number[] }[] = [];
   for (let k = 1; k <= 60; k++) {
     const start = `${Number(from.slice(0, 4)) - k}${from.slice(4) === '-02-29' ? '-02-28' : from.slice(4)}`;
     const ds = Array.from({ length: len }, (_, i) => addDays(start, i));
     const rows = ds.map((d) => idx.get(d)).filter((i): i is number => i != null);
     if (rows.length < len) continue;
-    const p = rows.map((i) => daily.precipitation_sum[i]);
     const tx = rows.map((i) => daily.temperature_2m_max[i]);
     const tn = rows.map((i) => daily.temperature_2m_min[i]);
-    if (![...p, ...tx, ...tn].every(num)) continue;
+    const r = rows.map((i) => daily.rain_sum[i] ?? daily.precipitation_sum[i]);
+    if (![...r, ...tx, ...tn].every(num)) continue;
     years.push({
-      wet: (p as number[]).filter((x) => x >= WET_MM).length,
-      snow: rows.some((i) => (daily.snowfall_sum[i] ?? 0) >= SNOW_CM),
+      rain: (r as number[]).filter((x) => x >= RAIN_MM).length,
+      snow: rows.filter((i) => (daily.snowfall_sum[i] ?? 0) >= SNOW_CM).length,
       hi: tx as number[],
       lo: tn as number[],
     });
@@ -267,9 +296,10 @@ export function climRange(
   const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
   return {
     years: years.length,
-    pAnyWet: pct(years.filter((y) => y.wet > 0).length, years.length),
-    pAnySnow: pct(years.filter((y) => y.snow).length, years.length),
-    wetDays: mean(years.map((y) => y.wet)),
+    pAnyRain: pct(years.filter((y) => y.rain > 0).length, years.length),
+    pAnySnow: pct(years.filter((y) => y.snow > 0).length, years.length),
+    rainDays: mean(years.map((y) => y.rain)),
+    snowDays: mean(years.map((y) => y.snow)),
     hi: mean(years.flatMap((y) => y.hi)),
     lo: mean(years.flatMap((y) => y.lo)),
   };

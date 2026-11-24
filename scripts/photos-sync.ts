@@ -18,6 +18,7 @@ import exifr from 'exifr';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
 import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { STOP_BYTES, bucketUsage, gb, pctOfFree } from './lib/r2-usage.ts';
 
 const SRC = process.env.PHOTOS_SRC ?? 'photos-src';
 const MANIFEST = 'src/data/photos.json';
@@ -46,7 +47,7 @@ const STICKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 21
 </svg>`;
 const INPUT_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.tif', '.tiff', '.heic', '.heif']);
 
-const { values: args } = parseArgs({ options: { local: { type: 'boolean' }, prune: { type: 'boolean' } } });
+const { values: args } = parseArgs({ options: { local: { type: 'boolean' }, prune: { type: 'boolean' }, 'allow-over-free': { type: 'boolean' } } });
 
 // ---------- config ----------
 if (existsSync('.env')) process.loadEnvFile('.env');
@@ -146,7 +147,22 @@ async function exists(key: string): Promise<boolean> {
   }
 }
 
+// R2 bills past 10 GB stored: stop before an upload would take the bucket over STOP_BYTES (9 GB)
+let bucketBytes: number | null = null;
+async function guardFreeTier(adding: number) {
+  if (local || args['allow-over-free']) return;
+  bucketBytes ??= (await bucketUsage(s3!, env.R2_BUCKET!)).bytes;
+  if (bucketBytes + adding > STOP_BYTES) {
+    throw new Error(
+      `R2 would pass ${gb(STOP_BYTES)} (now ${gb(bucketBytes)}, ${pctOfFree(bucketBytes)} of the free tier). ` +
+        'Run photos:prune-r2 --delete to clear unused files, or re-run with --allow-over-free to accept charges.',
+    );
+  }
+  bucketBytes += adding;
+}
+
 async function put(key: string, body: Buffer, contentType: string) {
+  await guardFreeTier(body.length);
   if (local) {
     await mkdir(LOCAL_DIR, { recursive: true });
     await writeFile(join(LOCAL_DIR, key), body);
@@ -339,4 +355,5 @@ if (args.prune) {
 const out = [...byId.values()].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 await writeFile(MANIFEST, JSON.stringify(out, null, 2) + '\n');
 console.log(`\n${out.length} photos in ${MANIFEST}; ${uploaded} files ${local ? 'written locally' : 'uploaded to R2'}.`);
+if (!local && bucketBytes != null) console.log(`R2 now holds about ${gb(bucketBytes)} (${pctOfFree(bucketBytes)} of the free 10 GB).`);
 if (local) console.log('Local mode: do not commit photos.json until you re-run with R2 configured (CI rejects local URLs).');
