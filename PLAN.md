@@ -42,6 +42,7 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 /blog                 Post index
 /blog/[slug]          Post
 /blog/tags/[tag]      Tag listing
+/forecast             Forecast lab (+ forecast card, §5.8)
 /rss.xml, /sitemap-index.xml, 404
 ```
 
@@ -162,6 +163,35 @@ Mark any placeholder content in code or content files with `TODO(owner)`.
 
 A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wrong URL.") with a link home.
 
+### 5.8 Forecast lab (`/forecast`)
+
+> ✅ **Built:** city chips (`src/data/forecast-cities.json`), 15-day ensemble plumes from AIFS ENS, IFS ENS and GEFS, a region map from precomputed `public/fx/` (CI every 6 h, `scripts/forecast-data/build.py`), and "How did the models do?" scored against ERA5. All forecast data is fetched client-side from Open-Meteo.
+
+**Forecast card (Phase 7, planned).** Pick any place (search or map click) and optionally a date → a shareable card with a general forecast and how accurate forecasts have been at that spot. Modeled on three hand-made cards (Sequoia trip, Thanksgiving skiing in Maine/Vermont, Seattle on a date 15 days out).
+
+- **Where it runs:** entirely in the visitor's browser; the site stays static on GitHub Pages. No server, no API keys, $0. Open-Meteo's free non-commercial tier limits by IP (600/min, 5,000/h, 10,000/day), so each visitor spends their own quota. Don't proxy through a server: one shared IP hits 429s (seen from the cloud sandbox).
+- **Input:** search box (Open-Meteo Geocoding API, `language=en|zh`) or a click on the map; optional target date (today to +35 days). Share link: `/forecast/?lat=&lon=&name=&date=&lang=`.
+- **Data per card** (~8 requests, ~4 MB raw / ~0.6 MB gzipped, about 2 s; the history requests take ~1.5 s for 6 months and ~2 s for 12 months, in parallel):
+  - Ensembles: `ecmwf_aifs025` and `ecmwf_ifs025` (51 members each, 15 days) and `gfs025` (31, 10 days). For targets past 15 days, add `gfs05` (31, 35 days) and `gem_global` (21, 16 days).
+  - History: `previous-runs-api` for `ecmwf_aifs025_single`, `ecmwf_ifs025` and `gfs_seamless`, hourly precipitation and temperature at leads of 1, 2, 3, 5 and 7 days, **last 12 months**. Truth is ERA5 (`archive-api`, about 5 days behind).
+  - Climatology: 30 years of ERA5 daily data, ±7 days around the target date (one request).
+- **Card contents** (general, not tied to an activity):
+  - Headline and a short verdict built from rules and templates. No LLM.
+  - Per day: chance of ≥1 mm precipitation; chance of ≥1 cm snow (row shown only if any member snows); median high/low with a 10–90% band.
+  - Rows per model, plus a climatology row when the target is more than 7 days out.
+  - Accuracy at this spot, by lead (1–7 days): "said dry → stayed dry", "said wet → was wet", the climatological wet-day rate drawn as the "just guess" line, and daily-high error.
+  - Accuracy is scored only on days in the same season as the target (±2 months). That's why the window is 12 months: a 6-month window in November holds about 17 winter days.
+  - Past 7 days: say plainly it can't be back-tested (the archive stores leads of 1–7 days only) and compare with climatology instead.
+  - Footer: sources, the ERA5 caveat (≈25 km grid, not a station), Open-Meteo attribution.
+- **Language:** English by default, with a 中文 toggle on the card. The rest of the site stays English.
+- **Export:** "Save image" draws the card with the Canvas 2D API in the page's loaded fonts (no new dependency), at 3× for phones, and offers the Web Share API where available. If canvas drawing proves too fiddly, ask before adding `html-to-image`.
+- **Not in v1:**
+  - Per-location link previews. These need a Cloudflare Worker, about $5/mo for image rendering.
+  - Verdicts written by an LLM.
+  - Activity modes, e.g. skiing (wet-bulb snowmaking hours) or hiking.
+  - Saving cards on a server.
+- **Done when:** a card for any searched place renders in under 3 s on a phone, the PNG matches the on-screen card, both languages work, and `pnpm astro check && pnpm build` pass.
+
 ## 6. CI/CD
 
 `.github/workflows/deploy.yml`
@@ -181,6 +211,7 @@ A short, playful page in the site's voice (e.g. "Forecast: 100% chance of a wron
 | 4 | Coffee page + CompareSlider | |
 | 5 | ✅ Running page from a manual Strava export (no API, no cron) | Done |
 | 6 | Photo map view, home teasers, OG images, Lighthouse pass | All targets in §4 met |
+| 7 | Forecast card on `/forecast` (§5.8): any place or date → forecast + local accuracy, PNG export, EN/中文 | Done-when list in §5.8 met |
 
 ## 8. Working rules for Claude Code
 
